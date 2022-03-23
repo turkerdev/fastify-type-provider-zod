@@ -20,7 +20,7 @@
     "type",
     "provider"
   ],
-  "author": "turkerdev",
+  "author": "turkerd",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/turkerdev/fastify-type-provider-zod/issues"
