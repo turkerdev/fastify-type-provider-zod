@@ -3,5 +3,6 @@
     "declaration": true,
     "rootDir": "src",
     "outDir": "dist"
-  }
+  },
+  "exclude": ["./node_modules", "types/**/*.test-d.ts"]
 }

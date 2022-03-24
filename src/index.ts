@@ -8,7 +8,7 @@ export interface ZodTypeProvider extends FastifyTypeProvider {
 
 export const validatorCompiler: FastifySchemaCompiler<ZodAny> =
   ({ schema }) =>
-  (data) => {
+  (data): any => {
     try {
       return { value: schema.parse(data) };
     } catch (error) {
