@@ -4,7 +4,7 @@
 
 ```js
 import Fastify from "fastify";
-import {serializerCompiler, validatorCompiler, ZodTypeProvider,} from "fastify-type-provider-zod";
+import { serializerCompiler, validatorCompiler, ZodTypeProvider } from "fastify-type-provider-zod";
 import z from "zod";
 
 const app = Fastify()
