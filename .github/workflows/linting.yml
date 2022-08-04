@@ -22,8 +22,5 @@ jobs:
       - name: Install
         run: npm install
 
-      - name: Install PeerDeps
-        run: npm i fastify zod
-
       - name: Run linting
         run: npm run lint
