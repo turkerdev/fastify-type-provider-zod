@@ -1,15 +1,30 @@
-import { serializerCompiler, validatorCompiler, ZodTypeProvider } from '../src/index';
-import { expectAssignable, expectType } from 'tsd'
-import Fastify, { FastifyInstance, FastifyLoggerInstance, RawReplyDefaultExpression, RawRequestDefaultExpression, RawServerDefault } from 'fastify'
+import type {
+  FastifyInstance,
+  FastifyLoggerInstance,
+  RawReplyDefaultExpression,
+  RawRequestDefaultExpression,
+  RawServerDefault,
+} from 'fastify';
+import Fastify from 'fastify';
+import { expectAssignable, expectType } from 'tsd';
 import z from 'zod';
 
-const fastify = Fastify().withTypeProvider<ZodTypeProvider>()
+import { serializerCompiler, validatorCompiler } from '../src/index';
+import type { ZodTypeProvider } from '../src/index';
 
-type FastifyZodInstance = FastifyInstance<RawServerDefault, RawRequestDefaultExpression, RawReplyDefaultExpression, FastifyLoggerInstance, ZodTypeProvider>
+const fastify = Fastify().withTypeProvider<ZodTypeProvider>();
+
+type FastifyZodInstance = FastifyInstance<
+  RawServerDefault,
+  RawRequestDefaultExpression,
+  RawReplyDefaultExpression,
+  FastifyLoggerInstance,
+  ZodTypeProvider
+>;
 
 expectType<FastifyZodInstance>(fastify.setValidatorCompiler(validatorCompiler));
 expectType<FastifyZodInstance>(fastify.setSerializerCompiler(serializerCompiler));
-expectAssignable<FastifyZodInstance>(fastify)
+expectAssignable<FastifyZodInstance>(fastify);
 
 fastify.route({
   method: 'GET',
@@ -24,7 +39,7 @@ fastify.route({
     },
   },
   handler: (req, res) => {
-    expectType<string>(req.query.name)
-    res.send('string')
+    expectType<string>(req.query.name);
+    res.send('string');
   },
 });
