@@ -1,0 +1,26 @@
+name: linting
+
+on:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node-version: [18]
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install
+        run: npm install
+
+      - name: Run linting
+        run: npm run lint
