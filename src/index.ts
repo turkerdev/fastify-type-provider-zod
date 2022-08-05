@@ -1,4 +1,4 @@
-import type { FastifySchemaCompiler, FastifyTypeProvider, FastifySchema } from 'fastify';
+import type { FastifySchema, FastifySchemaCompiler, FastifyTypeProvider } from 'fastify';
 import type { FastifySerializerCompiler } from 'fastify/types/schema';
 import type { z, ZodAny, ZodTypeAny } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
@@ -21,8 +21,15 @@ export const jsonSchemaTransform = ({ schema, url }: { schema: FastifySchema; ur
   if (querystring) transformed.querystring = zodToJsonSchema(querystring as any);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (headers) transformed.headers = zodToJsonSchema(headers as any);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (response) transformed.response = zodToJsonSchema(response as any);
+
+  if (response) {
+    transformed.response = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const prop in response as any) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      transformed.response[prop] = zodToJsonSchema((response as any)[prop]);
+    }
+  }
 
   return { schema: transformed, url };
 };
