@@ -4,5 +4,5 @@
     "rootDir": "src",
     "outDir": "dist"
   },
-  "exclude": ["./node_modules", "types/**/*.test-d.ts", "test"]
+  "exclude": ["./node_modules", "types/**/*.test-d.ts", "test", "dist"]
 }
