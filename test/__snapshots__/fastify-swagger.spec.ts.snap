@@ -1,0 +1,116 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`transformer generates types for fastify-swagger correctly 1`] = `
+Object {
+  "components": Object {
+    "schemas": Object {},
+  },
+  "info": Object {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.3",
+  "paths": Object {
+    "/documentation/": Object {
+      "get": Object {
+        "responses": Object {
+          "200": Object {
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+    "/documentation/initOAuth": Object {
+      "get": Object {
+        "responses": Object {
+          "200": Object {
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+    "/documentation/json": Object {
+      "get": Object {
+        "responses": Object {
+          "200": Object {
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+    "/documentation/static/{wildcard}": Object {
+      "get": Object {
+        "responses": Object {
+          "200": Object {
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+    "/documentation/uiConfig": Object {
+      "get": Object {
+        "responses": Object {
+          "200": Object {
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+    "/documentation/yaml": Object {
+      "get": Object {
+        "responses": Object {
+          "200": Object {
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+    "/documentation/{wildcard}": Object {
+      "get": Object {
+        "responses": Object {
+          "200": Object {
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+    "/login": Object {
+      "post": Object {
+        "requestBody": Object {
+          "content": Object {
+            "application/json": Object {
+              "schema": Object {
+                "additionalProperties": false,
+                "properties": Object {
+                  "password": Object {
+                    "maxLength": 32,
+                    "type": "string",
+                  },
+                  "username": Object {
+                    "description": "someDescription",
+                    "maxLength": 32,
+                    "type": "string",
+                  },
+                },
+                "required": Array [
+                  "username",
+                  "password",
+                ],
+                "type": "object",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": Object {
+          "200": Object {
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": Array [],
+}
+`;

@@ -32,3 +32,49 @@ app.withTypeProvider<ZodTypeProvider>().route({
 
 app.listen({ port: 4949 });
 ```
+
+## How to use together with @fastify/swagger
+
+```ts
+import {
+  jsonSchemaTransform,
+  serializerCompiler,
+  validatorCompiler,
+  ZodTypeProvider,
+} from 'fastify-type-provider-zod';
+
+const app = Fastify();
+app.setValidatorCompiler(validatorCompiler);
+app.setSerializerCompiler(serializerCompiler);
+
+app.register(fastifySwagger, {
+  exposeRoute: true,
+  openapi: {
+    info: {
+      title: 'SampleApi',
+      description: 'Sample backend service',
+      version: '1.0.0',
+    },
+    servers: [],
+  },
+  transform: jsonSchemaTransform,
+});
+
+const LOGIN_SCHEMA = z.object({
+  username: z.string().max(32).describe('someDescription'),
+  password: z.string().max(32),
+});
+
+app.after(() => {
+  app.withTypeProvider<ZodTypeProvider>().route({
+    method: 'POST',
+    url: '/login',
+    schema: { body: LOGIN_SCHEMA },
+    handler: (req, res) => {
+      res.send('ok');
+    },
+  });
+});
+
+await app.ready();
+```
