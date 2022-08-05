@@ -105,6 +105,35 @@ Object {
         },
         "responses": Object {
           "200": Object {
+            "content": Object {
+              "application/json": Object {
+                "schema": Object {
+                  "type": "string",
+                },
+              },
+            },
+            "description": "Default Response",
+          },
+          "401": Object {
+            "content": Object {
+              "application/json": Object {
+                "schema": Object {
+                  "additionalProperties": false,
+                  "properties": Object {
+                    "required_role": Object {
+                      "enum": Array [
+                        "admin",
+                      ],
+                      "type": "string",
+                    },
+                  },
+                  "required": Array [
+                    "required_role",
+                  ],
+                  "type": "object",
+                },
+              },
+            },
             "description": "Default Response",
           },
         },

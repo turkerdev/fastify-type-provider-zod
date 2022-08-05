@@ -29,11 +29,21 @@ describe('transformer', () => {
       password: z.string().max(32),
     });
 
+    const UNAUTHORIZED_SCHEMA = z.object({
+      required_role: z.literal('admin'),
+    });
+
     app.after(() => {
       app.withTypeProvider<ZodTypeProvider>().route({
         method: 'POST',
         url: '/login',
-        schema: { body: LOGIN_SCHEMA },
+        schema: {
+          body: LOGIN_SCHEMA,
+          response: {
+            200: z.string(),
+            401: UNAUTHORIZED_SCHEMA,
+          },
+        },
         handler: (req, res) => {
           res.send('ok');
         },
