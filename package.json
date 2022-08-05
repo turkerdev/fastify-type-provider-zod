@@ -11,7 +11,8 @@
     "format": "prettier --write .",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
-    "typescript": "tsd"
+    "typescript": "tsd",
+    "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
     "fastify": "^4.0.0",
