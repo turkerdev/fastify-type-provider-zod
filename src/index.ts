@@ -10,12 +10,18 @@ export interface ZodTypeProvider extends FastifyTypeProvider {
 export const jsonSchemaTransform = ({ schema, url }: { schema: FastifySchema; url: string }) => {
   const { params, body, querystring, headers, response } = schema;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const transformed: Record<string, any> = {};
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (params) transformed.params = zodToJsonSchema(params as any);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (body) transformed.body = zodToJsonSchema(body as any);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (querystring) transformed.querystring = zodToJsonSchema(querystring as any);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (headers) transformed.headers = zodToJsonSchema(headers as any);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (response) transformed.response = zodToJsonSchema(response as any);
 
   return { schema: transformed, url };
