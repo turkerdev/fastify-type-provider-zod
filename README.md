@@ -62,7 +62,7 @@ app.register(fastifySwagger, {
   // You can also create transform with custom skiplist:
   //
   // transform: createJsonSchemaTransform({
-  //   skipList: [ '/documentation/static/{wildcard}' ]
+  //   skipList: [ '/documentation/static/*' ]
   // })
 });
 
