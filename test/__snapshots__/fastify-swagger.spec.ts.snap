@@ -12,69 +12,6 @@ Object {
   },
   "openapi": "3.0.3",
   "paths": Object {
-    "/documentation/": Object {
-      "get": Object {
-        "responses": Object {
-          "200": Object {
-            "description": "Default Response",
-          },
-        },
-      },
-    },
-    "/documentation/initOAuth": Object {
-      "get": Object {
-        "responses": Object {
-          "200": Object {
-            "description": "Default Response",
-          },
-        },
-      },
-    },
-    "/documentation/json": Object {
-      "get": Object {
-        "responses": Object {
-          "200": Object {
-            "description": "Default Response",
-          },
-        },
-      },
-    },
-    "/documentation/static/{wildcard}": Object {
-      "get": Object {
-        "responses": Object {
-          "200": Object {
-            "description": "Default Response",
-          },
-        },
-      },
-    },
-    "/documentation/uiConfig": Object {
-      "get": Object {
-        "responses": Object {
-          "200": Object {
-            "description": "Default Response",
-          },
-        },
-      },
-    },
-    "/documentation/yaml": Object {
-      "get": Object {
-        "responses": Object {
-          "200": Object {
-            "description": "Default Response",
-          },
-        },
-      },
-    },
-    "/documentation/{wildcard}": Object {
-      "get": Object {
-        "responses": Object {
-          "200": Object {
-            "description": "Default Response",
-          },
-        },
-      },
-    },
     "/login": Object {
       "post": Object {
         "requestBody": Object {

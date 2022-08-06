@@ -38,6 +38,7 @@ app.listen({ port: 4949 });
 ```ts
 import {
   jsonSchemaTransform,
+  createJsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
   ZodTypeProvider,
@@ -58,6 +59,11 @@ app.register(fastifySwagger, {
     servers: [],
   },
   transform: jsonSchemaTransform,
+  // You can also create transform with custom skiplist:
+  //
+  // transform: createJsonSchemaTransform({
+  //   skipList: [ '/documentation/static/{wildcard}' ]
+  // })
 });
 
 const LOGIN_SCHEMA = z.object({
