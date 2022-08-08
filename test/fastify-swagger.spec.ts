@@ -1,5 +1,6 @@
 import fastifySwagger from '@fastify/swagger';
 import Fastify from 'fastify';
+import validator = require('oas-validator');
 import { z } from 'zod';
 
 import type { ZodTypeProvider } from '../src';
@@ -56,5 +57,6 @@ describe('transformer', () => {
     const openApiSpec = JSON.parse(openApiSpecResponse.body);
 
     expect(openApiSpec).toMatchSnapshot();
+    await validator.validate(openApiSpec, {});
   });
 });
