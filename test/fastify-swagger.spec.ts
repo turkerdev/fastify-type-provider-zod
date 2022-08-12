@@ -27,6 +27,7 @@ describe('transformer', () => {
 
     const LOGIN_SCHEMA = z.object({
       username: z.string().max(32).describe('someDescription'),
+      seed: z.number().positive(),
       password: z.string().max(32),
     });
 
