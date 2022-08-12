@@ -24,6 +24,11 @@ Object {
                     "maxLength": 32,
                     "type": "string",
                   },
+                  "seed": Object {
+                    "exclusiveMinimum": true,
+                    "minimum": 0,
+                    "type": "number",
+                  },
                   "username": Object {
                     "description": "someDescription",
                     "maxLength": 32,
@@ -32,6 +37,7 @@ Object {
                 },
                 "required": Array [
                   "username",
+                  "seed",
                   "password",
                 ],
                 "type": "object",

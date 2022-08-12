@@ -17,6 +17,10 @@ export interface ZodTypeProvider extends FastifyTypeProvider {
   output: this['input'] extends ZodTypeAny ? z.infer<this['input']> : never;
 }
 
+const zodToJsonSchemaOptions = {
+  target: 'openApi3'
+} as const
+
 export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly string[] }) => {
   return ({ schema, url }: { schema: FastifySchema; url: string }) => {
     const { params, body, querystring, headers, response } = schema;
@@ -30,20 +34,22 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (params) transformed.params = zodToJsonSchema(params as any);
+    if (params) transformed.params = zodToJsonSchema(params as any, zodToJsonSchemaOptions);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (body) transformed.body = zodToJsonSchema(body as any);
+    if (body) transformed.body = zodToJsonSchema(body as any, zodToJsonSchemaOptions);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (querystring) transformed.querystring = zodToJsonSchema(querystring as any);
+    if (querystring) transformed.querystring = zodToJsonSchema(querystring as any, zodToJsonSchemaOptions);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (headers) transformed.headers = zodToJsonSchema(headers as any);
+    if (headers) transformed.headers = zodToJsonSchema(headers as any, zodToJsonSchemaOptions);
 
     if (response) {
       transformed.response = {};
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       for (const prop in response as any) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        transformed.response[prop] = zodToJsonSchema((response as any)[prop]);
+        const transformedResponse = zodToJsonSchema((response[prop] as any), zodToJsonSchemaOptions)
+        transformed.response[prop] = transformedResponse;
       }
     }
 
