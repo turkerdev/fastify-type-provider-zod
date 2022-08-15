@@ -3,6 +3,12 @@ import type { FastifySerializerCompiler } from 'fastify/types/schema';
 import type { z, ZodAny, ZodTypeAny } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
+declare module 'fastify' {
+  interface FastifySchema {
+    description?: string;
+  }
+}
+
 const defaultSkipList = [
   '/documentation/',
   '/documentation/initOAuth',
@@ -23,7 +29,7 @@ const zodToJsonSchemaOptions = {
 
 export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly string[] }) => {
   return ({ schema, url }: { schema: FastifySchema; url: string }) => {
-    const { params, body, querystring, headers, response } = schema;
+    const { params, body, querystring, headers, response, description } = schema;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const transformed: Record<string, any> = {};
@@ -55,6 +61,10 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
         );
         transformed.response[prop] = transformedResponse;
       }
+    }
+
+    if (description) {
+      transformed.description = description;
     }
 
     return { schema: transformed, url };

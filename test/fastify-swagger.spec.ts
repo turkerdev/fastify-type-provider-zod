@@ -60,4 +60,46 @@ describe('transformer', () => {
     expect(openApiSpec).toMatchSnapshot();
     await validator.validate(openApiSpec, {});
   });
+
+  it('does not lose the `description` propery when transforming schemas', async () => {
+    const app = Fastify();
+    app.setValidatorCompiler(validatorCompiler);
+    app.setSerializerCompiler(serializerCompiler);
+
+    app.register(fastifySwagger, {
+      exposeRoute: true,
+      openapi: {
+        info: {
+          title: 'SampleApi',
+          description: 'Sample backend service',
+          version: '1.0.0',
+        },
+        servers: [],
+      },
+      transform: jsonSchemaTransform,
+    });
+
+    const description = 'This is a description';
+
+    app.after(() => {
+      app.withTypeProvider<ZodTypeProvider>().route({
+        method: 'POST',
+        url: '/login',
+        schema: {
+          description,
+        },
+        handler: (req, res) => {
+          res.send('ok');
+        },
+      });
+    });
+
+    await app.ready();
+
+    const openApiSpecResponse = await app.inject().get('/documentation/json');
+    const openApiSpec = JSON.parse(openApiSpecResponse.body);
+
+    expect(openApiSpec).toHaveProperty('paths./login.post.description', description);
+    await validator.validate(openApiSpec, {});
+  });
 });
