@@ -61,7 +61,7 @@ describe('transformer', () => {
     await validator.validate(openApiSpec, {});
   });
 
-  it('does not lose the `description` propery when transforming schemas', async () => {
+  it('does not lose the `description` property when transforming schemas', async () => {
     const app = Fastify();
     app.setValidatorCompiler(validatorCompiler);
     app.setSerializerCompiler(serializerCompiler);
