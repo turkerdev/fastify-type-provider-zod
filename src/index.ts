@@ -1,3 +1,4 @@
+import {} from '@fastify/swagger';
 import type { FastifySchema, FastifySchemaCompiler, FastifyTypeProvider } from 'fastify';
 import type { FastifySerializerCompiler } from 'fastify/types/schema';
 import type { z, ZodAny, ZodTypeAny } from 'zod';
@@ -23,25 +24,25 @@ const zodToJsonSchemaOptions = {
 
 export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly string[] }) => {
   return ({ schema, url }: { schema: FastifySchema; url: string }) => {
-    const { params, body, querystring, headers, response } = schema;
+    const { response, headers, querystring, body, params, hide, ...rest } = schema;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const transformed: Record<string, any> = {};
 
-    if (skipList.includes(url)) {
+    if (skipList.includes(url) || hide) {
       transformed.hide = true;
       return { schema: transformed, url };
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (params) transformed.params = zodToJsonSchema(params as any, zodToJsonSchemaOptions);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (body) transformed.body = zodToJsonSchema(body as any, zodToJsonSchemaOptions);
-    if (querystring)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      transformed.querystring = zodToJsonSchema(querystring as any, zodToJsonSchemaOptions);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (headers) transformed.headers = zodToJsonSchema(headers as any, zodToJsonSchemaOptions);
+    const zodSchemas: Record<string, any> = { headers, querystring, body, params };
+
+    for (const prop in zodSchemas) {
+      const zodSchema = zodSchemas[prop];
+      if (zodSchema) {
+        transformed[prop] = zodToJsonSchema(zodSchema, zodToJsonSchemaOptions);
+      }
+    }
 
     if (response) {
       transformed.response = {};
@@ -54,6 +55,13 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
           zodToJsonSchemaOptions,
         );
         transformed.response[prop] = transformedResponse;
+      }
+    }
+
+    for (const prop in rest) {
+      const meta = rest[prop as keyof typeof rest];
+      if (meta) {
+        transformed[prop] = meta;
       }
     }
 
