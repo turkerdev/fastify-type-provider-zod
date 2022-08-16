@@ -14,6 +14,11 @@ Object {
   "paths": Object {
     "/login": Object {
       "post": Object {
+        "description": "login route",
+        "externalDocs": Object {
+          "description": "check google",
+          "url": "https://google.com",
+        },
         "requestBody": Object {
           "content": Object {
             "application/json": Object {
@@ -80,6 +85,10 @@ Object {
             "description": "Default Response",
           },
         },
+        "summary": "login your account",
+        "tags": Array [
+          "auth",
+        ],
       },
     },
   },
