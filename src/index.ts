@@ -1,4 +1,3 @@
-import {} from '@fastify/swagger';
 import type { FastifySchema, FastifySchemaCompiler, FastifyTypeProvider } from 'fastify';
 import type { FastifySerializerCompiler } from 'fastify/types/schema';
 import type { z, ZodAny, ZodTypeAny } from 'zod';
@@ -18,12 +17,16 @@ export interface ZodTypeProvider extends FastifyTypeProvider {
   output: this['input'] extends ZodTypeAny ? z.infer<this['input']> : never;
 }
 
+interface Schema extends FastifySchema {
+  hide?: boolean;
+}
+
 const zodToJsonSchemaOptions = {
   target: 'openApi3',
 } as const;
 
 export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly string[] }) => {
-  return ({ schema, url }: { schema: FastifySchema; url: string }) => {
+  return ({ schema, url }: { schema: Schema; url: string }) => {
     const { response, headers, querystring, body, params, hide, ...rest } = schema;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
