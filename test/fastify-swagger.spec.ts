@@ -40,6 +40,13 @@ describe('transformer', () => {
         method: 'POST',
         url: '/login',
         schema: {
+          description: 'login route',
+          summary: 'login your account',
+          consumes: ['application/json'],
+          deprecated: false,
+          hide: false,
+          tags: ['auth'],
+          externalDocs: { url: 'https://google.com', description: 'check google' },
           body: LOGIN_SCHEMA,
           response: {
             200: z.string(),
