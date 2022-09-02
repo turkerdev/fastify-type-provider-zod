@@ -7,6 +7,7 @@
   },
   "testEnvironment": "node",
   "reporters": ["default"],
+  "collectCoverageFrom": ["./src/**/*.ts"],
   "coveragePathIgnorePatterns": ["<rootDir>/node_modules/", "<rootDir>/coverage/"],
   "globals": {
     "ts-jest": {
@@ -15,10 +16,10 @@
   },
   "coverageThreshold": {
     "global": {
-      "statements": 58,
-      "branches": 16,
-      "functions": 40,
-      "lines": 65
+      "statements": 87,
+      "branches": 88,
+      "functions": 87,
+      "lines": 86
     }
   }
 }
