@@ -90,7 +90,8 @@ export const validatorCompiler: FastifySchemaCompiler<ZodAny> =
 export const serializerCompiler: FastifySerializerCompiler<ZodAny> =
   ({ schema }) =>
   (data) => {
-    const result = schema.safeParse(data);
+    // @ts-ignore
+    const result = schema.safeParse ? schema.safeParse(data) : schema.properties.safeParse(data);
     if (result.success) {
       return JSON.stringify(result.data);
     }
