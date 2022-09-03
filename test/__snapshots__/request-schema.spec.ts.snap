@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`response schema returns 400 on validation error 1`] = `
+Object {
+  "error": "Bad Request",
+  "message": "[
+  {
+    \\"code\\": \\"invalid_type\\",
+    \\"expected\\": \\"string\\",
+    \\"received\\": \\"undefined\\",
+    \\"path\\": [
+      \\"name\\"
+    ],
+    \\"message\\": \\"Required\\"
+  }
+]",
+  "statusCode": 400,
+}
+`;

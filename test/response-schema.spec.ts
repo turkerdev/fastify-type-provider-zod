@@ -1,3 +1,4 @@
+import type { FastifyInstance } from 'fastify';
 import Fastify from 'fastify';
 import { z } from 'zod';
 
@@ -5,42 +6,129 @@ import type { ZodTypeProvider } from '../src';
 import { serializerCompiler, validatorCompiler } from '../src';
 
 describe('response schema', () => {
-  it('correctly processes response schema', async () => {
-    const REPLY_SCHEMA = z.object({
-      name: z.string(),
-    });
+  describe('correctly processes response schema (string)', () => {
+    let app: FastifyInstance;
+    beforeAll(async () => {
+      const REPLY_SCHEMA = z.string();
 
-    const app = Fastify();
-    app.setValidatorCompiler(validatorCompiler);
-    app.setSerializerCompiler(serializerCompiler);
-    app.setErrorHandler((err, req, reply) => {
-      reply.status(500).send('error');
-    });
+      app = Fastify();
+      app.setValidatorCompiler(validatorCompiler);
+      app.setSerializerCompiler(serializerCompiler);
 
-    app.after(() => {
-      app.withTypeProvider<ZodTypeProvider>().route({
-        method: 'GET',
-        url: '/',
-        schema: {
-          response: {
-            200: REPLY_SCHEMA,
+      app.after(() => {
+        app.withTypeProvider<ZodTypeProvider>().route({
+          method: 'GET',
+          url: '/',
+          schema: {
+            response: {
+              200: REPLY_SCHEMA,
+            },
           },
-        },
-        handler: (req, res) => {
-          res.send({
-            name: 'test',
-          });
-        },
+          handler: (req, res) => {
+            res.send('test');
+          },
+        });
+
+        app.withTypeProvider<ZodTypeProvider>().route({
+          method: 'GET',
+          url: '/incorrect',
+          schema: {
+            response: {
+              200: REPLY_SCHEMA,
+            },
+          },
+          handler: (req, res) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            res.send({ name: 'test' } as any);
+          },
+        });
+      });
+
+      await app.ready();
+    });
+
+    afterAll(async () => {
+      await app.close();
+    });
+
+    it('returns 200 on correct response', async () => {
+      const response = await app.inject().get('/');
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toEqual('test');
+    });
+
+    it('returns 500 on incorrect response', async () => {
+      const response = await app.inject().get('/incorrect');
+
+      expect(response.statusCode).toBe(500);
+      expect(response.body).toMatchSnapshot();
+    });
+  });
+
+  describe('correctly processes response schema (object)', () => {
+    let app: FastifyInstance;
+    beforeEach(async () => {
+      const REPLY_SCHEMA = z.object({
+        name: z.string(),
+      });
+
+      app = Fastify();
+      app.setValidatorCompiler(validatorCompiler);
+      app.setSerializerCompiler(serializerCompiler);
+
+      app.after(() => {
+        app.withTypeProvider<ZodTypeProvider>().route({
+          method: 'GET',
+          url: '/',
+          schema: {
+            response: {
+              200: REPLY_SCHEMA,
+            },
+          },
+          handler: (req, res) => {
+            res.send({
+              name: 'test',
+            });
+          },
+        });
+
+        app.withTypeProvider<ZodTypeProvider>().route({
+          method: 'GET',
+          url: '/incorrect',
+          schema: {
+            response: {
+              200: REPLY_SCHEMA,
+            },
+          },
+          handler: (req, res) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            res.send('test' as any);
+          },
+        });
+      });
+
+      await app.ready();
+    });
+    afterAll(async () => {
+      await app.close();
+    });
+
+    it('returns 200 for correct response', async () => {
+      const response = await app.inject().get('/');
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual({
+        name: 'test',
       });
     });
 
-    await app.ready();
+    // FixMe https://github.com/turkerdev/fastify-type-provider-zod/issues/16
+    it.skip('returns 500 for incorrect response', async () => {
+      const response = await app.inject().get('/incorrect');
 
-    const response = await app.inject().get('/');
-
-    expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({
-      name: 'test',
+      expect(response.statusCode).toBe(500);
+      expect(response.json()).toMatchSnapshot();
     });
   });
 });
