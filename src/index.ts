@@ -87,9 +87,26 @@ export const validatorCompiler: FastifySchemaCompiler<ZodAny> =
     }
   };
 
-export const serializerCompiler: FastifySerializerCompiler<ZodAny> =
-  ({ schema }) =>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function hasOwnProperty<T, K extends PropertyKey>(obj: T, prop: K): obj is T & Record<K, any> {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
+}
+
+function resolveSchema(maybeSchema: ZodAny | { properties: ZodAny }): Pick<ZodAny, 'safeParse'> {
+  if (hasOwnProperty(maybeSchema, 'safeParse')) {
+    return maybeSchema;
+  }
+  if (hasOwnProperty(maybeSchema, 'properties')) {
+    return maybeSchema.properties;
+  }
+  throw new Error(`Invalid schema passed: ${JSON.stringify(maybeSchema)}`);
+}
+
+export const serializerCompiler: FastifySerializerCompiler<ZodAny | { properties: ZodAny }> =
+  ({ schema: maybeSchema }) =>
   (data) => {
+    const schema: Pick<ZodAny, 'safeParse'> = resolveSchema(maybeSchema);
+
     const result = schema.safeParse(data);
     if (result.success) {
       return JSON.stringify(result.data);
