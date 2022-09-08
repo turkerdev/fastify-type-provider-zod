@@ -3,6 +3,9 @@ import type { FastifySerializerCompiler } from 'fastify/types/schema';
 import type { z, ZodAny, ZodTypeAny } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type FreeformRecord = Record<string, any>;
+
 const defaultSkipList = [
   '/documentation/',
   '/documentation/initOAuth',
@@ -29,16 +32,14 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
   return ({ schema, url }: { schema: Schema; url: string }) => {
     const { response, headers, querystring, body, params, hide, ...rest } = schema;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const transformed: Record<string, any> = {};
+    const transformed: FreeformRecord = {};
 
     if (skipList.includes(url) || hide) {
       transformed.hide = true;
       return { schema: transformed, url };
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const zodSchemas: Record<string, any> = { headers, querystring, body, params };
+    const zodSchemas: FreeformRecord = { headers, querystring, body, params };
 
     for (const prop in zodSchemas) {
       const zodSchema = zodSchemas[prop];
@@ -102,6 +103,16 @@ function resolveSchema(maybeSchema: ZodAny | { properties: ZodAny }): Pick<ZodAn
   throw new Error(`Invalid schema passed: ${JSON.stringify(maybeSchema)}`);
 }
 
+export class ResponseValidationError extends Error {
+  public details: FreeformRecord;
+
+  constructor(validationResult: FreeformRecord) {
+    super("Response doesn't match the schema");
+    this.name = 'ResponseValidationError';
+    this.details = validationResult.error;
+  }
+}
+
 export const serializerCompiler: FastifySerializerCompiler<ZodAny | { properties: ZodAny }> =
   ({ schema: maybeSchema }) =>
   (data) => {
@@ -111,5 +122,6 @@ export const serializerCompiler: FastifySerializerCompiler<ZodAny | { properties
     if (result.success) {
       return JSON.stringify(result.data);
     }
-    throw Error("Response doesn't match the schema");
+
+    throw new ResponseValidationError(result);
   };
