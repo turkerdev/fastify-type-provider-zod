@@ -1,7 +1,7 @@
 # Fastify Type Provider Zod
 
-[![NPM Version][npm-image]][npm-url]
-[![npm downloads](https://img.shields.io/npm/dm/fastify-type-provider-zod.svg)](https://npmjs.org/package/fastify-type-provider-zod)
+[![NPM Version](https://img.shields.io/npm/v/fastify-type-provider-zod.svg)](https://npmjs.org/package/fastify-type-provider-zod)
+[![NPM Downloads](https://img.shields.io/npm/dm/fastify-type-provider-zod.svg)](https://npmjs.org/package/fastify-type-provider-zod)
 [![Build Status](https://github.com//turkerdev/fastify-type-provider-zod/workflows/CI/badge.svg)](https://github.com//turkerdev/fastify-type-provider-zod/actions)
 
 ## How to use?
@@ -88,8 +88,3 @@ app.after(() => {
 
 await app.ready();
 ```
-
-[npm-image]: https://img.shields.io/npm/v/fastify-type-provider-zod.svg
-[npm-url]: https://npmjs.org/package/fastify-type-provider-zod
-[downloads-image]: https://img.shields.io/npm/dm/fastify-type-provider-zod.svg
-[downloads-url]: https://npmjs.org/package/fastify-type-provider-zod
