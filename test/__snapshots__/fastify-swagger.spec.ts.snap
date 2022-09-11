@@ -12,6 +12,24 @@ Object {
   },
   "openapi": "3.0.3",
   "paths": Object {
+    "/delete": Object {
+      "delete": Object {
+        "description": "delete route",
+        "responses": Object {
+          "204": Object {
+            "content": Object {
+              "application/json": Object {
+                "schema": Object {
+                  "description": "Empty response",
+                  "not": Object {},
+                },
+              },
+            },
+            "description": "Empty response",
+          },
+        },
+      },
+    },
     "/login": Object {
       "post": Object {
         "description": "login route",
