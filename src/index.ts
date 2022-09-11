@@ -53,9 +53,12 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       for (const prop in response as any) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const schema = resolveSchema((response as any)[prop]);
+
         const transformedResponse = zodToJsonSchema(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (response as any)[prop],
+          schema as any,
           zodToJsonSchemaOptions,
         );
         transformed.response[prop] = transformedResponse;

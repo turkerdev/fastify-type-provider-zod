@@ -36,27 +36,42 @@ describe('transformer', () => {
     });
 
     app.after(() => {
-      app.withTypeProvider<ZodTypeProvider>().route({
-        method: 'POST',
-        url: '/login',
-        schema: {
-          description: 'login route',
-          summary: 'login your account',
-          consumes: ['application/json'],
-          deprecated: false,
-          hide: false,
-          tags: ['auth'],
-          externalDocs: { url: 'https://google.com', description: 'check google' },
-          body: LOGIN_SCHEMA,
-          response: {
-            200: z.string(),
-            401: UNAUTHORIZED_SCHEMA,
+      app
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+          method: 'POST',
+          url: '/login',
+          schema: {
+            description: 'login route',
+            summary: 'login your account',
+            consumes: ['application/json'],
+            deprecated: false,
+            hide: false,
+            tags: ['auth'],
+            externalDocs: { url: 'https://google.com', description: 'check google' },
+            body: LOGIN_SCHEMA,
+            response: {
+              200: z.string(),
+              401: UNAUTHORIZED_SCHEMA,
+            },
           },
-        },
-        handler: (req, res) => {
-          res.send('ok');
-        },
-      });
+          handler: (req, res) => {
+            res.send('ok');
+          },
+        })
+        .route({
+          method: 'DELETE',
+          url: '/delete',
+          schema: {
+            description: 'delete route',
+            response: {
+              204: z.undefined().describe('Empty response'),
+            },
+          },
+          handler: (req, res) => {
+            res.status(204).send();
+          },
+        });
     });
 
     await app.ready();
