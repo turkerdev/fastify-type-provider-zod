@@ -37,7 +37,7 @@
     "zod-to-json-schema": "^3.17.1"
   },
   "devDependencies": {
-    "@fastify/swagger": "^7.5.1",
+    "@fastify/swagger": "^8.1.0",
     "@types/jest": "^29.2.0",
     "@types/node": "^18.11.7",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
