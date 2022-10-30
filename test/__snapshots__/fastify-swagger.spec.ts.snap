@@ -1,27 +1,27 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`transformer generates types for fastify-swagger correctly 1`] = `
-Object {
-  "components": Object {
-    "schemas": Object {},
+{
+  "components": {
+    "schemas": {},
   },
-  "info": Object {
+  "info": {
     "description": "Sample backend service",
     "title": "SampleApi",
     "version": "1.0.0",
   },
   "openapi": "3.0.3",
-  "paths": Object {
-    "/delete": Object {
-      "delete": Object {
+  "paths": {
+    "/delete": {
+      "delete": {
         "description": "delete route",
-        "responses": Object {
-          "204": Object {
-            "content": Object {
-              "application/json": Object {
-                "schema": Object {
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {
                   "description": "Empty response",
-                  "not": Object {},
+                  "not": {},
                 },
               },
             },
@@ -30,35 +30,35 @@ Object {
         },
       },
     },
-    "/login": Object {
-      "post": Object {
+    "/login": {
+      "post": {
         "description": "login route",
-        "externalDocs": Object {
+        "externalDocs": {
           "description": "check google",
           "url": "https://google.com",
         },
-        "requestBody": Object {
-          "content": Object {
-            "application/json": Object {
-              "schema": Object {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
                 "additionalProperties": false,
-                "properties": Object {
-                  "password": Object {
+                "properties": {
+                  "password": {
                     "maxLength": 32,
                     "type": "string",
                   },
-                  "seed": Object {
+                  "seed": {
                     "exclusiveMinimum": true,
                     "minimum": 0,
                     "type": "number",
                   },
-                  "username": Object {
+                  "username": {
                     "description": "someDescription",
                     "maxLength": 32,
                     "type": "string",
                   },
                 },
-                "required": Array [
+                "required": [
                   "username",
                   "seed",
                   "password",
@@ -69,31 +69,31 @@ Object {
           },
           "required": true,
         },
-        "responses": Object {
-          "200": Object {
-            "content": Object {
-              "application/json": Object {
-                "schema": Object {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
                   "type": "string",
                 },
               },
             },
             "description": "Default Response",
           },
-          "401": Object {
-            "content": Object {
-              "application/json": Object {
-                "schema": Object {
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
                   "additionalProperties": false,
-                  "properties": Object {
-                    "required_role": Object {
-                      "enum": Array [
+                  "properties": {
+                    "required_role": {
+                      "enum": [
                         "admin",
                       ],
                       "type": "string",
                     },
                   },
-                  "required": Array [
+                  "required": [
                     "required_role",
                   ],
                   "type": "object",
@@ -104,12 +104,12 @@ Object {
           },
         },
         "summary": "login your account",
-        "tags": Array [
+        "tags": [
           "auth",
         ],
       },
     },
   },
-  "servers": Array [],
+  "servers": [],
 }
 `;

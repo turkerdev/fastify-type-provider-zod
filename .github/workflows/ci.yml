@@ -1,15 +1,17 @@
 name: CI
 
 on:
-  pull_request:
   push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
   test:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: [14, 16, 18]
+        node-version: [14, 16, 18, 19]
         os: [macos-latest, ubuntu-latest, windows-latest]
 
     steps:
@@ -28,3 +30,14 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+  automerge:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - uses: fastify/github-action-merge-dependabot@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
