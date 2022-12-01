@@ -1,7 +1,8 @@
 import fastifySwagger from '@fastify/swagger';
+import fastifySwaggerUI from '@fastify/swagger-ui';
 import Fastify from 'fastify';
-import validator = require('oas-validator');
 import { z } from 'zod';
+const validator = require('oas-validator');
 
 import type { ZodTypeProvider } from '../src';
 import { jsonSchemaTransform, serializerCompiler, validatorCompiler } from '../src';
@@ -13,7 +14,6 @@ describe('transformer', () => {
     app.setSerializerCompiler(serializerCompiler);
 
     app.register(fastifySwagger, {
-      exposeRoute: true,
       openapi: {
         info: {
           title: 'SampleApi',
@@ -23,6 +23,10 @@ describe('transformer', () => {
         servers: [],
       },
       transform: jsonSchemaTransform,
+    });
+
+    app.register(fastifySwaggerUI, {
+      routePrefix: '/documentation',
     });
 
     const LOGIN_SCHEMA = z.object({
