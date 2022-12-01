@@ -2,7 +2,8 @@
   "compilerOptions": {
     "declaration": true,
     "rootDir": "src",
-    "outDir": "dist"
+    "outDir": "dist",
+    "esModuleInterop": true
   },
   "exclude": ["./node_modules", "types/**/*.test-d.ts", "test", "dist"]
 }
