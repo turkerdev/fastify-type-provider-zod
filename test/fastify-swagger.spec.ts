@@ -1,8 +1,8 @@
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUI from '@fastify/swagger-ui';
 import Fastify from 'fastify';
+import * as validator from 'oas-validator';
 import { z } from 'zod';
-const validator = require('oas-validator');
 
 import type { ZodTypeProvider } from '../src';
 import { jsonSchemaTransform, serializerCompiler, validatorCompiler } from '../src';
