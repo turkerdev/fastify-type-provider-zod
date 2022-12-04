@@ -32,8 +32,9 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
   return ({ schema, url }: { schema: Schema; url: string }) => {
     if (!schema) {
       return {
-        schema, url
-      }
+        schema,
+        url,
+      };
     }
 
     const { response, headers, querystring, body, params, hide, ...rest } = schema;

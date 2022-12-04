@@ -63,14 +63,14 @@ describe('transformer', () => {
             res.send('ok');
           },
         })
-          .route({
-            method: 'POST',
-            url: '/no-schema',
-            schema: undefined,
-            handler: (req, res) => {
-              res.send('ok');
-            },
-          })
+        .route({
+          method: 'POST',
+          url: '/no-schema',
+          schema: undefined,
+          handler: (req, res) => {
+            res.send('ok');
+          },
+        })
         .route({
           method: 'DELETE',
           url: '/delete',
