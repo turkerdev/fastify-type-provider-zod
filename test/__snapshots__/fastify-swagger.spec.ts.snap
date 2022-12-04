@@ -109,6 +109,15 @@ exports[`transformer generates types for fastify-swagger correctly 1`] = `
         ],
       },
     },
+    "/no-schema": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+          },
+        },
+      },
+    },
   },
   "servers": [],
 }

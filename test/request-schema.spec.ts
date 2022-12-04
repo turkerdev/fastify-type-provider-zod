@@ -28,7 +28,17 @@ describe('response schema', () => {
             name: req.query.name,
           });
         },
-      });
+      })
+          .route({
+            method: 'GET',
+            url: '/no-schema',
+            schema: undefined,
+            handler: (req, res) => {
+              res.send({
+                status: 'ok',
+              });
+            },
+          });
     });
 
     await app.ready();
@@ -45,6 +55,15 @@ describe('response schema', () => {
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({
       name: 'test',
+    });
+  });
+
+  it('accepts request on route without schema', async () => {
+    const response = await app.inject().get('/no-schema')
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({
+      status: 'ok',
     });
   });
 
