@@ -30,6 +30,13 @@ const zodToJsonSchemaOptions = {
 
 export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly string[] }) => {
   return ({ schema, url }: { schema: Schema; url: string }) => {
+    if (!schema) {
+      return {
+        schema,
+        url,
+      };
+    }
+
     const { response, headers, querystring, body, params, hide, ...rest } = schema;
 
     const transformed: FreeformRecord = {};
