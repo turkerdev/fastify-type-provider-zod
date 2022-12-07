@@ -26,6 +26,7 @@ interface Schema extends FastifySchema {
 
 const zodToJsonSchemaOptions = {
   target: 'openApi3',
+  $refStrategy: 'none',
 } as const;
 
 export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly string[] }) => {

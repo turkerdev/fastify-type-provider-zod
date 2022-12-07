@@ -94,4 +94,52 @@ describe('transformer', () => {
     expect(openApiSpec).toMatchSnapshot();
     await validator.validate(openApiSpec, {});
   });
+
+  it('should not generate ref', async () => {
+    const app = Fastify();
+    app.setValidatorCompiler(validatorCompiler);
+    app.setSerializerCompiler(serializerCompiler);
+
+    app.register(fastifySwagger, {
+      openapi: {
+        info: {
+          title: 'SampleApi',
+          description: 'Sample backend service',
+          version: '1.0.0',
+        },
+        servers: [],
+      },
+      transform: jsonSchemaTransform,
+    });
+
+    app.register(fastifySwaggerUI, {
+      routePrefix: '/documentation',
+    });
+
+    const TOKEN_SCHEMA = z.string().length(12);
+
+    app.after(() => {
+      app.withTypeProvider<ZodTypeProvider>().route({
+        method: 'POST',
+        url: '/login',
+        schema: {
+          body: z.object({
+            access_token: TOKEN_SCHEMA,
+            refresh_token: TOKEN_SCHEMA,
+          }),
+        },
+        handler: (req, res) => {
+          res.send('ok');
+        },
+      });
+    });
+
+    await app.ready();
+
+    const openApiSpecResponse = await app.inject().get('/documentation/json');
+    const openApiSpec = JSON.parse(openApiSpecResponse.body);
+
+    expect(openApiSpec).toMatchSnapshot();
+    await validator.validate(openApiSpec, {});
+  });
 });
