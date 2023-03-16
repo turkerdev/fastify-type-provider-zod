@@ -1,6 +1,15 @@
-import type { FastifySchema, FastifySchemaCompiler, FastifyTypeProvider } from 'fastify';
+import type {
+  FastifyPluginAsync,
+  FastifyPluginCallback,
+  FastifyPluginOptions,
+  FastifySchema,
+  FastifySchemaCompiler,
+  FastifyTypeProvider,
+  RawServerBase,
+  RawServerDefault,
+} from 'fastify';
 import type { FastifySerializerCompiler } from 'fastify/types/schema';
-import type { z, ZodAny, ZodTypeAny } from 'zod';
+import type { ZodAny, ZodTypeAny, z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -136,3 +145,36 @@ export const serializerCompiler: FastifySerializerCompiler<ZodAny | { properties
 
     throw new ResponseValidationError(result);
   };
+
+/**
+ * FastifyPluginCallbackZod with Zod automatic type inference
+ *
+ * @example
+ * ```typescript
+ * import { FastifyPluginCallbackZod } fromg "fastify-type-provider-zod"
+ *
+ * const plugin: FastifyPluginCallbackZod = (fastify, options, done) => {
+ *   done()
+ * }
+ * ```
+ */
+export type FastifyPluginCallbackZod<
+  Options extends FastifyPluginOptions = Record<never, never>,
+  Server extends RawServerBase = RawServerDefault,
+> = FastifyPluginCallback<Options, Server, ZodTypeProvider>;
+
+/**
+ * FastifyPluginAsyncZod with Zod automatic type inference
+ *
+ * @example
+ * ```typescript
+ * import { FastifyPluginAsyncZod } fromg "fastify-type-provider-zod"
+ *
+ * const plugin: FastifyPluginAsyncZod = async (fastify, options) => {
+ * }
+ * ```
+ */
+export type FastifyPluginAsyncZod<
+  Options extends FastifyPluginOptions = Record<never, never>,
+  Server extends RawServerBase = RawServerDefault,
+> = FastifyPluginAsync<Options, Server, ZodTypeProvider>;
