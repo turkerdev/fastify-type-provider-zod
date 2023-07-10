@@ -2,18 +2,9 @@
 
 exports[`response schema returns 400 on validation error 1`] = `
 {
+  "code": "FST_ERR_VALIDATION",
   "error": "Bad Request",
-  "message": "[
-  {
-    "code": "invalid_type",
-    "expected": "string",
-    "received": "undefined",
-    "path": [
-      "name"
-    ],
-    "message": "Required"
-  }
-]",
+  "message": "Validation error: Required at "name"",
   "statusCode": 400,
 }
 `;
