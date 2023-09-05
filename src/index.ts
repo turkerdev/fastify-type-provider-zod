@@ -1,8 +1,8 @@
+import { build } from 'fast-json-stringify';
 import type { FastifySchema, FastifySchemaCompiler, FastifyTypeProvider } from 'fastify';
 import type { FastifySerializerCompiler } from 'fastify/types/schema';
 import type { z, ZodAny, ZodTypeAny } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { build } from 'fast-json-stringify'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FreeformRecord = Record<string, any>;
@@ -96,14 +96,14 @@ export const jsonSchemaTransform = createJsonSchemaTransform({
 
 export const validatorCompiler: FastifySchemaCompiler<ZodAny> =
   ({ schema }) =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (data): any => {
-      try {
-        return { value: schema.parse(data) };
-      } catch (error) {
-        return { error };
-      }
-    };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (data): any => {
+    try {
+      return { value: schema.parse(data) };
+    } catch (error) {
+      return { error };
+    }
+  };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function hasOwnProperty<T, K extends PropertyKey>(obj: T, prop: K): obj is T & Record<K, any> {
@@ -130,19 +130,19 @@ export class ResponseValidationError extends Error {
   }
 }
 
-export const serializerCompiler: FastifySerializerCompiler<ZodAny | { properties: ZodAny }> =
-  ({ schema: maybeSchema }) => {
-    const schema = resolveSchema(maybeSchema);
-    const jsonSchema = zodToJsonSchema(schema as ZodAny, zodToFastJsonStringifySchemaOptions);
-    const stringify = build(jsonSchema as FreeformRecord)
+export const serializerCompiler: FastifySerializerCompiler<ZodAny | { properties: ZodAny }> = ({
+  schema: maybeSchema,
+}) => {
+  const schema = resolveSchema(maybeSchema);
+  const jsonSchema = zodToJsonSchema(schema as ZodAny, zodToFastJsonStringifySchemaOptions);
+  const stringify = build(jsonSchema as FreeformRecord);
 
-    return (data) => {
-
-      const result = schema.safeParse(data);
-      if (result.success) {
-        return stringify(result.data);
-      }
-
-      throw new ResponseValidationError(result);
+  return (data) => {
+    const result = schema.safeParse(data);
+    if (result.success) {
+      return stringify(result.data);
     }
+
+    throw new ResponseValidationError(result);
   };
+};
