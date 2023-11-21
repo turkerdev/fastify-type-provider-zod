@@ -6,6 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "prepare": "npm run build",
     "test": "npm run build && npm run typescript && jest",
     "test:coverage": "jest --coverage",
     "format": "prettier --write .",
