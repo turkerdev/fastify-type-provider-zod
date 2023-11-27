@@ -1,3 +1,4 @@
+import { build } from 'fast-json-stringify';
 import type { FastifySchema, FastifySchemaCompiler, FastifyTypeProvider } from 'fastify';
 import type { FastifySerializerCompiler } from 'fastify/types/schema';
 import type { z, ZodAny, ZodTypeAny } from 'zod';
@@ -27,6 +28,11 @@ interface Schema extends FastifySchema {
 const zodToJsonSchemaOptions = {
   target: 'openApi3',
   $refStrategy: 'none',
+} as const;
+
+const zodToFastJsonStringifySchemaOptions = {
+  target: 'jsonSchema7',
+  $refStrategy: 'root',
 } as const;
 
 export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly string[] }) => {
@@ -124,15 +130,19 @@ export class ResponseValidationError extends Error {
   }
 }
 
-export const serializerCompiler: FastifySerializerCompiler<ZodAny | { properties: ZodAny }> =
-  ({ schema: maybeSchema }) =>
-  (data) => {
-    const schema: Pick<ZodAny, 'safeParse'> = resolveSchema(maybeSchema);
+export const serializerCompiler: FastifySerializerCompiler<ZodAny | { properties: ZodAny }> = ({
+  schema: maybeSchema,
+}) => {
+  const schema = resolveSchema(maybeSchema);
+  const jsonSchema = zodToJsonSchema(schema as ZodAny, zodToFastJsonStringifySchemaOptions);
+  const stringify = build(jsonSchema as FreeformRecord);
 
+  return (data) => {
     const result = schema.safeParse(data);
     if (result.success) {
-      return JSON.stringify(result.data);
+      return stringify(result.data);
     }
 
     throw new ResponseValidationError(result);
   };
+};
