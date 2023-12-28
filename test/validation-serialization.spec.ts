@@ -20,11 +20,7 @@ describe('Fastify Type Provider Zod', () => {
       });
 
       expect(response.statusCode).toBe(400);
-      expect(JSON.parse(response.body)).toMatchObject({
-        statusCode: 400,
-        error: 'Bad Request',
-        message: 'Validation error: Required at "value"',
-      });
+      expect(JSON.parse(response.body)).toMatchSnapshot();
     });
 
     it('should be able to tell that validation need to have a number', async () => {
@@ -35,11 +31,7 @@ describe('Fastify Type Provider Zod', () => {
         url: '/test-valid-number?value=foo',
       });
       expect(response.statusCode).toBe(400);
-      expect(JSON.parse(response.body)).toMatchObject({
-        statusCode: 400,
-        error: 'Bad Request',
-        message: 'Validation error: Expected number, received string at "value"',
-      });
+      expect(JSON.parse(response.body)).toMatchSnapshot();
     });
   });
 

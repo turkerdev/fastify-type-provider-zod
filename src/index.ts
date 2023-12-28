@@ -1,9 +1,8 @@
 import Ajv from 'ajv';
 import type { FastifySchema, FastifySchemaCompiler, FastifyTypeProvider } from 'fastify';
-import type { FastifySerializerCompiler } from 'fastify/types/schema';
-import type { z, ZodAny, ZodError, ZodTypeAny } from 'zod';
+import type { FastifySerializerCompiler, FastifyValidationResult } from 'fastify/types/schema';
+import type { z, ZodAny, ZodTypeAny } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { fromZodError } from 'zod-validation-error';
 
 type FreeformRecord = Record<string, any>;
 
@@ -111,23 +110,33 @@ const ajv = new Ajv({
   coerceTypes: 'array',
 });
 
-//@ts-ignore
-export const validatorCompiler: FastifySchemaCompiler<ZodAny> = ({ schema }) => {
-  //@ts-ignore
-  if (schema.safeParse) {
-    return (data) => {
-      try {
-        schema.parse(data);
-        return { value: data };
-      } catch (e) {
-        const validationError = fromZodError(e as ZodError);
-        return { error: validationError };
-      }
-    };
-  }
+export const validatorCompiler = (
+  fallbackFunction?: (schema: unknown, data: unknown) => FastifyValidationResult,
+) =>
+  (({ schema }) => {
+    if (schema.safeParse) {
+      return (data) => {
+        try {
+          schema.parse(data);
+          return { value: data };
+        } catch (e) {
+          return { error: e };
+        }
+      };
+    }
 
-  return ajv.compile(schema);
-};
+    if (fallbackFunction) {
+      return (data) => {
+        try {
+          return fallbackFunction(schema, data);
+        } catch (e) {
+          return { error: e };
+        }
+      };
+    }
+
+    return ajv.compile(schema);
+  }) as FastifySchemaCompiler<ZodAny>;
 
 export class ResponseValidationError extends Error {
   public details: FreeformRecord;
