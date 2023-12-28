@@ -14,7 +14,7 @@ import z from "zod";
 const app = Fastify()
 
 // Add schema validator and serializer
-app.setValidatorCompiler(validatorCompiler);
+app.setValidatorCompiler(validatorCompiler());
 app.setSerializerCompiler(serializerCompiler);
 
 app.withTypeProvider<ZodTypeProvider>().route({
@@ -54,7 +54,7 @@ import {
 } from 'fastify-type-provider-zod';
 
 const app = fastify();
-app.setValidatorCompiler(validatorCompiler);
+app.setValidatorCompiler(validatorCompiler());
 app.setSerializerCompiler(serializerCompiler);
 
 app.register(fastifySwagger, {

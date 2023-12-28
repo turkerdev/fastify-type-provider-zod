@@ -114,6 +114,7 @@ export const validatorCompiler = (
   fallbackFunction?: (schema: unknown, data: unknown) => FastifyValidationResult,
 ) =>
   (({ schema }) => {
+    //@ts-ignore
     if (schema.safeParse) {
       return (data) => {
         try {

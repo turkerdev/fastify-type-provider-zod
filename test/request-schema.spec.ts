@@ -13,7 +13,7 @@ describe('response schema', () => {
     });
 
     app = Fastify();
-    app.setValidatorCompiler(validatorCompiler);
+    app.setValidatorCompiler(validatorCompiler());
     app.setSerializerCompiler(serializerCompiler);
 
     app.after(() => {

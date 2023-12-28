@@ -10,7 +10,7 @@ describe('response schema', () => {
     let app: FastifyInstance;
     beforeAll(async () => {
       app = Fastify();
-      app.setValidatorCompiler(validatorCompiler);
+      app.setValidatorCompiler(validatorCompiler());
       app.setSerializerCompiler(serializerCompiler);
 
       app.after(() => {
@@ -73,7 +73,7 @@ describe('response schema', () => {
       const REPLY_SCHEMA = z.string();
 
       app = Fastify();
-      app.setValidatorCompiler(validatorCompiler);
+      app.setValidatorCompiler(validatorCompiler());
       app.setSerializerCompiler(serializerCompiler);
 
       app.after(() => {
@@ -135,7 +135,7 @@ describe('response schema', () => {
       });
 
       app = Fastify();
-      app.setValidatorCompiler(validatorCompiler);
+      app.setValidatorCompiler(validatorCompiler());
       app.setSerializerCompiler(serializerCompiler);
 
       app.after(() => {

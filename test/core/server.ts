@@ -11,7 +11,7 @@ import { jsonSchemaTransform, serializerCompiler, validatorCompiler } from '../.
 const makeServer = async (): Promise<FastifyInstance> => {
   const fastify = Fastify();
 
-  fastify.setValidatorCompiler(validatorCompiler);
+  fastify.setValidatorCompiler(validatorCompiler());
   fastify.setSerializerCompiler(serializerCompiler);
 
   await fastify.register(require('@fastify/swagger'), {

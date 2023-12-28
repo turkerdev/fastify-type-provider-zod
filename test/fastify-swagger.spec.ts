@@ -10,7 +10,7 @@ import { jsonSchemaTransform, serializerCompiler, validatorCompiler } from '../s
 describe('transformer', () => {
   it('generates types for fastify-swagger correctly', async () => {
     const app = Fastify();
-    app.setValidatorCompiler(validatorCompiler);
+    app.setValidatorCompiler(validatorCompiler());
     app.setSerializerCompiler(serializerCompiler);
 
     app.register(fastifySwagger, {
@@ -97,7 +97,7 @@ describe('transformer', () => {
 
   it('should not generate ref', async () => {
     const app = Fastify();
-    app.setValidatorCompiler(validatorCompiler);
+    app.setValidatorCompiler(validatorCompiler());
     app.setSerializerCompiler(serializerCompiler);
 
     app.register(fastifySwagger, {
