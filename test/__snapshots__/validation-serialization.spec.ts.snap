@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Fastify Type Provider Zod Validation should be able to tell that validation is required 1`] = `
+{
+  "code": "FST_ERR_VALIDATION",
+  "error": "Bad Request",
+  "message": "[
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "value"
+    ],
+    "message": "Required"
+  }
+]",
+  "statusCode": 400,
+}
+`;
+
+exports[`Fastify Type Provider Zod Validation should be able to tell that validation need to have a number 1`] = `
+{
+  "code": "FST_ERR_VALIDATION",
+  "error": "Bad Request",
+  "message": "[
+  {
+    "code": "invalid_type",
+    "expected": "number",
+    "received": "string",
+    "path": [
+      "value"
+    ],
+    "message": "Expected number, received string"
+  }
+]",
+  "statusCode": 400,
+}
+`;

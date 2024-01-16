@@ -14,8 +14,14 @@ import z from "zod";
 const app = Fastify()
 
 // Add schema validator and serializer
-app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
+
+//validatorCompiler(ajvInstance?, fallbackFunction?)
+//First Argument : You can pass an AJV Instance to validate schema by AJV
+//Second Argument : 
+//You can precise a function to handle the case where schema is not from Zod.
+//The function should respect :  (schema: unknown, data: unknown) => FastifyValidationResult
+app.setValidatorCompiler(validatorCompiler()); 
 
 app.withTypeProvider<ZodTypeProvider>().route({
   method: "GET",
@@ -54,7 +60,7 @@ import {
 } from 'fastify-type-provider-zod';
 
 const app = fastify();
-app.setValidatorCompiler(validatorCompiler);
+app.setValidatorCompiler(validatorCompiler());
 app.setSerializerCompiler(serializerCompiler);
 
 app.register(fastifySwagger, {

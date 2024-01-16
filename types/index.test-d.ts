@@ -22,7 +22,7 @@ type FastifyZodInstance = FastifyInstance<
   ZodTypeProvider
 >;
 
-expectType<FastifyZodInstance>(fastify.setValidatorCompiler(validatorCompiler));
+expectType<FastifyZodInstance>(fastify.setValidatorCompiler(validatorCompiler()));
 expectType<FastifyZodInstance>(fastify.setSerializerCompiler(serializerCompiler));
 expectAssignable<FastifyZodInstance>(fastify);
 
