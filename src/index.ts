@@ -1,4 +1,4 @@
-import Ajv from 'ajv';
+import type Ajv from 'ajv';
 import type { FastifySchema, FastifySchemaCompiler, FastifyTypeProvider } from 'fastify';
 import type { FastifySerializerCompiler, FastifyValidationResult } from 'fastify/types/schema';
 import type { z, ZodAny, ZodTypeAny } from 'zod';
@@ -104,13 +104,8 @@ function resolveSchema(maybeSchema: ZodAny | { properties: ZodAny }): Pick<ZodAn
   throw new Error(`Invalid schema passed: ${JSON.stringify(maybeSchema)}`);
 }
 
-const ajv = new Ajv({
-  removeAdditional: 'all',
-  useDefaults: true,
-  coerceTypes: 'array',
-});
-
 export const validatorCompiler = (
+  ajvInstance?: Ajv.Ajv,
   fallbackFunction?: (schema: unknown, data: unknown) => FastifyValidationResult,
 ) =>
   (({ schema }) => {
@@ -136,7 +131,13 @@ export const validatorCompiler = (
       };
     }
 
-    return ajv.compile(schema);
+    if (ajvInstance) {
+      return ajvInstance.compile(schema);
+    }
+
+    return (data) => {
+      return { value: data };
+    };
   }) as FastifySchemaCompiler<ZodAny>;
 
 export class ResponseValidationError extends Error {

@@ -15,9 +15,12 @@ const app = Fastify()
 
 // Add schema validator and serializer
 app.setSerializerCompiler(serializerCompiler);
+
+//validatorCompiler(ajvInstance?, fallbackFunction?)
+//First Argument : You can pass an AJV Instance to validate schema by AJV
+//Second Argument : 
 //You can precise a function to handle the case where schema is not from Zod.
 //The function should respect :  (schema: unknown, data: unknown) => FastifyValidationResult
-//By default, it will try to use AJV if not precised
 app.setValidatorCompiler(validatorCompiler()); 
 
 app.withTypeProvider<ZodTypeProvider>().route({
