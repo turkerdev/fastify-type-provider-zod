@@ -10,7 +10,7 @@ import type {
 } from 'fastify';
 import type { FastifySerializerCompiler } from 'fastify/types/schema';
 import type { ZodAny, ZodTypeAny, z } from 'zod';
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { zodToJsonSchema, defaultOptions } from 'zod-to-json-schema';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FreeformRecord = Record<string, any>;
@@ -33,12 +33,16 @@ interface Schema extends FastifySchema {
   hide?: boolean;
 }
 
+type createJsonSchemaTransformOptions = Partial<typeof defaultOptions> & {
+  skipList: readonly string[];
+}
+
 const zodToJsonSchemaOptions = {
   target: 'openApi3',
   $refStrategy: 'none',
 } as const;
 
-export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly string[] }) => {
+export const createJsonSchemaTransform = ({ skipList, ..._options }: createJsonSchemaTransformOptions) => {
   return ({ schema, url }: { schema: Schema; url: string }) => {
     if (!schema) {
       return {
@@ -46,6 +50,8 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
         url,
       };
     }
+
+    const options = { ...zodToJsonSchemaOptions, ..._options };
 
     const { response, headers, querystring, body, params, hide, ...rest } = schema;
 
@@ -61,7 +67,7 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
     for (const prop in zodSchemas) {
       const zodSchema = zodSchemas[prop];
       if (zodSchema) {
-        transformed[prop] = zodToJsonSchema(zodSchema, zodToJsonSchemaOptions);
+        transformed[prop] = zodToJsonSchema(zodSchema, options);
       }
     }
 
@@ -76,7 +82,7 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
         const transformedResponse = zodToJsonSchema(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           schema as any,
-          zodToJsonSchemaOptions,
+          options,
         );
         transformed.response[prop] = transformedResponse;
       }

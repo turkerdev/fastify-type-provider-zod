@@ -6,6 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "prepare": "npm run build",
     "test": "npm run build && npm run typescript && jest",
     "test:coverage": "jest --coverage",
     "format": "prettier --write .",
@@ -34,7 +35,7 @@
   },
   "homepage": "https://github.com/turkerdev/fastify-type-provider-zod",
   "dependencies": {
-    "zod-to-json-schema": "^3.17.1"
+    "zod-to-json-schema": "^3.23.0"
   },
   "devDependencies": {
     "@fastify/swagger": "^8.12.0",
