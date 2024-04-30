@@ -3,7 +3,15 @@
     "declaration": true,
     "rootDir": "src",
     "outDir": "dist",
+    "target": "es2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "esModuleInterop": true
   },
-  "exclude": ["./node_modules", "types/**/*.test-d.ts", "test", "dist"]
+  "exclude": [
+    "./node_modules",
+    "types/**/*.test-d.ts",
+    "test",
+    "dist"
+  ]
 }

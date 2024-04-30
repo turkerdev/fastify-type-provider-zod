@@ -35,7 +35,7 @@
   },
   "homepage": "https://github.com/turkerdev/fastify-type-provider-zod",
   "dependencies": {
-    "zod-to-json-schema": "^3.22.0"
+    "zod-to-json-schema": "^3.23.0"
   },
   "devDependencies": {
     "@fastify/swagger": "^8.12.0",
