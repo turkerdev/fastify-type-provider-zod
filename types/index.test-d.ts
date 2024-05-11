@@ -25,6 +25,7 @@ type FastifyZodInstance = FastifyInstance<
 expectType<FastifyZodInstance>(fastify.setValidatorCompiler(validatorCompiler));
 expectType<FastifyZodInstance>(fastify.setSerializerCompiler(serializerCompiler));
 expectAssignable<FastifyZodInstance>(fastify);
+expectAssignable<FastifyInstance>(fastify);
 
 fastify.route({
   method: 'GET',
