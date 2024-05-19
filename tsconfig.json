@@ -4,8 +4,8 @@
     "rootDir": "src",
     "outDir": "dist",
     "esModuleInterop": true,
-    "moduleResolution": "Bundler",
-    "module": "preserve",
+    "moduleResolution": "Node",
+    "module": "CommonJS",
     "target": "ES2020"
   },
   "exclude": ["./node_modules", "types/**/*.test-d.ts", "test", "dist"]
