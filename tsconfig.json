@@ -3,7 +3,8 @@
     "declaration": true,
     "rootDir": "src",
     "outDir": "dist",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
   "exclude": ["./node_modules", "types/**/*.test-d.ts", "test", "dist"]
 }
