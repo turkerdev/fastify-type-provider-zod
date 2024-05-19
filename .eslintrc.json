@@ -2,18 +2,16 @@
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
-    "plugin:prettier/recommended",
     "plugin:import/recommended",
     "plugin:import/typescript"
   ],
-  "plugins": ["@typescript-eslint", "prettier", "import"],
+  "plugins": ["@typescript-eslint", "import"],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 2022,
     "sourceType": "module"
   },
   "rules": {
-    "prettier/prettier": "error",
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/no-explicit-any": "warn",
     "@typescript-eslint/no-use-before-define": "off",
