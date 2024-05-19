@@ -4,6 +4,11 @@
   "description": "Zod Type Provider for Fastify@4",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "README.md",
+    "LICENSE",
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "npm run build && npm run typescript && jest",
