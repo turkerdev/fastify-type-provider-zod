@@ -38,6 +38,55 @@ const zodToJsonSchemaOptions = {
   $refStrategy: 'none',
 } as const;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function hasOwnProperty<T, K extends PropertyKey>(obj: T, prop: K): obj is T & Record<K, any> {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
+}
+
+function resolveSchema(maybeSchema: ZodAny | { properties: ZodAny }): Pick<ZodAny, 'safeParse'> {
+  if (hasOwnProperty(maybeSchema, 'safeParse')) {
+    return maybeSchema;
+  }
+  if (hasOwnProperty(maybeSchema, 'properties')) {
+    return maybeSchema.properties;
+  }
+  throw new Error(`Invalid schema passed: ${JSON.stringify(maybeSchema)}`);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function transformSchema(responseElement: any) {
+  const schema = resolveSchema(responseElement);
+  return zodToJsonSchema(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    schema as any,
+    zodToJsonSchemaOptions,
+  );
+}
+
+/**
+ * Takes a 'content' response element that defines different response schemas for different
+ * response content types and returns a new version of that content element with the schemas
+ * converted from zod schemas to json schemas.
+ *
+ * @param responseElementContent a 'content' element, nested under a response code, that defines different schemas for
+ * the different content types that the endpoint can return. For example:
+ * <pre>
+ * {
+ *   'application/json': { schema: some-zod-schema },
+ *   'text/csv': { schema: some-zod-schema }
+ * }
+ * </pre>
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const transformMultipleSchemas: any = (responseElementContent: any) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const content: any = {};
+  for (const property in responseElementContent) {
+    content[property] = { ...responseElementContent[property], schema: transformSchema(responseElementContent[property].schema) };
+  }
+  return content;
+};
+
 export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly string[] }) => {
   return ({ schema, url }: { schema: Schema; url: string }) => {
     if (!schema) {
@@ -69,16 +118,14 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
       transformed.response = {};
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      for (const prop in response as any) {
+      for (const responseCode in response as any) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const schema = resolveSchema((response as any)[prop]);
-
-        const transformedResponse = zodToJsonSchema(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          schema as any,
-          zodToJsonSchemaOptions,
-        );
-        transformed.response[prop] = transformedResponse;
+        const responseElement = (response as any)[responseCode];
+        if (responseElement.content) {
+          transformed.response[responseCode] = { ...responseElement, content: transformMultipleSchemas(responseElement.content) };
+        } else {
+          transformed.response[responseCode] = transformSchema(responseElement);
+        }
       }
     }
 
@@ -107,21 +154,6 @@ export const validatorCompiler: FastifySchemaCompiler<ZodAny> =
       return { error };
     }
   };
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function hasOwnProperty<T, K extends PropertyKey>(obj: T, prop: K): obj is T & Record<K, any> {
-  return Object.prototype.hasOwnProperty.call(obj, prop);
-}
-
-function resolveSchema(maybeSchema: ZodAny | { properties: ZodAny }): Pick<ZodAny, 'safeParse'> {
-  if (hasOwnProperty(maybeSchema, 'safeParse')) {
-    return maybeSchema;
-  }
-  if (hasOwnProperty(maybeSchema, 'properties')) {
-    return maybeSchema.properties;
-  }
-  throw new Error(`Invalid schema passed: ${JSON.stringify(maybeSchema)}`);
-}
 
 export class ResponseValidationError extends Error {
   public details: FreeformRecord;
