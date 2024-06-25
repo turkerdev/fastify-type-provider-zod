@@ -73,6 +73,23 @@ describe('response schema', () => {
     const response = await app.inject().get('/');
 
     expect(response.statusCode).toBe(400);
-    expect(response.json()).toMatchSnapshot();
+    expect(response.json()).toMatchInlineSnapshot(`
+      {
+        "code": "FST_ERR_VALIDATION",
+        "error": "Bad Request",
+        "message": "[
+        {
+          "code": "invalid_type",
+          "expected": "string",
+          "received": "undefined",
+          "path": [
+            "name"
+          ],
+          "message": "Required"
+        }
+      ]",
+        "statusCode": 400,
+      }
+    `);
   });
 });

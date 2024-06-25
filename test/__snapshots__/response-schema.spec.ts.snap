@@ -1,3 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`response schema correctly processes response schema (string) returns 500 on incorrect response 1`] = `"{"statusCode":500,"error":"Internal Server Error","message":"Response doesn't match the schema"}"`;
