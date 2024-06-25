@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import type { ZodTypeProvider } from '../src';
 import { serializerCompiler, validatorCompiler } from '../src';
+import type { ResponseValidationError } from '../src/ResponseValidationError';
 
 describe('response schema', () => {
   describe('does not fail on empty response schema (204)', () => {
@@ -37,9 +38,18 @@ describe('response schema', () => {
               },
             },
             handler: (req, res) => {
+              // @ts-expect-error
               res.status(204).send({ id: 1 });
             },
           });
+      });
+      app.setErrorHandler((err, req, reply) => {
+        return reply.code(500).send({
+          error: 'Internal Server Error',
+          message: "Response doesn't match the schema",
+          details: (err as unknown as ResponseValidationError).details,
+          statusCode: 500,
+        });
       });
       await app.ready();
     });
@@ -59,11 +69,26 @@ describe('response schema', () => {
       const response = await app.inject().get('/incorrect');
 
       expect(response.statusCode).toBe(500);
-      expect(response.json()).toEqual({
-        error: 'Internal Server Error',
-        message: "Response doesn't match the schema",
-        statusCode: 500,
-      });
+      expect(response.json()).toMatchInlineSnapshot(`
+        {
+          "details": {
+            "error": [
+              {
+                "code": "invalid_type",
+                "expected": "undefined",
+                "message": "Expected undefined, received object",
+                "path": [],
+                "received": "object",
+              },
+            ],
+            "method": "GET",
+            "url": "/incorrect",
+          },
+          "error": "Internal Server Error",
+          "message": "Response doesn't match the schema",
+          "statusCode": 500,
+        }
+      `);
     });
   });
 
@@ -123,7 +148,9 @@ describe('response schema', () => {
       const response = await app.inject().get('/incorrect');
 
       expect(response.statusCode).toBe(500);
-      expect(response.body).toMatchSnapshot();
+      expect(response.body).toMatchInlineSnapshot(
+        `"{"statusCode":500,"error":"Internal Server Error","message":"Response doesn't match the schema"}"`,
+      );
     });
   });
 
@@ -189,7 +216,7 @@ describe('response schema', () => {
       const response = await app.inject().get('/incorrect');
 
       expect(response.statusCode).toBe(500);
-      expect(response.json()).toMatchSnapshot();
+      expect(response.json()).toMatchInlineSnapshot();
     });
   });
 });

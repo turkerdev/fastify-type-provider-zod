@@ -12,6 +12,8 @@ import type { FastifySerializerCompiler } from 'fastify/types/schema';
 import type { ZodAny, ZodTypeAny, z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
+import { ResponseValidationError } from './ResponseValidationError';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FreeformRecord = Record<string, any>;
 
@@ -123,18 +125,8 @@ function resolveSchema(maybeSchema: ZodAny | { properties: ZodAny }): Pick<ZodAn
   throw new Error(`Invalid schema passed: ${JSON.stringify(maybeSchema)}`);
 }
 
-export class ResponseValidationError extends Error {
-  public details: FreeformRecord;
-
-  constructor(validationResult: FreeformRecord) {
-    super("Response doesn't match the schema");
-    this.name = 'ResponseValidationError';
-    this.details = validationResult.error;
-  }
-}
-
 export const serializerCompiler: FastifySerializerCompiler<ZodAny | { properties: ZodAny }> =
-  ({ schema: maybeSchema }) =>
+  ({ schema: maybeSchema, method, url }) =>
   (data) => {
     const schema: Pick<ZodAny, 'safeParse'> = resolveSchema(maybeSchema);
 
@@ -143,7 +135,7 @@ export const serializerCompiler: FastifySerializerCompiler<ZodAny | { properties
       return JSON.stringify(result.data);
     }
 
-    throw new ResponseValidationError(result);
+    throw new ResponseValidationError(result, method, url);
   };
 
 /**

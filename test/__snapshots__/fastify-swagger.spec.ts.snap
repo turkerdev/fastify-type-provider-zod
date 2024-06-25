@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`transformer generates types for fastify-swagger correctly 1`] = `
+exports[`transformer > generates types for fastify-swagger correctly 1`] = `
 {
   "components": {
     "schemas": {},
@@ -123,7 +123,7 @@ exports[`transformer generates types for fastify-swagger correctly 1`] = `
 }
 `;
 
-exports[`transformer should not generate ref 1`] = `
+exports[`transformer > should not generate ref 1`] = `
 {
   "components": {
     "schemas": {},
