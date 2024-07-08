@@ -12,6 +12,7 @@ import type { FastifySerializerCompiler } from 'fastify/types/schema'
 import type { OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from 'openapi-types'
 import type { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
+import { ResponseValidationError } from './ResponseValidationError'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FreeformRecord = Record<string, any>
@@ -191,19 +192,13 @@ const resolveSchema = (
   if ('properties' in maybeSchema) {
     return maybeSchema.properties
   }
-  throw new Error(`Invalid schema passed: ${JSON.stringify(maybeSchema)}`)
+  throw new Error(`Invalid schema passed: ${JSON.stringify(maybeSchema)}`);
 }
 
-export class ResponseValidationError extends Error {
-  public details: FreeformRecord
-
-  constructor(validationResult: FreeformRecord) {
-    super("Response doesn't match the schema")
-    this.name = 'ResponseValidationError'
-    this.details = validationResult.error
-  }
-}
-
+export const serializerCompiler: FastifySerializerCompiler<ZodAny | { properties: ZodAny }> =
+  ({ schema: maybeSchema, method, url }) =>
+  (data) => {
+    const schema: Pick<ZodAny, 'safeParse'> = resolveSchema(maybeSchema);
 export const serializerCompiler: FastifySerializerCompiler<z.ZodAny | { properties: z.ZodAny }> =
   ({ schema: maybeSchema }) =>
     (data) => {
@@ -214,7 +209,7 @@ export const serializerCompiler: FastifySerializerCompiler<z.ZodAny | { properti
         return JSON.stringify(result.data)
       }
 
-      throw new ResponseValidationError(result)
+      throw new ResponseValidationError(result, method, url)
     }
 
 /**
