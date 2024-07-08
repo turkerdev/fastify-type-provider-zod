@@ -7,15 +7,16 @@ import type {
   FastifyTypeProvider,
   RawServerBase,
   RawServerDefault,
-} from 'fastify'
-import type { FastifySerializerCompiler } from 'fastify/types/schema'
-import type { OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from 'openapi-types'
-import type { z } from 'zod'
-import { zodToJsonSchema } from 'zod-to-json-schema'
-import { ResponseValidationError } from './ResponseValidationError'
+} from 'fastify';
+import type { FastifySerializerCompiler } from 'fastify/types/schema';
+import type { OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from 'openapi-types';
+import type { z } from 'zod';
+import { zodToJsonSchema } from 'zod-to-json-schema';
+
+import { ResponseValidationError } from './ResponseValidationError';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type FreeformRecord = Record<string, any>
+type FreeformRecord = Record<string, any>;
 
 const defaultSkipList = [
   '/documentation/',
@@ -25,29 +26,29 @@ const defaultSkipList = [
   '/documentation/yaml',
   '/documentation/*',
   '/documentation/static/*',
-]
+];
 
 export interface ZodTypeProvider extends FastifyTypeProvider {
-  validator: this['schema'] extends z.ZodTypeAny ? z.output<this['schema']> : unknown
-  serializer: this['schema'] extends z.ZodTypeAny ? z.input<this['schema']> : unknown
+  validator: this['schema'] extends z.ZodTypeAny ? z.output<this['schema']> : unknown;
+  serializer: this['schema'] extends z.ZodTypeAny ? z.input<this['schema']> : unknown;
 }
 
 interface Schema extends FastifySchema {
-  hide?: boolean
+  hide?: boolean;
 }
 
 const zodToJsonSchemaOptions = {
   target: 'openApi3',
   $refStrategy: 'none',
-} as const
+} as const;
 
 export const jsonSchemaTransformSchemas = (inputSchemas: Record<string, z.ZodTypeAny>) => {
-  const schemas: Record<string, OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject> = {}
+  const schemas: Record<string, OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject> = {};
   for (const key in inputSchemas)
-    schemas[key] = zodToJsonSchema(inputSchemas[key], zodToJsonSchemaOptions)
+    schemas[key] = zodToJsonSchema(inputSchemas[key], zodToJsonSchemaOptions);
 
-  return schemas
-}
+  return schemas;
+};
 
 export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly string[] }) => {
   return ({ schema, url }: { schema: Schema; url: string }) => {
@@ -55,58 +56,58 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
       return {
         schema,
         url,
-      }
+      };
     }
 
-    const { response, headers, querystring, body, params, hide, ...rest } = schema
+    const { response, headers, querystring, body, params, hide, ...rest } = schema;
 
-    const transformed: FreeformRecord = {}
+    const transformed: FreeformRecord = {};
 
     if (skipList.includes(url) || hide) {
-      transformed.hide = true
-      return { schema: transformed, url }
+      transformed.hide = true;
+      return { schema: transformed, url };
     }
 
-    const zodSchemas: FreeformRecord = { headers, querystring, body, params }
+    const zodSchemas: FreeformRecord = { headers, querystring, body, params };
 
     for (const prop in zodSchemas) {
-      const zodSchema = zodSchemas[prop]
+      const zodSchema = zodSchemas[prop];
       if (zodSchema) {
-        transformed[prop] = zodToJsonSchema(zodSchema, zodToJsonSchemaOptions)
+        transformed[prop] = zodToJsonSchema(zodSchema, zodToJsonSchemaOptions);
       }
     }
 
     if (response) {
-      transformed.response = {}
+      transformed.response = {};
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       for (const prop in response as any) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const schema = resolveSchema((response as any)[prop])
+        const schema = resolveSchema((response as any)[prop]);
 
         const transformedResponse = zodToJsonSchema(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           schema as any,
           zodToJsonSchemaOptions,
-        )
-        transformed.response[prop] = transformedResponse
+        );
+        transformed.response[prop] = transformedResponse;
       }
     }
 
     for (const prop in rest) {
-      const meta = rest[prop as keyof typeof rest]
+      const meta = rest[prop as keyof typeof rest];
       if (meta) {
-        transformed[prop] = meta
+        transformed[prop] = meta;
       }
     }
 
-    return { schema: transformed, url }
-  }
-}
+    return { schema: transformed, url };
+  };
+};
 
 export const jsonSchemaTransform = createJsonSchemaTransform({
   skipList: defaultSkipList,
-})
+});
 
 export const jsonSchemaTransformObject = (
   input:
@@ -114,42 +115,42 @@ export const jsonSchemaTransformObject = (
     | { openapiObject: Partial<OpenAPIV3.Document | OpenAPIV3_1.Document> },
 ) => {
   if ('swaggerObject' in input) {
-    console.warn('This package currently does not support component references for Swagger 2.0')
-    return input.swaggerObject
+    console.warn('This package currently does not support component references for Swagger 2.0');
+    return input.swaggerObject;
   }
 
-  const componentMapVK = new Map<string, string>()
+  const componentMapVK = new Map<string, string>();
   Object.entries(input.openapiObject.components?.schemas ?? {}).forEach(([key, value]) =>
     componentMapVK.set(JSON.stringify(value), key),
-  )
+  );
 
-  const RANDOM_COMPONENT_KEY_PREFIX = Math.random().toString(36).substring(2)
+  const RANDOM_COMPONENT_KEY_PREFIX = Math.random().toString(36).substring(2);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const componentReplacer = (key: string, value: any) => {
-    if (typeof value !== 'object') return value
+    if (typeof value !== 'object') return value;
 
-    if (key.startsWith(RANDOM_COMPONENT_KEY_PREFIX)) return value
+    if (key.startsWith(RANDOM_COMPONENT_KEY_PREFIX)) return value;
 
-    const stringifiedValue = JSON.stringify(value)
+    const stringifiedValue = JSON.stringify(value);
     if (componentMapVK.has(stringifiedValue))
-      return { $ref: `#/components/schemas/${componentMapVK.get(stringifiedValue)}` }
+      return { $ref: `#/components/schemas/${componentMapVK.get(stringifiedValue)}` };
 
     if (value.nullable === true) {
-      const nonNullableValue = { ...value }
-      delete nonNullableValue.nullable
-      const stringifiedNonNullableValue = JSON.stringify(nonNullableValue)
+      const nonNullableValue = { ...value };
+      delete nonNullableValue.nullable;
+      const stringifiedNonNullableValue = JSON.stringify(nonNullableValue);
       if (componentMapVK.has(stringifiedNonNullableValue))
         return {
           anyOf: [
             { $ref: `#/components/schemas/${componentMapVK.get(stringifiedNonNullableValue)}` },
           ],
           nullable: true,
-        }
+        };
     }
 
-    return value
-  }
+    return value;
+  };
 
   const document = {
     ...input.openapiObject,
@@ -162,55 +163,51 @@ export const jsonSchemaTransformObject = (
         ]),
       ),
     },
-  }
+  };
   const stringified = JSON.stringify(document, componentReplacer).replace(
     new RegExp(RANDOM_COMPONENT_KEY_PREFIX, 'g'),
     '',
-  )
-  const parsed = JSON.parse(stringified)
+  );
+  const parsed = JSON.parse(stringified);
 
-  return parsed
-}
+  return parsed;
+};
 
 export const validatorCompiler: FastifySchemaCompiler<z.ZodAny> =
   ({ schema }) =>
-    (data) => {
-      const result = schema.safeParse(data)
-      if (result.success) {
-        return { value: result.data }
-      } else {
-        return { error: result.error }
-      }
+  (data) => {
+    const result = schema.safeParse(data);
+    if (result.success) {
+      return { value: result.data };
+    } else {
+      return { error: result.error };
     }
+  };
 
 const resolveSchema = (
   maybeSchema: z.ZodAny | { properties: z.ZodAny },
 ): Pick<z.ZodAny, 'safeParse'> => {
   if ('safeParse' in maybeSchema) {
-    return maybeSchema
+    return maybeSchema;
   }
   if ('properties' in maybeSchema) {
-    return maybeSchema.properties
+    return maybeSchema.properties;
   }
   throw new Error(`Invalid schema passed: ${JSON.stringify(maybeSchema)}`);
-}
+};
 
-export const serializerCompiler: FastifySerializerCompiler<ZodAny | { properties: ZodAny }> =
+export const serializerCompiler: FastifySerializerCompiler<z.ZodAny | { properties: z.ZodAny }> =
   ({ schema: maybeSchema, method, url }) =>
   (data) => {
-    const schema: Pick<ZodAny, 'safeParse'> = resolveSchema(maybeSchema);
-export const serializerCompiler: FastifySerializerCompiler<z.ZodAny | { properties: z.ZodAny }> =
-  ({ schema: maybeSchema }) =>
-    (data) => {
-      const schema: Pick<z.ZodAny, 'safeParse'> = resolveSchema(maybeSchema)
+    const schema: Pick<z.ZodAny, 'safeParse'> = resolveSchema(maybeSchema);
 
-      const result = schema.safeParse(data)
-      if (result.success) {
-        return JSON.stringify(result.data)
-      }
-
-      throw new ResponseValidationError(result, method, url)
+    const result = schema.safeParse(data);
+    if (result.success) {
+      return JSON.stringify(result.data);
     }
+
+    throw new ResponseValidationError(result, method, url);
+  };
 
 /**
  * FastifyPluginCallbackZod with Zod automatic type inference
@@ -227,7 +224,7 @@ export const serializerCompiler: FastifySerializerCompiler<z.ZodAny | { properti
 export type FastifyPluginCallbackZod<
   Options extends FastifyPluginOptions = Record<never, never>,
   Server extends RawServerBase = RawServerDefault,
-> = FastifyPluginCallback<Options, Server, ZodTypeProvider>
+> = FastifyPluginCallback<Options, Server, ZodTypeProvider>;
 
 /**
  * FastifyPluginAsyncZod with Zod automatic type inference
@@ -243,4 +240,4 @@ export type FastifyPluginCallbackZod<
 export type FastifyPluginAsyncZod<
   Options extends FastifyPluginOptions = Record<never, never>,
   Server extends RawServerBase = RawServerDefault,
-> = FastifyPluginAsync<Options, Server, ZodTypeProvider>
+> = FastifyPluginAsync<Options, Server, ZodTypeProvider>;
