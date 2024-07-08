@@ -9,7 +9,7 @@ import type {
   RawServerDefault,
 } from 'fastify';
 import type { FastifySerializerCompiler } from 'fastify/types/schema';
-import type { ZodAny, ZodTypeAny, z } from 'zod';
+import type { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import { ResponseValidationError } from './ResponseValidationError';
@@ -28,7 +28,8 @@ const defaultSkipList = [
 ];
 
 export interface ZodTypeProvider extends FastifyTypeProvider {
-  output: this['input'] extends ZodTypeAny ? z.infer<this['input']> : unknown;
+  validator: this['schema'] extends z.ZodTypeAny ? z.output<this['schema']> : unknown;
+  serializer: this['schema'] extends z.ZodTypeAny ? z.input<this['schema']> : unknown;
 }
 
 interface Schema extends FastifySchema {
@@ -99,36 +100,33 @@ export const jsonSchemaTransform = createJsonSchemaTransform({
   skipList: defaultSkipList,
 });
 
-export const validatorCompiler: FastifySchemaCompiler<ZodAny> =
+export const validatorCompiler: FastifySchemaCompiler<z.ZodAny> =
   ({ schema }) =>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (data): any => {
-    try {
-      return { value: schema.parse(data) };
-    } catch (error) {
-      return { error };
+  (data) => {
+    const result = schema.safeParse(data);
+    if (result.success) {
+      return { value: result.data };
+    } else {
+      return { error: result.error };
     }
   };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function hasOwnProperty<T, K extends PropertyKey>(obj: T, prop: K): obj is T & Record<K, any> {
-  return Object.prototype.hasOwnProperty.call(obj, prop);
-}
-
-function resolveSchema(maybeSchema: ZodAny | { properties: ZodAny }): Pick<ZodAny, 'safeParse'> {
-  if (hasOwnProperty(maybeSchema, 'safeParse')) {
+const resolveSchema = (
+  maybeSchema: z.ZodAny | { properties: z.ZodAny },
+): Pick<z.ZodAny, 'safeParse'> => {
+  if ('safeParse' in maybeSchema) {
     return maybeSchema;
   }
-  if (hasOwnProperty(maybeSchema, 'properties')) {
+  if ('properties' in maybeSchema) {
     return maybeSchema.properties;
   }
   throw new Error(`Invalid schema passed: ${JSON.stringify(maybeSchema)}`);
-}
+};
 
-export const serializerCompiler: FastifySerializerCompiler<ZodAny | { properties: ZodAny }> =
+export const serializerCompiler: FastifySerializerCompiler<z.ZodAny | { properties: z.ZodAny }> =
   ({ schema: maybeSchema, method, url }) =>
   (data) => {
-    const schema: Pick<ZodAny, 'safeParse'> = resolveSchema(maybeSchema);
+    const schema: Pick<z.ZodAny, 'safeParse'> = resolveSchema(maybeSchema);
 
     const result = schema.safeParse(data);
     if (result.success) {
