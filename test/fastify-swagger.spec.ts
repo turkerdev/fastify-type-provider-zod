@@ -5,7 +5,12 @@ import * as validator from 'oas-validator';
 import { z } from 'zod';
 
 import type { ZodTypeProvider } from '../src';
-import { jsonSchemaTransform, serializerCompiler, validatorCompiler } from '../src';
+import {
+  jsonSchemaTransform,
+  createJsonSchemaTransformObject,
+  serializerCompiler,
+  validatorCompiler,
+} from '../src';
 
 describe('transformer', () => {
   it('generates types for fastify-swagger correctly', async () => {
@@ -117,6 +122,57 @@ describe('transformer', () => {
     });
 
     const TOKEN_SCHEMA = z.string().length(12);
+
+    app.after(() => {
+      app.withTypeProvider<ZodTypeProvider>().route({
+        method: 'POST',
+        url: '/login',
+        schema: {
+          body: z.object({
+            access_token: TOKEN_SCHEMA,
+            refresh_token: TOKEN_SCHEMA,
+          }),
+        },
+        handler: (req, res) => {
+          res.send('ok');
+        },
+      });
+    });
+
+    await app.ready();
+
+    const openApiSpecResponse = await app.inject().get('/documentation/json');
+    const openApiSpec = JSON.parse(openApiSpecResponse.body);
+
+    expect(openApiSpec).toMatchSnapshot();
+    await validator.validate(openApiSpec, {});
+  });
+
+  it('should generate ref correctly', async () => {
+    const app = Fastify();
+    app.setValidatorCompiler(validatorCompiler);
+    app.setSerializerCompiler(serializerCompiler);
+
+    const TOKEN_SCHEMA = z.string().length(12);
+
+    app.register(fastifySwagger, {
+      openapi: {
+        info: {
+          title: 'SampleApi',
+          description: 'Sample backend service',
+          version: '1.0.0',
+        },
+        servers: [],
+      },
+      transform: jsonSchemaTransform,
+      transformObject: createJsonSchemaTransformObject({
+        Token: TOKEN_SCHEMA,
+      }),
+    });
+
+    app.register(fastifySwaggerUI, {
+      routePrefix: '/documentation',
+    });
 
     app.after(() => {
       app.withTypeProvider<ZodTypeProvider>().route({
