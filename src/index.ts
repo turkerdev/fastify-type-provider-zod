@@ -9,6 +9,7 @@ import type {
   RawServerDefault,
 } from 'fastify';
 import type { FastifySerializerCompiler } from 'fastify/types/schema';
+import type { OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from 'openapi-types';
 import type { ZodAny, ZodTypeAny, z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
@@ -98,6 +99,68 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
 export const jsonSchemaTransform = createJsonSchemaTransform({
   skipList: defaultSkipList,
 });
+
+export const createJsonSchemaTransformObject =
+  ({ schemas: zodSchemas }: { schemas: Record<string, z.ZodTypeAny> }) =>
+  (
+    input:
+      | { swaggerObject: Partial<OpenAPIV2.Document> }
+      | { openapiObject: Partial<OpenAPIV3.Document | OpenAPIV3_1.Document> },
+  ) => {
+    if ('swaggerObject' in input) {
+      console.warn('This package currently does not support component references for Swagger 2.0');
+      return input.swaggerObject;
+    }
+
+    const schemas: Record<string, OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject> = {};
+    for (const key in zodSchemas)
+      schemas[key] = zodToJsonSchema(zodSchemas[key], zodToJsonSchemaOptions);
+
+    const document = {
+      ...input.openapiObject,
+      components: {
+        ...input.openapiObject.components,
+        schemas: {
+          ...input.openapiObject.components?.schemas,
+          ...schemas,
+        },
+      },
+    };
+
+    const componentMapVK = new Map<string, string>();
+    Object.entries(schemas).forEach(([key, value]) =>
+      componentMapVK.set(JSON.stringify(value), key),
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function componentReplacer(this: any, key: string, value: any) {
+      if (typeof value !== 'object') return value;
+
+      // Check if the parent is the schemas object, if so, return the value as is
+      if (this === document.components.schemas) return value;
+
+      const stringifiedValue = JSON.stringify(value);
+      if (componentMapVK.has(stringifiedValue))
+        return { $ref: `#/components/schemas/${componentMapVK.get(stringifiedValue)}` };
+
+      if (value.nullable === true) {
+        const nonNullableValue = { ...value };
+        delete nonNullableValue.nullable;
+        const stringifiedNonNullableValue = JSON.stringify(nonNullableValue);
+        if (componentMapVK.has(stringifiedNonNullableValue))
+          return {
+            anyOf: [
+              { $ref: `#/components/schemas/${componentMapVK.get(stringifiedNonNullableValue)}` },
+            ],
+            nullable: true,
+          };
+      }
+
+      return value;
+    }
+
+    return JSON.parse(JSON.stringify(document, componentReplacer));
+  };
 
 export const validatorCompiler: FastifySchemaCompiler<ZodAny> =
   ({ schema }) =>
