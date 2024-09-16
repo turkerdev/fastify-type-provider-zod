@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@fastify/swagger": "^8.14.0",
-    "@fastify/swagger-ui": "^4.0.0",
+    "@fastify/swagger-ui": "^5.0.1",
     "@types/node": "^20.12.12",
     "@typescript-eslint/eslint-plugin": "^7.9.0",
     "@typescript-eslint/parser": "^7.9.0",
