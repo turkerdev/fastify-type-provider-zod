@@ -4,6 +4,18 @@
 [![NPM Downloads](https://img.shields.io/npm/dm/fastify-type-provider-zod.svg)](https://npmjs.org/package/fastify-type-provider-zod)
 [![Build Status](https://github.com//turkerdev/fastify-type-provider-zod/workflows/CI/badge.svg)](https://github.com//turkerdev/fastify-type-provider-zod/actions)
 
+## Installation
+
+You can install `fastify-type-provider-zod` via npm or yarn:
+
+```bash
+# Using npm
+npm install fastify-type-provider-zod
+
+# Using yarn
+yarn add fastify-type-provider-zod
+```
+
 ## How to use?
 
 ```js
