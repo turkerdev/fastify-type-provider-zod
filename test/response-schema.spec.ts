@@ -282,4 +282,79 @@ describe('response schema', () => {
       });
     });
   });
+  describe('correctly process response schema and expects the non transformed type', () => {
+    let app: FastifyInstance;
+    beforeEach(async () => {
+      const REPLY_SCHEMA = z.object({
+        mySubObject: z
+          .object({
+            myDate: z.date(),
+          })
+          .transform(({ myDate }) => ({ myDate: myDate.toISOString() })),
+      });
+
+      app = Fastify();
+      app.setValidatorCompiler(validatorCompiler);
+      app.setSerializerCompiler(serializerCompiler);
+
+      app.after(() => {
+        app.withTypeProvider<ZodTypeProvider>().route({
+          method: 'GET',
+          url: '/',
+          schema: {
+            response: {
+              200: REPLY_SCHEMA,
+            },
+          },
+          handler: (req, res) => {
+            res.send({
+              mySubObject: {
+                // this is a Date as the input (aka. before transform) is a date
+                myDate: new Date('2021-05-12T00:00:00.000Z'),
+              },
+            });
+          },
+        });
+
+        app.withTypeProvider<ZodTypeProvider>().route({
+          method: 'GET',
+          url: '/incorrect',
+          schema: {
+            response: {
+              200: REPLY_SCHEMA,
+            },
+          },
+          handler: (req, res) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            res.send('test' as any);
+          },
+        });
+      });
+
+      await app.ready();
+    });
+    afterAll(async () => {
+      await app.close();
+    });
+
+    it('returns 200 for correct response', async () => {
+      const response = await app.inject().get('/');
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual({
+        mySubObject: {
+          // this is a string as the output (aka. after transform) is a string
+          myDate: '2021-05-12T00:00:00.000Z',
+        },
+      });
+    });
+
+    // FixMe https://github.com/turkerdev/fastify-type-provider-zod/issues/16
+    it.skip('returns 500 for incorrect response', async () => {
+      const response = await app.inject().get('/incorrect');
+
+      expect(response.statusCode).toBe(500);
+      expect(response.json()).toMatchInlineSnapshot();
+    });
+  });
 });
