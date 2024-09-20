@@ -1,7 +1,7 @@
 import createError from "@fastify/error"
 import type { FastifyPluginAsync, FastifyPluginCallback, FastifyPluginOptions, FastifySchema, FastifySchemaCompiler, FastifyTypeProvider, RawServerBase, RawServerDefault } from "fastify"
 import type { OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from "openapi-types"
-import type { FastifySerializerCompiler } from "fastify/types/schema"
+import type { FastifySchemaValidationError, FastifySerializerCompiler } from "fastify/types/schema"
 import type { z } from "zod"
 import { zodToJsonSchema } from "zod-to-json-schema"
 
@@ -17,6 +17,10 @@ const defaultSkipList = [
     "/documentation/*",
     "/documentation/static/*",
 ]
+
+export const ResponseValidationError = createError<[{ cause: Error }]>("FST_ERR_RESPONSE_VALIDATION", "Response doesn't match the schema", 500)
+
+export const InvalidSchemaError = createError<[string]>("FST_ERR_INVALID_SCHEMA", "Invalid schema passed: %s", 500)
 
 export interface ZodTypeProvider extends FastifyTypeProvider {
     validator: this["schema"] extends z.ZodTypeAny ? z.output<this["schema"]> : unknown
@@ -96,7 +100,19 @@ export const ZodValidatorCompiler: FastifySchemaCompiler<z.ZodAny> = ({ schema }
     if (result.success) {
         return { value: result.data }
     } else {
-        return { error: result.error }
+        return {
+            error: result.error.errors.map(error => ({
+                keyword: error.code,
+                instancePath: `/${error.path.join("/")}`,
+                schemaPath: `#/${error.path.join("/")}/${error.code}`,
+                params: {
+                    code: error.code,
+                    zodError: result.error,
+                },
+                message: error.message,
+
+            })) satisfies FastifySchemaValidationError[] as unknown as Error,
+        }
     }
 }
 
@@ -107,10 +123,8 @@ const resolveSchema = (maybeSchema: z.ZodAny | { properties: z.ZodAny }) => {
     if ("properties" in maybeSchema) {
         return maybeSchema.properties
     }
-    throw new Error(`Invalid schema passed: ${JSON.stringify(maybeSchema)}`)
+    throw new InvalidSchemaError(JSON.stringify(maybeSchema))
 }
-
-const ResponseValidationError = createError("FST_ERR_RESPONSE_VALIDATION", "Response doesn't match the schema", 500)
 
 export const ZodSerializerCompiler: FastifySerializerCompiler<z.ZodAny | { properties: z.ZodAny }> = ({ schema: maybeSchema }) => (data) => {
     const schema = resolveSchema(maybeSchema)

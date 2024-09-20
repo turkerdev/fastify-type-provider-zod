@@ -77,17 +77,7 @@ describe("response schema", () => {
       {
         "code": "FST_ERR_VALIDATION",
         "error": "Bad Request",
-        "message": "[
-        {
-          "code": "invalid_type",
-          "expected": "string",
-          "received": "undefined",
-          "path": [
-            "name"
-          ],
-          "message": "Required"
-        }
-      ]",
+        "message": "querystring/name Required",
         "statusCode": 400,
       }
     `)
