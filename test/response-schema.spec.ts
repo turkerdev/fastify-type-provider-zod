@@ -1,222 +1,209 @@
-import type { FastifyInstance } from 'fastify';
-import Fastify from 'fastify';
-import { z } from 'zod';
+import type { FastifyInstance } from "fastify"
+import Fastify from "fastify"
+import { z } from "zod"
+import { describe, beforeAll, afterAll, it, expect, beforeEach } from "vitest"
+import type { ZodTypeProvider } from "../src"
+import { ZodSerializerCompiler, ZodValidatorCompiler } from "../src"
 
-import type { ZodTypeProvider } from '../src';
-import { serializerCompiler, validatorCompiler } from '../src';
-import type { ResponseValidationError } from '../src/ResponseValidationError';
+describe("response schema", () => {
+    describe("does not fail on empty response schema (204)", () => {
+        let app: FastifyInstance
+        beforeAll(async () => {
+            app = Fastify()
+            app.setValidatorCompiler(ZodValidatorCompiler)
+            app.setSerializerCompiler(ZodSerializerCompiler)
 
-describe('response schema', () => {
-  describe('does not fail on empty response schema (204)', () => {
-    let app: FastifyInstance;
-    beforeAll(async () => {
-      app = Fastify();
-      app.setValidatorCompiler(validatorCompiler);
-      app.setSerializerCompiler(serializerCompiler);
+            app.after(() => {
+                app
+                    .withTypeProvider<ZodTypeProvider>()
+                    .route({
+                        method: "GET",
+                        url: "/",
+                        schema: {
+                            response: {
+                                204: z.undefined().describe("test"),
+                            },
+                        },
+                        handler: (req, res) => {
+                            res.status(204).send()
+                        },
+                    })
+                    .route({
+                        method: "GET",
+                        url: "/incorrect",
+                        schema: {
+                            response: {
+                                204: z.undefined().describe("test"),
+                            },
+                        },
+                        handler: (req, res) => {
+                            // @ts-expect-error intentionally incorrect response
+                            res.status(204).send({ id: 1 })
+                        },
+                    })
+            })
+            app.setErrorHandler((err, req, reply) => {
+                return reply.code(500).send({
+                    code: "FST_ERR_RESPONSE_VALIDATION",
+                    error: "Internal Server Error",
+                    message: "Response doesn't match the schema",
+                    statusCode: 500,
+                })
+            })
+            await app.ready()
+        })
 
-      app.after(() => {
-        app
-          .withTypeProvider<ZodTypeProvider>()
-          .route({
-            method: 'GET',
-            url: '/',
-            schema: {
-              response: {
-                204: z.undefined().describe('test'),
-              },
-            },
-            handler: (req, res) => {
-              res.status(204).send();
-            },
-          })
-          .route({
-            method: 'GET',
-            url: '/incorrect',
-            schema: {
-              response: {
-                204: z.undefined().describe('test'),
-              },
-            },
-            handler: (req, res) => {
-              // @ts-expect-error
-              res.status(204).send({ id: 1 });
-            },
-          });
-      });
-      app.setErrorHandler((err, req, reply) => {
-        return reply.code(500).send({
-          error: 'Internal Server Error',
-          message: "Response doesn't match the schema",
-          details: (err as unknown as ResponseValidationError).details,
-          statusCode: 500,
-        });
-      });
-      await app.ready();
-    });
+        afterAll(async () => {
+            await app.close()
+        })
 
-    afterAll(async () => {
-      await app.close();
-    });
+        it("returns 204", async () => {
+            const response = await app.inject().get("/")
 
-    it('returns 204', async () => {
-      const response = await app.inject().get('/');
+            expect(response.statusCode).toBe(204)
+            expect(response.body).toEqual("")
+        })
 
-      expect(response.statusCode).toBe(204);
-      expect(response.body).toEqual('');
-    });
+        it("throws on non-empty", async () => {
+            const response = await app.inject().get("/incorrect")
 
-    it('throws on non-empty', async () => {
-      const response = await app.inject().get('/incorrect');
-
-      expect(response.statusCode).toBe(500);
-      expect(response.json()).toMatchInlineSnapshot(`
+            expect(response.statusCode).toBe(500)
+            expect(response.json()).toMatchInlineSnapshot(`
         {
-          "details": {
-            "error": [
-              {
-                "code": "invalid_type",
-                "expected": "undefined",
-                "message": "Expected undefined, received object",
-                "path": [],
-                "received": "object",
-              },
-            ],
-            "method": "GET",
-            "url": "/incorrect",
-          },
+          "code": "FST_ERR_RESPONSE_VALIDATION",
           "error": "Internal Server Error",
           "message": "Response doesn't match the schema",
           "statusCode": 500,
         }
-      `);
-    });
-  });
+      `)
+        })
+    })
 
-  describe('correctly processes response schema (string)', () => {
-    let app: FastifyInstance;
-    beforeAll(async () => {
-      const REPLY_SCHEMA = z.string();
+    describe("correctly processes response schema (string)", () => {
+        let app: FastifyInstance
+        beforeAll(async () => {
+            const REPLY_SCHEMA = z.string()
 
-      app = Fastify();
-      app.setValidatorCompiler(validatorCompiler);
-      app.setSerializerCompiler(serializerCompiler);
+            app = Fastify()
+            app.setValidatorCompiler(ZodValidatorCompiler)
+            app.setSerializerCompiler(ZodSerializerCompiler)
 
-      app.after(() => {
-        app.withTypeProvider<ZodTypeProvider>().route({
-          method: 'GET',
-          url: '/',
-          schema: {
-            response: {
-              200: REPLY_SCHEMA,
-            },
-          },
-          handler: (req, res) => {
-            res.send('test');
-          },
-        });
+            app.after(() => {
+                app.withTypeProvider<ZodTypeProvider>().route({
+                    method: "GET",
+                    url: "/",
+                    schema: {
+                        response: {
+                            200: REPLY_SCHEMA,
+                        },
+                    },
+                    handler: (req, res) => {
+                        res.send("test")
+                    },
+                })
 
-        app.withTypeProvider<ZodTypeProvider>().route({
-          method: 'GET',
-          url: '/incorrect',
-          schema: {
-            response: {
-              200: REPLY_SCHEMA,
-            },
-          },
-          handler: (req, res) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            res.send({ name: 'test' } as any);
-          },
-        });
-      });
+                app.withTypeProvider<ZodTypeProvider>().route({
+                    method: "GET",
+                    url: "/incorrect",
+                    schema: {
+                        response: {
+                            200: REPLY_SCHEMA,
+                        },
+                    },
+                    handler: (req, res) => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        res.send({ name: "test" } as any)
+                    },
+                })
+            })
 
-      await app.ready();
-    });
+            await app.ready()
+        })
 
-    afterAll(async () => {
-      await app.close();
-    });
+        afterAll(async () => {
+            await app.close()
+        })
 
-    it('returns 200 on correct response', async () => {
-      const response = await app.inject().get('/');
+        it("returns 200 on correct response", async () => {
+            const response = await app.inject().get("/")
 
-      expect(response.statusCode).toBe(200);
-      expect(response.body).toEqual('test');
-    });
+            expect(response.statusCode).toBe(200)
+            expect(response.body).toEqual("test")
+        })
 
-    it('returns 500 on incorrect response', async () => {
-      const response = await app.inject().get('/incorrect');
+        it("returns 500 on incorrect response", async () => {
+            const response = await app.inject().get("/incorrect")
 
-      expect(response.statusCode).toBe(500);
-      expect(response.body).toMatchInlineSnapshot(
-        `"{"statusCode":500,"error":"Internal Server Error","message":"Response doesn't match the schema"}"`,
-      );
-    });
-  });
+            expect(response.statusCode).toBe(500)
+            expect(response.body).toMatchInlineSnapshot(
+                "\"{\"statusCode\":500,\"code\":\"FST_ERR_RESPONSE_VALIDATION\",\"error\":\"Internal Server Error\",\"message\":\"Response doesn't match the schema\"}\"",
+            )
+        })
+    })
 
-  describe('correctly processes response schema (object)', () => {
-    let app: FastifyInstance;
-    beforeEach(async () => {
-      const REPLY_SCHEMA = z.object({
-        name: z.string(),
-      });
+    describe("correctly processes response schema (object)", () => {
+        let app: FastifyInstance
+        beforeEach(async () => {
+            const REPLY_SCHEMA = z.object({
+                name: z.string(),
+            })
 
-      app = Fastify();
-      app.setValidatorCompiler(validatorCompiler);
-      app.setSerializerCompiler(serializerCompiler);
+            app = Fastify()
+            app.setValidatorCompiler(ZodValidatorCompiler)
+            app.setSerializerCompiler(ZodSerializerCompiler)
 
-      app.after(() => {
-        app.withTypeProvider<ZodTypeProvider>().route({
-          method: 'GET',
-          url: '/',
-          schema: {
-            response: {
-              200: REPLY_SCHEMA,
-            },
-          },
-          handler: (req, res) => {
-            res.send({
-              name: 'test',
-            });
-          },
-        });
+            app.after(() => {
+                app.withTypeProvider<ZodTypeProvider>().route({
+                    method: "GET",
+                    url: "/",
+                    schema: {
+                        response: {
+                            200: REPLY_SCHEMA,
+                        },
+                    },
+                    handler: (req, res) => {
+                        res.send({
+                            name: "test",
+                        })
+                    },
+                })
 
-        app.withTypeProvider<ZodTypeProvider>().route({
-          method: 'GET',
-          url: '/incorrect',
-          schema: {
-            response: {
-              200: REPLY_SCHEMA,
-            },
-          },
-          handler: (req, res) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            res.send('test' as any);
-          },
-        });
-      });
+                app.withTypeProvider<ZodTypeProvider>().route({
+                    method: "GET",
+                    url: "/incorrect",
+                    schema: {
+                        response: {
+                            200: REPLY_SCHEMA,
+                        },
+                    },
+                    handler: (req, res) => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        res.send("test" as any)
+                    },
+                })
+            })
 
-      await app.ready();
-    });
-    afterAll(async () => {
-      await app.close();
-    });
+            await app.ready()
+        })
+        afterAll(async () => {
+            await app.close()
+        })
 
-    it('returns 200 for correct response', async () => {
-      const response = await app.inject().get('/');
+        it("returns 200 for correct response", async () => {
+            const response = await app.inject().get("/")
 
-      expect(response.statusCode).toBe(200);
-      expect(response.json()).toEqual({
-        name: 'test',
-      });
-    });
+            expect(response.statusCode).toBe(200)
+            expect(response.json()).toEqual({
+                name: "test",
+            })
+        })
 
-    // FixMe https://github.com/turkerdev/fastify-type-provider-zod/issues/16
-    it.skip('returns 500 for incorrect response', async () => {
-      const response = await app.inject().get('/incorrect');
+        // FixMe https://github.com/turkerdev/fastify-type-provider-zod/issues/16
+        it.skip("returns 500 for incorrect response", async () => {
+            const response = await app.inject().get("/incorrect")
 
-      expect(response.statusCode).toBe(500);
-      expect(response.json()).toMatchInlineSnapshot();
-    });
-  });
-});
+            expect(response.statusCode).toBe(500)
+            expect(response.json()).toMatchInlineSnapshot()
+        })
+    })
+})

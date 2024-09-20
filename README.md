@@ -2,20 +2,20 @@
 
 [![NPM Version](https://img.shields.io/npm/v/fastify-type-provider-zod.svg)](https://npmjs.org/package/fastify-type-provider-zod)
 [![NPM Downloads](https://img.shields.io/npm/dm/fastify-type-provider-zod.svg)](https://npmjs.org/package/fastify-type-provider-zod)
-[![Build Status](https://github.com//turkerdev/fastify-type-provider-zod/workflows/CI/badge.svg)](https://github.com//turkerdev/fastify-type-provider-zod/actions)
+[![Build Status](https://github.com//bram-dc/fastify-type-provider-zod/workflows/CI/badge.svg)](https://github.com/bram-dc/fastify-type-provider-zod/actions)
 
 ## How to use?
 
 ```js
 import Fastify from "fastify";
-import { serializerCompiler, validatorCompiler, ZodTypeProvider } from "fastify-type-provider-zod";
+import { ZodSerializerCompiler, ZodValidatorCompiler, ZodTypeProvider } from "fastify-type-provider-zod";
 import z from "zod";
 
 const app = Fastify()
 
 // Add schema validator and serializer
-app.setValidatorCompiler(validatorCompiler);
-app.setSerializerCompiler(serializerCompiler);
+app.setValidatorCompiler(ZodValidatorCompiler);
+app.setSerializerCompiler(ZodSerializerCompiler);
 
 app.withTypeProvider<ZodTypeProvider>().route({
   method: "GET",
@@ -40,29 +40,29 @@ app.listen({ port: 4949 });
 ## How to use together with @fastify/swagger
 
 ```ts
-import fastify from 'fastify';
-import fastifySwagger from '@fastify/swagger';
-import fastifySwaggerUI from '@fastify/swagger-ui';
-import { z } from 'zod';
+import fastify from "fastify";
+import fastifySwagger from "@fastify/swagger";
+import fastifySwaggerUI from "@fastify/swagger-ui";
+import { z } from "zod";
 
 import {
   jsonSchemaTransform,
   createJsonSchemaTransform,
-  serializerCompiler,
-  validatorCompiler,
+  ZodSerializerCompiler,
+  ZodValidatorCompiler,
   ZodTypeProvider,
-} from 'fastify-type-provider-zod';
+} from "fastify-type-provider-zod";
 
 const app = fastify();
-app.setValidatorCompiler(validatorCompiler);
-app.setSerializerCompiler(serializerCompiler);
+app.setValidatorCompiler(ZodValidatorCompiler);
+app.setSerializerCompiler(ZodSerializerCompiler);
 
 app.register(fastifySwagger, {
   openapi: {
     info: {
-      title: 'SampleApi',
-      description: 'Sample backend service',
-      version: '1.0.0',
+      title: "SampleApi",
+      description: "Sample backend service",
+      version: "1.0.0",
     },
     servers: [],
   },
@@ -70,26 +70,37 @@ app.register(fastifySwagger, {
   // You can also create transform with custom skiplist of endpoints that should not be included in the specification:
   //
   // transform: createJsonSchemaTransform({
-  //   skipList: [ '/documentation/static/*' ]
+  //   skipList: [ "/documentation/static/*" ]
   // })
+  
+  // In order to create refs to the schemas, you need to provide the schemas to the transformObject using createJsonSchemaTransformObject
+  //
+  // transformObject: createJsonSchemaTransformObject({
+  //    schemas: {
+  //      User: z.object({
+  //        id: z.string(),
+  //        name: z.string(),
+  //      }),
+  //    }
+  // }),
 });
 
 app.register(fastifySwaggerUI, {
-  routePrefix: '/documentation',
+  routePrefix: "/documentation",
 });
 
 const LOGIN_SCHEMA = z.object({
-  username: z.string().max(32).describe('Some description for username'),
+  username: z.string().max(32).describe("Some description for username"),
   password: z.string().max(32),
 });
 
 app.after(() => {
   app.withTypeProvider<ZodTypeProvider>().route({
-    method: 'POST',
-    url: '/login',
+    method: "POST",
+    url: "/login",
     schema: { body: LOGIN_SCHEMA },
     handler: (req, res) => {
-      res.send('ok');
+      res.send("ok");
     },
   });
 });
@@ -110,13 +121,13 @@ run();
 ## How to create a plugin?
 
 ```ts
-import { z } from 'zod';
-import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
+import { z } from "zod";
+import { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 
 const plugin: FastifyPluginAsyncZod = async function (fastify, _opts) {
   fastify.route({
-    method: 'GET',
-    url: '/',
+    method: "GET",
+    url: "/",
     // Define your schema
     schema: {
       querystring: z.object({
