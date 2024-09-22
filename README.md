@@ -17,22 +17,25 @@ const app = Fastify()
 app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
 
-app.withTypeProvider<ZodTypeProvider>().route({
-  method: "GET",
-  url: "/",
-  // Define your schema
-  schema: {
-    querystring: z.object({
-      name: z.string().min(4),
-    }),
-    response: {
-      200: z.string(),
-    },
-  },
-  handler: (req, res) => {
-    res.send(req.query.name);
-  },
+const createUserQuerySchema = z.object({
+  name: z.string(),
 });
+type CreateUserQuerySchema = z.infer<typeof createUserQuerySchema>;
+
+app.withTypeProvider<ZodTypeProvider>().route<{Querystring: CreateUserQuerySchema }>({
+  method: 'GET',
+  url: '/user',
+  schema: {
+    querystring: createUserQuerySchema,
+    response: {
+      200: createUserQuerySchema,
+    }
+  },
+  handler: function (request, reply) {
+    reply.send(request.query.name)
+  }
+})
+
 
 app.listen({ port: 4949 });
 ```
