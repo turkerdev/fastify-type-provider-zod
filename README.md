@@ -67,11 +67,23 @@ app.register(fastifySwagger, {
     servers: [],
   },
   transform: jsonSchemaTransform,
+
   // You can also create transform with custom skiplist of endpoints that should not be included in the specification:
   //
   // transform: createJsonSchemaTransform({
   //   skipList: [ '/documentation/static/*' ]
   // })
+
+  // In order to create refs to the schemas, you need to provide the schemas to the transformObject using createJsonSchemaTransformObject
+  //
+  // transformObject: createJsonSchemaTransformObject({
+  //    schemas: {
+  //      User: z.object({
+  //        id: z.string(),
+  //        name: z.string(),
+  //      }),
+  //    }
+  // }),
 });
 
 app.register(fastifySwaggerUI, {
