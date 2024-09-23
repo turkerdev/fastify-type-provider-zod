@@ -50,7 +50,7 @@
     "eslint": "^8.57.0",
     "eslint-plugin-import": "^2.29.1",
     "fastify": "^4.27.0",
-    "fastify-plugin": "^4.5.1",
+    "fastify-plugin": "^5.0.1",
     "oas-validator": "^5.0.8",
     "prettier": "^3.2.5",
     "tsd": "^0.31.0",
