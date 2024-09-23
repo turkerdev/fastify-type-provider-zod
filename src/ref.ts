@@ -64,7 +64,7 @@ export const resolveRefs = (
   const componentMapVK = createComponentMap(schemas);
   const componentReplacer = createComponentReplacer(componentMapVK, document.components.schemas);
 
-  // Using the componetReplacer function we deep check if the document has any schemas that are the same as the zod schemas provided
+  // Using the componentReplacer function we deep check if the document has any schemas that are the same as the zod schemas provided
   // When a match is found replace them with a $ref.
   return JSON.parse(JSON.stringify(document, componentReplacer));
 };
