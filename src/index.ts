@@ -10,7 +10,7 @@ import type {
 } from 'fastify';
 import type { FastifySerializerCompiler } from 'fastify/types/schema';
 import type { OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from 'openapi-types';
-import type { ZodAny, ZodTypeAny, z } from 'zod';
+import { type ZodAny, type ZodTypeAny, type z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import { ResponseValidationError } from './ResponseValidationError';
@@ -100,6 +100,44 @@ export const jsonSchemaTransform = createJsonSchemaTransform({
   skipList: defaultSkipList,
 });
 
+const createComponentMap = (
+  schemas: Record<string, OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject>,
+) => {
+  const map = new Map<string, string>();
+
+  Object.entries(schemas).forEach(([key, value]) => map.set(JSON.stringify(value), key));
+
+  return map;
+};
+
+const createComponentReplacer = (componentMapVK: Map<string, string>, schemasObject: object) =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function componentReplacer(this: any, key: string, value: any) {
+    if (typeof value !== 'object') return value;
+
+    // Check if the parent is the schemas object, if so, return the value as is. This is where the schemas are defined.
+    if (this === schemasObject) return value;
+
+    const stringifiedValue = JSON.stringify(value);
+    if (componentMapVK.has(stringifiedValue))
+      return { $ref: `#/components/schemas/${componentMapVK.get(stringifiedValue)}` };
+
+    if (value.nullable === true) {
+      const nonNullableValue = { ...value };
+      delete nonNullableValue.nullable;
+      const stringifiedNonNullableValue = JSON.stringify(nonNullableValue);
+      if (componentMapVK.has(stringifiedNonNullableValue))
+        return {
+          anyOf: [
+            { $ref: `#/components/schemas/${componentMapVK.get(stringifiedNonNullableValue)}` },
+          ],
+          nullable: true,
+        };
+    }
+
+    return value;
+  };
+
 export const createJsonSchemaTransformObject =
   ({ schemas: zodSchemas }: { schemas: Record<string, z.ZodTypeAny> }) =>
   (
@@ -113,8 +151,9 @@ export const createJsonSchemaTransformObject =
     }
 
     const schemas: Record<string, OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject> = {};
-    for (const key in zodSchemas)
+    for (const key in zodSchemas) {
       schemas[key] = zodToJsonSchema(zodSchemas[key], zodToJsonSchemaOptions);
+    }
 
     const document = {
       ...input.openapiObject,
@@ -127,37 +166,8 @@ export const createJsonSchemaTransformObject =
       },
     };
 
-    const componentMapVK = new Map<string, string>();
-    Object.entries(schemas).forEach(([key, value]) =>
-      componentMapVK.set(JSON.stringify(value), key),
-    );
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function componentReplacer(this: any, key: string, value: any) {
-      if (typeof value !== 'object') return value;
-
-      // Check if the parent is the schemas object, if so, return the value as is
-      if (this === document.components.schemas) return value;
-
-      const stringifiedValue = JSON.stringify(value);
-      if (componentMapVK.has(stringifiedValue))
-        return { $ref: `#/components/schemas/${componentMapVK.get(stringifiedValue)}` };
-
-      if (value.nullable === true) {
-        const nonNullableValue = { ...value };
-        delete nonNullableValue.nullable;
-        const stringifiedNonNullableValue = JSON.stringify(nonNullableValue);
-        if (componentMapVK.has(stringifiedNonNullableValue))
-          return {
-            anyOf: [
-              { $ref: `#/components/schemas/${componentMapVK.get(stringifiedNonNullableValue)}` },
-            ],
-            nullable: true,
-          };
-      }
-
-      return value;
-    }
+    const componentMapVK = createComponentMap(schemas);
+    const componentReplacer = createComponentReplacer(componentMapVK, document.components.schemas);
 
     return JSON.parse(JSON.stringify(document, componentReplacer));
   };
