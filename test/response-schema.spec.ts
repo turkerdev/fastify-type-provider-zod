@@ -43,9 +43,12 @@ describe('response schema', () => {
           });
       });
       app.setErrorHandler((err, req, reply) => {
+        console.log(err);
         return reply.code(500).send({
           error: 'Internal Server Error',
           message: "Response doesn't match the schema",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          issues: (err as any).cause.issues,
           statusCode: 500,
         });
       });
@@ -70,6 +73,15 @@ describe('response schema', () => {
       expect(response.json()).toMatchInlineSnapshot(`
         {
           "error": "Internal Server Error",
+          "issues": [
+            {
+              "code": "invalid_type",
+              "expected": "undefined",
+              "message": "Expected undefined, received object",
+              "path": [],
+              "received": "object",
+            },
+          ],
           "message": "Response doesn't match the schema",
           "statusCode": 500,
         }
@@ -134,7 +146,7 @@ describe('response schema', () => {
 
       expect(response.statusCode).toBe(500);
       expect(response.body).toMatchInlineSnapshot(
-        `"{"statusCode":500,"code":"FST_ERR_RESPONSE_VALIDATION","error":"Internal Server Error","message":"Response doesn't match the schema"}"`,
+        `"{"statusCode":500,"code":"FST_ERR_RESPONSE_SERIALIZATION","error":"Internal Server Error","message":"Response doesn't match the schema"}"`,
       );
     });
   });

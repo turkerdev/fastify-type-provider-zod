@@ -12,7 +12,7 @@ import type { FastifySerializerCompiler } from 'fastify/types/schema';
 import type { OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from 'openapi-types';
 import type { z } from 'zod';
 
-import { createValidationError, InvalidSchemaError, ResponseValidationError } from './errors';
+import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors';
 import { resolveRefs } from './ref';
 import { convertZodToJsonSchema } from './zod-to-json';
 
@@ -137,7 +137,7 @@ export const serializerCompiler: FastifySerializerCompiler<
 
     const result = schema.safeParse(data);
     if (result.error) {
-      throw new ResponseValidationError({ cause: result.error });
+      throw new ResponseSerializationError({ cause: result.error });
     }
 
     return JSON.stringify(result.data);

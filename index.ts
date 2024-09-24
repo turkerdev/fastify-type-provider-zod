@@ -9,4 +9,4 @@ export {
   validatorCompiler,
 } from './src/core';
 
-export { ResponseValidationError, InvalidSchemaError } from './src/errors';
+export { ResponseSerializationError, InvalidSchemaError } from './src/errors';

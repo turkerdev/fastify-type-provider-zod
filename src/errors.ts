@@ -2,8 +2,8 @@ import createError from '@fastify/error';
 import type { FastifySchemaValidationError } from 'fastify/types/schema';
 import type { ZodError } from 'zod';
 
-export const ResponseValidationError = createError<[{ cause: Error }]>(
-  'FST_ERR_RESPONSE_VALIDATION',
+export const ResponseSerializationError = createError<[{ cause: Error }]>(
+  'FST_ERR_RESPONSE_SERIALIZATION',
   "Response doesn't match the schema",
   500,
 );
