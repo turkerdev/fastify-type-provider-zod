@@ -1,7 +1,7 @@
 {
   "name": "fastify-type-provider-zod",
   "version": "2.1.0",
-  "description": "Zod Type Provider for Fastify@4",
+  "description": "Zod Type Provider for Fastify@5",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -19,7 +19,7 @@
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
-    "fastify": "^4.0.0",
+    "fastify": "^5.0.0",
     "zod": "^3.14.2"
   },
   "repository": {
@@ -49,7 +49,7 @@
     "@vitest/coverage-v8": "^1.6.0",
     "eslint": "^8.57.0",
     "eslint-plugin-import": "^2.29.1",
-    "fastify": "^4.27.0",
+    "fastify": "^5.0.0",
     "fastify-plugin": "^5.0.1",
     "oas-validator": "^5.0.8",
     "openapi-types": "^12.1.3",

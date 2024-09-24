@@ -30,7 +30,8 @@ const defaultSkipList = [
 ];
 
 export interface ZodTypeProvider extends FastifyTypeProvider {
-  output: this['input'] extends z.ZodTypeAny ? z.infer<this['input']> : unknown;
+  validator: this['schema'] extends z.ZodTypeAny ? z.output<this['schema']> : unknown;
+  serializer: this['schema'] extends z.ZodTypeAny ? z.input<this['schema']> : unknown;
 }
 
 interface Schema extends FastifySchema {
