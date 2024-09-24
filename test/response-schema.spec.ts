@@ -43,7 +43,6 @@ describe('response schema', () => {
           });
       });
       app.setErrorHandler((err, req, reply) => {
-        console.log(err);
         return reply.code(500).send({
           error: 'Internal Server Error',
           message: "Response doesn't match the schema",
