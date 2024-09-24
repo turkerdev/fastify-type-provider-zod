@@ -7,9 +7,9 @@ export {
   createJsonSchemaTransformObject,
   serializerCompiler,
   validatorCompiler,
-} from './core';
+} from './src/core';
 
 export {
   ResponseValidationError,
   type ResponseValidationErrorDetails,
-} from './ResponseValidationError';
+} from './src/ResponseValidationError';
