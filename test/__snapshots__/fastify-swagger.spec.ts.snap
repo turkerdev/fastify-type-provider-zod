@@ -123,6 +123,61 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
 }
 `;
 
+exports[`transformer > should generate ref correctly 1`] = `
+{
+  "components": {
+    "schemas": {
+      "Token": {
+        "maxLength": 12,
+        "minLength": 12,
+        "type": "string",
+      },
+    },
+  },
+  "info": {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/login": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "access_token": {
+                    "$ref": "#/components/schemas/Token",
+                  },
+                  "refresh_token": {
+                    "$ref": "#/components/schemas/Token",
+                  },
+                },
+                "required": [
+                  "access_token",
+                  "refresh_token",
+                ],
+                "type": "object",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": [],
+}
+`;
+
 exports[`transformer > should not generate ref 1`] = `
 {
   "components": {

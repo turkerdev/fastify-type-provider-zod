@@ -9,10 +9,12 @@ import type {
   RawServerDefault,
 } from 'fastify';
 import type { FastifySerializerCompiler } from 'fastify/types/schema';
-import type { ZodAny, ZodTypeAny, z } from 'zod';
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import type { OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from 'openapi-types';
+import type { z } from 'zod';
 
 import { ResponseValidationError } from './ResponseValidationError';
+import { resolveRefs } from './ref';
+import { convertZodToJsonSchema } from './zod-to-json';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FreeformRecord = Record<string, any>;
@@ -28,17 +30,12 @@ const defaultSkipList = [
 ];
 
 export interface ZodTypeProvider extends FastifyTypeProvider {
-  output: this['input'] extends ZodTypeAny ? z.infer<this['input']> : unknown;
+  output: this['input'] extends z.ZodTypeAny ? z.infer<this['input']> : unknown;
 }
 
 interface Schema extends FastifySchema {
   hide?: boolean;
 }
-
-const zodToJsonSchemaOptions = {
-  target: 'openApi3',
-  $refStrategy: 'none',
-} as const;
 
 export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly string[] }) => {
   return ({ schema, url }: { schema: Schema; url: string }) => {
@@ -63,7 +60,7 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
     for (const prop in zodSchemas) {
       const zodSchema = zodSchemas[prop];
       if (zodSchema) {
-        transformed[prop] = zodToJsonSchema(zodSchema, zodToJsonSchemaOptions);
+        transformed[prop] = convertZodToJsonSchema(zodSchema);
       }
     }
 
@@ -75,11 +72,7 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const schema = resolveSchema((response as any)[prop]);
 
-        const transformedResponse = zodToJsonSchema(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          schema as any,
-          zodToJsonSchemaOptions,
-        );
+        const transformedResponse = convertZodToJsonSchema(schema);
         transformed.response[prop] = transformedResponse;
       }
     }
@@ -99,7 +92,22 @@ export const jsonSchemaTransform = createJsonSchemaTransform({
   skipList: defaultSkipList,
 });
 
-export const validatorCompiler: FastifySchemaCompiler<ZodAny> =
+export const createJsonSchemaTransformObject =
+  ({ schemas }: { schemas: Record<string, z.ZodTypeAny> }) =>
+  (
+    input:
+      | { swaggerObject: Partial<OpenAPIV2.Document> }
+      | { openapiObject: Partial<OpenAPIV3.Document | OpenAPIV3_1.Document> },
+  ) => {
+    if ('swaggerObject' in input) {
+      console.warn('This package currently does not support component references for Swagger 2.0');
+      return input.swaggerObject;
+    }
+
+    return resolveRefs(input.openapiObject, schemas);
+  };
+
+export const validatorCompiler: FastifySchemaCompiler<z.ZodTypeAny> =
   ({ schema }) =>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (data): any => {
@@ -115,9 +123,9 @@ function hasOwnProperty<T, K extends PropertyKey>(obj: T, prop: K): obj is T & R
   return Object.prototype.hasOwnProperty.call(obj, prop);
 }
 
-function resolveSchema(maybeSchema: ZodAny | { properties: ZodAny }): Pick<ZodAny, 'safeParse'> {
+function resolveSchema(maybeSchema: z.ZodTypeAny | { properties: z.ZodTypeAny }): z.ZodTypeAny {
   if (hasOwnProperty(maybeSchema, 'safeParse')) {
-    return maybeSchema;
+    return maybeSchema as z.ZodTypeAny;
   }
   if (hasOwnProperty(maybeSchema, 'properties')) {
     return maybeSchema.properties;
@@ -125,10 +133,12 @@ function resolveSchema(maybeSchema: ZodAny | { properties: ZodAny }): Pick<ZodAn
   throw new Error(`Invalid schema passed: ${JSON.stringify(maybeSchema)}`);
 }
 
-export const serializerCompiler: FastifySerializerCompiler<ZodAny | { properties: ZodAny }> =
+export const serializerCompiler: FastifySerializerCompiler<
+  z.ZodTypeAny | { properties: z.ZodTypeAny }
+> =
   ({ schema: maybeSchema, method, url }) =>
   (data) => {
-    const schema: Pick<ZodAny, 'safeParse'> = resolveSchema(maybeSchema);
+    const schema = resolveSchema(maybeSchema);
 
     const result = schema.safeParse(data);
     if (result.success) {

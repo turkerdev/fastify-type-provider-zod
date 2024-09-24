@@ -67,6 +67,7 @@ app.register(fastifySwagger, {
     servers: [],
   },
   transform: jsonSchemaTransform,
+
   // You can also create transform with custom skiplist of endpoints that should not be included in the specification:
   //
   // transform: createJsonSchemaTransform({
@@ -90,6 +91,80 @@ app.after(() => {
     schema: { body: LOGIN_SCHEMA },
     handler: (req, res) => {
       res.send('ok');
+    },
+  });
+});
+
+async function run() {
+  await app.ready();
+
+  await app.listen({
+    port: 4949,
+  });
+
+  console.log(`Documentation running at http://localhost:4949/documentation`);
+}
+
+run();
+```
+
+## How to create refs to the schemas?
+It is possible to create refs to the schemas by using the `createJsonSchemaTransformObject` function. You provide the schemas as an object and fastifySwagger will create a OpenAPI document in which the schemas are referenced. The following example creates a ref to the `User` schema and will include the `User` schema in the OpenAPI document.
+
+```ts
+import fastifySwagger from '@fastify/swagger';
+import fastifySwaggerUI from '@fastify/swagger-ui';
+import fastify from 'fastify';
+import { z } from 'zod';
+import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+import {
+  createJsonSchemaTransformObject,
+  jsonSchemaTransform,
+  serializerCompiler,
+  validatorCompiler,
+} from 'fastify-type-provider-zod';
+
+const USER_SCHEMA = z.object({
+  id: z.number().int().positive(),
+  name: z.string().describe('The name of the user'),
+});
+
+const app = fastify();
+app.setValidatorCompiler(validatorCompiler);
+app.setSerializerCompiler(serializerCompiler);
+
+app.register(fastifySwagger, {
+  openapi: {
+    info: {
+      title: 'SampleApi',
+      description: 'Sample backend service',
+      version: '1.0.0',
+    },
+    servers: [],
+  },
+  transform: jsonSchemaTransform,
+  transformObject: createJsonSchemaTransformObject({
+    schemas: {
+      User: USER_SCHEMA,
+    },
+  }),
+});
+
+app.register(fastifySwaggerUI, {
+  routePrefix: '/documentation',
+});
+
+app.after(() => {
+  app.withTypeProvider<ZodTypeProvider>().route({
+    method: 'GET',
+    url: '/users',
+    schema: {
+      response: {
+        200: USER_SCHEMA.array(),
+      },
+    },
+    handler: (req, res) => {
+      res.send([]);
     },
   });
 });

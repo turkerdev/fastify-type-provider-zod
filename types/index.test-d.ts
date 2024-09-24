@@ -7,7 +7,7 @@ import type {
 } from 'fastify';
 import Fastify from 'fastify';
 import { expectAssignable, expectType } from 'tsd';
-import z from 'zod';
+import { z } from 'zod';
 
 import { serializerCompiler, validatorCompiler } from '../src/index';
 import type { ZodTypeProvider } from '../src/index';
