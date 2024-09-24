@@ -2,7 +2,6 @@ import type { FastifyInstance } from 'fastify';
 import Fastify from 'fastify';
 import { z } from 'zod';
 
-import type { ResponseValidationError } from '../src/ResponseValidationError';
 import type { ZodTypeProvider } from '../src/core';
 import { serializerCompiler, validatorCompiler } from '../src/core';
 
@@ -47,7 +46,6 @@ describe('response schema', () => {
         return reply.code(500).send({
           error: 'Internal Server Error',
           message: "Response doesn't match the schema",
-          details: (err as unknown as ResponseValidationError).details,
           statusCode: 500,
         });
       });
@@ -71,19 +69,6 @@ describe('response schema', () => {
       expect(response.statusCode).toBe(500);
       expect(response.json()).toMatchInlineSnapshot(`
         {
-          "details": {
-            "error": [
-              {
-                "code": "invalid_type",
-                "expected": "undefined",
-                "message": "Expected undefined, received object",
-                "path": [],
-                "received": "object",
-              },
-            ],
-            "method": "GET",
-            "url": "/incorrect",
-          },
           "error": "Internal Server Error",
           "message": "Response doesn't match the schema",
           "statusCode": 500,
@@ -149,7 +134,7 @@ describe('response schema', () => {
 
       expect(response.statusCode).toBe(500);
       expect(response.body).toMatchInlineSnapshot(
-        `"{"statusCode":500,"error":"Internal Server Error","message":"Response doesn't match the schema"}"`,
+        `"{"statusCode":500,"code":"FST_ERR_RESPONSE_VALIDATION","error":"Internal Server Error","message":"Response doesn't match the schema"}"`,
       );
     });
   });
