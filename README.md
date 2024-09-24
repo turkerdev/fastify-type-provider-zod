@@ -109,6 +109,7 @@ run();
 ```
 
 ## How to create refs to the schemas?
+
 It is possible to create refs to the schemas by using the `createJsonSchemaTransformObject` function. You provide the schemas as an object and fastifySwagger will create a OpenAPI document in which the schemas are referenced. The following example creates a ref to the `User` schema and will include the `User` schema in the OpenAPI document.
 
 ```ts

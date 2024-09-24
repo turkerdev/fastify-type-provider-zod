@@ -6,7 +6,7 @@ import fp from 'fastify-plugin';
 import { expectType } from 'tsd';
 import { z } from 'zod';
 
-import type { FastifyPluginAsyncZod, FastifyPluginCallbackZod } from '../src/index';
+import type { FastifyPluginAsyncZod, FastifyPluginCallbackZod } from '../src/core';
 
 // Ensure the defaults of FastifyPluginAsyncZod are the same as FastifyPluginAsync
 export const pluginAsyncDefaults: FastifyPluginAsync = async (fastify, options) => {
