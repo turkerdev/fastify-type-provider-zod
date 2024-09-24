@@ -4,13 +4,13 @@ import Fastify from 'fastify';
 import * as validator from 'oas-validator';
 import { z } from 'zod';
 
-import type { ZodTypeProvider } from '../src';
+import type { ZodTypeProvider } from '../src/core';
 import {
   createJsonSchemaTransformObject,
   jsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
-} from '../src';
+} from '../src/core';
 
 describe('transformer', () => {
   it('generates types for fastify-swagger correctly', async () => {
