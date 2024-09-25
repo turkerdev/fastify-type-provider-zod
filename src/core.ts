@@ -131,13 +131,13 @@ const resolveSchema = (maybeSchema: z.ZodTypeAny | { properties: z.ZodTypeAny })
 export const serializerCompiler: FastifySerializerCompiler<
   z.ZodTypeAny | { properties: z.ZodTypeAny }
 > =
-  ({ schema: maybeSchema }) =>
+  ({ schema: maybeSchema, method, url }) =>
   (data) => {
     const schema = resolveSchema(maybeSchema);
 
     const result = schema.safeParse(data);
     if (result.error) {
-      throw new ResponseSerializationError({ cause: result.error });
+      throw new ResponseSerializationError(result.error, method, url);
     }
 
     return JSON.stringify(result.data);
