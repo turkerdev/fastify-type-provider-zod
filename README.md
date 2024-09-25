@@ -46,18 +46,18 @@ type ZodSerializerCompilerOptions = {
 ```
 
 ```js
-import Fastify from "fastify";
-import { createSerializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
-import z from "zod";
+import Fastify from 'fastify';
+import { createSerializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
+import z from 'zod';
 
-const app = Fastify()
+const app = Fastify();
 
 const replacer = function (key, value) {
   if (this[key] instanceof Date) {
     return { _date: value.toISOString() };
   }
   return value;
-}
+};
 
 // Create a custom serializer compiler
 const customSerializerCompiler = createSerializerCompiler({ replacer });
