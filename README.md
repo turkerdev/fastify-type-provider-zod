@@ -37,6 +37,40 @@ app.withTypeProvider<ZodTypeProvider>().route({
 app.listen({ port: 4949 });
 ```
 
+You can also pass options to the `serializerCompiler` function:
+
+```ts
+type ZodSerializerCompilerOptions = {
+  replacer?: ReplacerFunction;
+};
+```
+
+```js
+import Fastify from "fastify";
+import { createSerializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
+import z from "zod";
+
+const app = Fastify()
+
+// Create a custom serializer compiler
+const customSerializerCompiler = createSerializerCompiler({
+  replacer: (key, value) => {
+    if (value instanceof Date) {
+      return { _date: value.toISOString() };
+    }
+    return value;
+  },
+});
+
+// Add schema validator and serializer
+app.setValidatorCompiler(validatorCompiler);
+app.setSerializerCompiler(customSerializerCompiler);
+
+// ...
+
+app.listen({ port: 4949 });
+```
+
 ## How to use together with @fastify/swagger
 
 ```ts
