@@ -52,15 +52,15 @@ import z from "zod";
 
 const app = Fastify()
 
+const replacer = function (key, value) {
+  if (this[key] instanceof Date) {
+    return { _date: value.toISOString() };
+  }
+  return value;
+}
+
 // Create a custom serializer compiler
-const customSerializerCompiler = createSerializerCompiler({
-  replacer: (key, value) => {
-    if (value instanceof Date) {
-      return { _date: value.toISOString() };
-    }
-    return value;
-  },
-});
+const customSerializerCompiler = createSerializerCompiler({ replacer });
 
 // Add schema validator and serializer
 app.setValidatorCompiler(validatorCompiler);
