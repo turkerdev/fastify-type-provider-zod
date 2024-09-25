@@ -118,7 +118,7 @@ export const validatorCompiler: FastifySchemaCompiler<z.ZodTypeAny> =
     return { value: result.data };
   };
 
-const resolveSchema = (maybeSchema: z.ZodTypeAny | { properties: z.ZodTypeAny }) => {
+function resolveSchema(maybeSchema: z.ZodTypeAny | { properties: z.ZodTypeAny }): z.ZodTypeAny {
   if ('safeParse' in maybeSchema) {
     return maybeSchema;
   }
@@ -126,7 +126,7 @@ const resolveSchema = (maybeSchema: z.ZodTypeAny | { properties: z.ZodTypeAny })
     return maybeSchema.properties;
   }
   throw new InvalidSchemaError(JSON.stringify(maybeSchema));
-};
+}
 
 export const serializerCompiler: FastifySerializerCompiler<
   z.ZodTypeAny | { properties: z.ZodTypeAny }
