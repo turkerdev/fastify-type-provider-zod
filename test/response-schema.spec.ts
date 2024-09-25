@@ -3,7 +3,7 @@ import Fastify from 'fastify';
 import { z } from 'zod';
 
 import type { ZodTypeProvider } from '../src/core';
-import { serializerCompiler, validatorCompiler } from '../src/core';
+import { createSerializerCompiler, serializerCompiler, validatorCompiler } from '../src/core';
 import { ResponseSerializationError } from '../src/errors';
 
 describe('response schema', () => {
@@ -224,6 +224,62 @@ describe('response schema', () => {
 
       expect(response.statusCode).toBe(500);
       expect(response.json()).toMatchInlineSnapshot();
+    });
+  });
+
+  describe('correctly replaces date in stringified response', () => {
+    let app: FastifyInstance;
+    beforeAll(async () => {
+      const REPLY_SCHEMA = z.object({
+        createdAt: z.date(),
+      });
+
+      app = Fastify();
+      app.setValidatorCompiler(validatorCompiler);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      function replacer(key: any, value: any) {
+        if (this[key] instanceof Date) {
+          return { _date: this[key].toISOString() };
+        }
+        return value;
+      }
+
+      const serializerCompiler = createSerializerCompiler({ replacer });
+
+      app.setSerializerCompiler(serializerCompiler);
+
+      app.after(() => {
+        app.withTypeProvider<ZodTypeProvider>().route({
+          method: 'GET',
+          url: '/',
+          schema: {
+            response: {
+              200: REPLY_SCHEMA,
+            },
+          },
+          handler: (req, res) => {
+            res.send({
+              createdAt: new Date('2021-01-01T00:00:00Z'),
+            });
+          },
+        });
+      });
+
+      await app.ready();
+    });
+
+    afterAll(async () => {
+      await app.close();
+    });
+
+    it('returns 200 for correct response', async () => {
+      const response = await app.inject().get('/');
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual({
+        createdAt: { _date: '2021-01-01T00:00:00.000Z' },
+      });
     });
   });
 });

@@ -129,9 +129,17 @@ function resolveSchema(maybeSchema: z.ZodTypeAny | { properties: z.ZodTypeAny })
   throw new InvalidSchemaError(JSON.stringify(maybeSchema));
 }
 
-export const serializerCompiler: FastifySerializerCompiler<
-  z.ZodTypeAny | { properties: z.ZodTypeAny }
-> =
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ReplacerFunction = (this: any, key: string, value: any) => any;
+
+export type ZodSerializerCompilerOptions = {
+  replacer?: ReplacerFunction;
+};
+
+export const createSerializerCompiler =
+  (
+    options?: ZodSerializerCompilerOptions,
+  ): FastifySerializerCompiler<z.ZodTypeAny | { properties: z.ZodTypeAny }> =>
   ({ schema: maybeSchema, method, url }) =>
   (data) => {
     const schema = resolveSchema(maybeSchema);
@@ -141,8 +149,10 @@ export const serializerCompiler: FastifySerializerCompiler<
       throw new ResponseSerializationError(result.error, method, url);
     }
 
-    return JSON.stringify(result.data);
+    return JSON.stringify(result.data, options?.replacer);
   };
+
+export const serializerCompiler = createSerializerCompiler({});
 
 /**
  * FastifyPluginCallbackZod with Zod automatic type inference
