@@ -132,7 +132,7 @@ function resolveSchema(maybeSchema: z.ZodTypeAny | { properties: z.ZodTypeAny })
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ReplacerFunction = (this: any, key: string, value: any) => any;
 
-type ZodSerializerCompilerOptions = {
+export type ZodSerializerCompilerOptions = {
   replacer?: ReplacerFunction;
 };
 
