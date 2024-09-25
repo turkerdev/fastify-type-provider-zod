@@ -12,7 +12,7 @@ import type { FastifySerializerCompiler } from 'fastify/types/schema';
 import type { OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from 'openapi-types';
 import type { z } from 'zod';
 
-import { ResponseValidationError } from './ResponseValidationError';
+import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors';
 import { resolveRefs } from './ref';
 import { convertZodToJsonSchema } from './zod-to-json';
 
@@ -109,29 +109,24 @@ export const createJsonSchemaTransformObject =
   };
 
 export const validatorCompiler: FastifySchemaCompiler<z.ZodTypeAny> =
-  ({ schema }) =>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (data): any => {
-    try {
-      return { value: schema.parse(data) };
-    } catch (error) {
-      return { error };
+  ({ schema, method, url }) =>
+  (data) => {
+    const result = schema.safeParse(data);
+    if (result.error) {
+      return { error: createValidationError(result.error, method, url) as unknown as Error };
     }
+
+    return { value: result.data };
   };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function hasOwnProperty<T, K extends PropertyKey>(obj: T, prop: K): obj is T & Record<K, any> {
-  return Object.prototype.hasOwnProperty.call(obj, prop);
-}
-
 function resolveSchema(maybeSchema: z.ZodTypeAny | { properties: z.ZodTypeAny }): z.ZodTypeAny {
-  if (hasOwnProperty(maybeSchema, 'safeParse')) {
-    return maybeSchema as z.ZodTypeAny;
+  if ('safeParse' in maybeSchema) {
+    return maybeSchema;
   }
-  if (hasOwnProperty(maybeSchema, 'properties')) {
+  if ('properties' in maybeSchema) {
     return maybeSchema.properties;
   }
-  throw new Error(`Invalid schema passed: ${JSON.stringify(maybeSchema)}`);
+  throw new InvalidSchemaError(JSON.stringify(maybeSchema));
 }
 
 export const serializerCompiler: FastifySerializerCompiler<
@@ -142,11 +137,11 @@ export const serializerCompiler: FastifySerializerCompiler<
     const schema = resolveSchema(maybeSchema);
 
     const result = schema.safeParse(data);
-    if (result.success) {
-      return JSON.stringify(result.data);
+    if (result.error) {
+      throw new ResponseSerializationError(result.error, method, url);
     }
 
-    throw new ResponseValidationError(result, method, url);
+    return JSON.stringify(result.data);
   };
 
 /**

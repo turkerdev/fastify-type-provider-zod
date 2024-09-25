@@ -2,9 +2,9 @@ import type { FastifyInstance } from 'fastify';
 import Fastify from 'fastify';
 import { z } from 'zod';
 
-import type { ResponseValidationError } from '../src/ResponseValidationError';
 import type { ZodTypeProvider } from '../src/core';
 import { serializerCompiler, validatorCompiler } from '../src/core';
+import { ResponseSerializationError } from '../src/errors';
 
 describe('response schema', () => {
   describe('does not fail on empty response schema (204)', () => {
@@ -44,12 +44,19 @@ describe('response schema', () => {
           });
       });
       app.setErrorHandler((err, req, reply) => {
-        return reply.code(500).send({
-          error: 'Internal Server Error',
-          message: "Response doesn't match the schema",
-          details: (err as unknown as ResponseValidationError).details,
-          statusCode: 500,
-        });
+        if (err instanceof ResponseSerializationError) {
+          return reply.code(500).send({
+            error: 'Internal Server Error',
+            message: "Response doesn't match the schema",
+            statusCode: 500,
+            details: {
+              issues: err.cause.issues,
+              method: err.method,
+              url: err.url,
+            },
+          });
+        }
+        throw err;
       });
       await app.ready();
     });
@@ -72,7 +79,7 @@ describe('response schema', () => {
       expect(response.json()).toMatchInlineSnapshot(`
         {
           "details": {
-            "error": [
+            "issues": [
               {
                 "code": "invalid_type",
                 "expected": "undefined",
@@ -149,7 +156,7 @@ describe('response schema', () => {
 
       expect(response.statusCode).toBe(500);
       expect(response.body).toMatchInlineSnapshot(
-        `"{"statusCode":500,"error":"Internal Server Error","message":"Response doesn't match the schema"}"`,
+        `"{"statusCode":500,"code":"FST_ERR_RESPONSE_SERIALIZATION","error":"Internal Server Error","message":"Response doesn't match the schema"}"`,
       );
     });
   });

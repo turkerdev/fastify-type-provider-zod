@@ -9,7 +9,4 @@ export {
   validatorCompiler,
 } from './src/core';
 
-export {
-  ResponseValidationError,
-  type ResponseValidationErrorDetails,
-} from './src/ResponseValidationError';
+export { ResponseSerializationError, InvalidSchemaError } from './src/errors';
