@@ -20,6 +20,18 @@ describe('response schema', () => {
       app
         .withTypeProvider<ZodTypeProvider>()
         .route({
+          method: 'POST',
+          url: '/',
+          schema: {
+            body: REQUEST_SCHEMA,
+          },
+          handler: (req, res) => {
+            res.send({
+              name: req.body.name,
+            });
+          },
+        })
+        .route({
           method: 'GET',
           url: '/',
           schema: {
@@ -69,7 +81,7 @@ describe('response schema', () => {
     });
   });
 
-  it('returns 400 on validation error', async () => {
+  it('returns 400 on querystring validation error', async () => {
     const response = await app.inject().get('/');
 
     expect(response.statusCode).toBe(400);
@@ -86,6 +98,54 @@ describe('response schema', () => {
             "name"
           ],
           "message": "Required"
+        }
+      ]",
+        "statusCode": 400,
+      }
+    `);
+  });
+
+  it('returns 400 on body validation error', async () => {
+    const response = await app.inject().post('/').body({
+      surname: 'dummy',
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchInlineSnapshot(`
+      {
+        "code": "FST_ERR_VALIDATION",
+        "error": "Bad Request",
+        "message": "body/name [
+        {
+          "code": "invalid_type",
+          "expected": "string",
+          "received": "undefined",
+          "path": [
+            "name"
+          ],
+          "message": "Required"
+        }
+      ]",
+        "statusCode": 400,
+      }
+    `);
+  });
+
+  it('returns 400 on empty body validation error', async () => {
+    const response = await app.inject().post('/');
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchInlineSnapshot(`
+      {
+        "code": "FST_ERR_VALIDATION",
+        "error": "Bad Request",
+        "message": "body/ [
+        {
+          "code": "invalid_type",
+          "expected": "object",
+          "received": "null",
+          "path": [],
+          "message": "Expected object, received null"
         }
       ]",
         "statusCode": 400,
