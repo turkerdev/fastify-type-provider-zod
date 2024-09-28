@@ -89,17 +89,7 @@ describe('response schema', () => {
       {
         "code": "FST_ERR_VALIDATION",
         "error": "Bad Request",
-        "message": "querystring/name [
-        {
-          "code": "invalid_type",
-          "expected": "string",
-          "received": "undefined",
-          "path": [
-            "name"
-          ],
-          "message": "Required"
-        }
-      ]",
+        "message": "querystring/name Required",
         "statusCode": 400,
       }
     `);
@@ -115,17 +105,7 @@ describe('response schema', () => {
       {
         "code": "FST_ERR_VALIDATION",
         "error": "Bad Request",
-        "message": "body/name [
-        {
-          "code": "invalid_type",
-          "expected": "string",
-          "received": "undefined",
-          "path": [
-            "name"
-          ],
-          "message": "Required"
-        }
-      ]",
+        "message": "body/name Required",
         "statusCode": 400,
       }
     `);
@@ -139,15 +119,7 @@ describe('response schema', () => {
       {
         "code": "FST_ERR_VALIDATION",
         "error": "Bad Request",
-        "message": "body/ [
-        {
-          "code": "invalid_type",
-          "expected": "object",
-          "received": "null",
-          "path": [],
-          "message": "Expected object, received null"
-        }
-      ]",
+        "message": "body/ Expected object, received null",
         "statusCode": 400,
       }
     `);
