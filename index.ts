@@ -12,8 +12,8 @@ export {
 } from './src/core';
 
 export {
-  isZodFastifySchemaValidationError,
-  type ZodFastifySchemaValidationError,
+  ZodFastifySchemaValidationError,
   ResponseSerializationError,
   InvalidSchemaError,
+  hasZodFastifySchemaValidationErrors,
 } from './src/errors';

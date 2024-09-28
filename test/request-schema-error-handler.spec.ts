@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import type { ZodTypeProvider } from '../src/core';
 import { serializerCompiler, validatorCompiler } from '../src/core';
-import {isZodFastifySchemaValidationError} from "../src/errors";
+import { hasZodFastifySchemaValidationErrors } from '../src/errors';
 
 describe('response schema with custom error handler', () => {
   let app: FastifyInstance;
@@ -56,7 +56,7 @@ describe('response schema with custom error handler', () => {
         });
     });
     app.setErrorHandler((err, req, reply) => {
-      if (isZodFastifySchemaValidationError(err)) {
+      if (hasZodFastifySchemaValidationErrors(err)) {
         return reply.code(400).send({
           error: 'Response Validation Error',
           message: "Request doesn't match the schema",
@@ -91,6 +91,7 @@ describe('response schema with custom error handler', () => {
               "instancePath": "/name",
               "keyword": "invalid_type",
               "message": "Required",
+              "name": "ZodFastifySchemaValidationError",
               "params": {
                 "issue": {
                   "code": "invalid_type",
@@ -101,8 +102,6 @@ describe('response schema with custom error handler', () => {
                   ],
                   "received": "undefined",
                 },
-                "method": "POST",
-                "url": "/",
                 "zodError": {
                   "issues": [
                     {

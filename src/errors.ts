@@ -1,4 +1,6 @@
 import createError from '@fastify/error';
+import type { FastifyError } from 'fastify';
+import type { FastifySchemaValidationError } from 'fastify/types/schema';
 import type { ZodError, ZodIssue, ZodIssueCode } from 'zod';
 
 export class ResponseSerializationError extends createError<[{ cause: ZodError }]>(
@@ -15,43 +17,53 @@ export class ResponseSerializationError extends createError<[{ cause: ZodError }
   }
 }
 
-export function isZodFastifySchemaValidationError(value: unknown): value is ZodFastifySchemaValidationError {
-    return (value as ZodFastifySchemaValidationError).validation
-}
-
 export const InvalidSchemaError = createError<[string]>(
   'FST_ERR_INVALID_SCHEMA',
   'Invalid schema passed: %s',
   500,
 );
 
-export interface ZodFastifySchemaValidationError {
-  keyword: ZodIssueCode;
-  instancePath: string;
-  schemaPath: string;
-  params: {
-    issue: ZodIssue;
-    zodError: ZodError;
-    method: string;
-    url: string;
-  };
-  message: string;
+export class ZodFastifySchemaValidationError implements FastifySchemaValidationError {
+  public name = 'ZodFastifySchemaValidationError';
+
+  constructor(
+    public message: string,
+    public keyword: ZodIssueCode,
+    public instancePath: string,
+    public schemaPath: string,
+    public params: {
+      issue: ZodIssue;
+      zodError: ZodError;
+    },
+  ) {}
 }
 
-export const createValidationError = (
-  error: ZodError,
-  method: string,
-  url: string,
-): ZodFastifySchemaValidationError[] =>
-  error.errors.map((issue) => ({
-    keyword: issue.code,
-    instancePath: `/${issue.path.join('/')}`,
-    schemaPath: `#/${issue.path.join('/')}/${issue.code}`,
-    params: {
-      issue,
-      zodError: error,
-      method,
-      url,
-    },
-    message: issue.message,
-  }));
+const isZodFastifySchemaValidationError = (
+  error: unknown,
+): error is ZodFastifySchemaValidationError =>
+  typeof error === 'object' &&
+  error !== null &&
+  'name' in error &&
+  error.name === 'ZodFastifySchemaValidationError';
+
+export const hasZodFastifySchemaValidationErrors = (
+  error: unknown,
+): error is FastifyError & { validation: ZodFastifySchemaValidationError[] } =>
+  typeof error === 'object' &&
+  error !== null &&
+  'validation' in error &&
+  Array.isArray(error.validation) &&
+  error.validation.length > 0 &&
+  isZodFastifySchemaValidationError(error.validation[0]);
+
+export const createValidationError = (error: ZodError) =>
+  error.errors.map(
+    (issue) =>
+      new ZodFastifySchemaValidationError(
+        issue.message,
+        issue.code,
+        `/${issue.path.join('/')}`,
+        `#/${issue.path.join('/')}/${issue.code}`,
+        { issue, zodError: error },
+      ),
+  );
