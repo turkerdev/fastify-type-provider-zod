@@ -15,6 +15,10 @@ export class ResponseSerializationError extends createError<[{ cause: ZodError }
   }
 }
 
+export function isZodFastifySchemaValidationError(value: unknown): value is ZodFastifySchemaValidationError {
+    return (value as ZodFastifySchemaValidationError).validation
+}
+
 export const InvalidSchemaError = createError<[string]>(
   'FST_ERR_INVALID_SCHEMA',
   'Invalid schema passed: %s',
