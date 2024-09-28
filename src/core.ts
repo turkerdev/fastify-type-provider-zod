@@ -146,7 +146,7 @@ export const createSerializerCompiler =
 
     const result = schema.safeParse(data);
     if (result.error) {
-      throw new ResponseSerializationError(result.error, method, url);
+      throw new ResponseSerializationError(method, url, { cause: result.error });
     }
 
     return JSON.stringify(result.data, options?.replacer);

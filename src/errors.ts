@@ -1,6 +1,5 @@
 import createError from '@fastify/error';
 import type { FastifyError } from 'fastify';
-import type { FastifySchemaValidationError } from 'fastify/types/schema';
 import type { ZodError, ZodIssue, ZodIssueCode } from 'zod';
 
 export class ResponseSerializationError extends createError<[{ cause: ZodError }]>(
@@ -9,11 +8,11 @@ export class ResponseSerializationError extends createError<[{ cause: ZodError }
   500,
 ) {
   constructor(
-    public cause: ZodError,
     public method: string,
     public url: string,
+    options: { cause: ZodError },
   ) {
-    super({ cause });
+    super({ cause: options.cause });
   }
 }
 
@@ -23,20 +22,17 @@ export const InvalidSchemaError = createError<[string]>(
   500,
 );
 
-export class ZodFastifySchemaValidationError implements FastifySchemaValidationError {
-  public name = 'ZodFastifySchemaValidationError';
-
-  constructor(
-    public message: string,
-    public keyword: ZodIssueCode,
-    public instancePath: string,
-    public schemaPath: string,
-    public params: {
-      issue: ZodIssue;
-      zodError: ZodError;
-    },
-  ) {}
-}
+export type ZodFastifySchemaValidationError = {
+  name: 'ZodFastifySchemaValidationError';
+  keyword: ZodIssueCode;
+  instancePath: string;
+  schemaPath: string;
+  params: {
+    issue: ZodIssue;
+    zodError: ZodError;
+  };
+  message: string;
+};
 
 const isZodFastifySchemaValidationError = (
   error: unknown,
@@ -56,14 +52,15 @@ export const hasZodFastifySchemaValidationErrors = (
   error.validation.length > 0 &&
   isZodFastifySchemaValidationError(error.validation[0]);
 
-export const createValidationError = (error: ZodError) =>
-  error.errors.map(
-    (issue) =>
-      new ZodFastifySchemaValidationError(
-        issue.message,
-        issue.code,
-        `/${issue.path.join('/')}`,
-        `#/${issue.path.join('/')}/${issue.code}`,
-        { issue, zodError: error },
-      ),
-  );
+export const createValidationError = (error: ZodError): ZodFastifySchemaValidationError[] =>
+  error.errors.map((issue) => ({
+    name: 'ZodFastifySchemaValidationError',
+    keyword: issue.code,
+    instancePath: `/${issue.path.join('/')}`,
+    schemaPath: `#/${issue.path.join('/')}/${issue.code}`,
+    params: {
+      issue,
+      zodError: error,
+    },
+    message: issue.message,
+  }));
