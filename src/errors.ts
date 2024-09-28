@@ -1,6 +1,6 @@
 import createError from '@fastify/error';
-import type { FastifySchemaValidationError } from 'fastify/types/schema';
-import type { ZodError } from 'zod';
+import type { FastifyError } from 'fastify';
+import type { ZodError, ZodIssue, ZodIssueCode } from 'zod';
 
 export class ResponseSerializationError extends createError<[{ cause: ZodError }]>(
   'FST_ERR_RESPONSE_SERIALIZATION',
@@ -8,11 +8,11 @@ export class ResponseSerializationError extends createError<[{ cause: ZodError }
   500,
 ) {
   constructor(
-    public cause: ZodError,
     public method: string,
     public url: string,
+    options: { cause: ZodError },
   ) {
-    super({ cause });
+    super({ cause: options.cause });
   }
 }
 
@@ -22,20 +22,45 @@ export const InvalidSchemaError = createError<[string]>(
   500,
 );
 
-export const createValidationError = (
-  error: ZodError,
-  method: string,
-  url: string,
-): FastifySchemaValidationError[] =>
+export type ZodFastifySchemaValidationError = {
+  name: 'ZodFastifySchemaValidationError';
+  keyword: ZodIssueCode;
+  instancePath: string;
+  schemaPath: string;
+  params: {
+    issue: ZodIssue;
+    zodError: ZodError;
+  };
+  message: string;
+};
+
+const isZodFastifySchemaValidationError = (
+  error: unknown,
+): error is ZodFastifySchemaValidationError =>
+  typeof error === 'object' &&
+  error !== null &&
+  'name' in error &&
+  error.name === 'ZodFastifySchemaValidationError';
+
+export const hasZodFastifySchemaValidationErrors = (
+  error: unknown,
+): error is FastifyError & { validation: ZodFastifySchemaValidationError[] } =>
+  typeof error === 'object' &&
+  error !== null &&
+  'validation' in error &&
+  Array.isArray(error.validation) &&
+  error.validation.length > 0 &&
+  isZodFastifySchemaValidationError(error.validation[0]);
+
+export const createValidationError = (error: ZodError): ZodFastifySchemaValidationError[] =>
   error.errors.map((issue) => ({
+    name: 'ZodFastifySchemaValidationError',
     keyword: issue.code,
     instancePath: `/${issue.path.join('/')}`,
     schemaPath: `#/${issue.path.join('/')}/${issue.code}`,
     params: {
       issue,
       zodError: error,
-      method,
-      url,
     },
-    message: error.message,
+    message: issue.message,
   }));

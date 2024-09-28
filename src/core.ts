@@ -109,11 +109,11 @@ export const createJsonSchemaTransformObject =
   };
 
 export const validatorCompiler: FastifySchemaCompiler<z.ZodTypeAny> =
-  ({ schema, method, url }) =>
+  ({ schema }) =>
   (data) => {
     const result = schema.safeParse(data);
     if (result.error) {
-      return { error: createValidationError(result.error, method, url) as unknown as Error };
+      return { error: createValidationError(result.error) as unknown as Error };
     }
 
     return { value: result.data };
@@ -146,7 +146,7 @@ export const createSerializerCompiler =
 
     const result = schema.safeParse(data);
     if (result.error) {
-      throw new ResponseSerializationError(result.error, method, url);
+      throw new ResponseSerializationError(method, url, { cause: result.error });
     }
 
     return JSON.stringify(result.data, options?.replacer);

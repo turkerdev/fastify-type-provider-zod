@@ -11,4 +11,9 @@ export {
   createSerializerCompiler,
 } from './src/core';
 
-export { ResponseSerializationError, InvalidSchemaError } from './src/errors';
+export {
+  type ZodFastifySchemaValidationError,
+  ResponseSerializationError,
+  InvalidSchemaError,
+  hasZodFastifySchemaValidationErrors,
+} from './src/errors';
