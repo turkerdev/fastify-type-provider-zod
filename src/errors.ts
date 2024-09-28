@@ -37,5 +37,5 @@ export const createValidationError = (
       method,
       url,
     },
-    message: error.message,
+    message: issue.message,
   }));
