@@ -22,14 +22,15 @@ export const InvalidSchemaError = createError<[string]>(
   500,
 );
 
+const ZodFastifySchemaValidationErrorSymbol = Symbol.for('ZodFastifySchemaValidationError');
+
 export type ZodFastifySchemaValidationError = {
-  name: 'ZodFastifySchemaValidationError';
+  [ZodFastifySchemaValidationErrorSymbol]: true;
   keyword: ZodIssueCode;
   instancePath: string;
   schemaPath: string;
   params: {
     issue: ZodIssue;
-    zodError: ZodError;
   };
   message: string;
 };
@@ -39,8 +40,8 @@ const isZodFastifySchemaValidationError = (
 ): error is ZodFastifySchemaValidationError =>
   typeof error === 'object' &&
   error !== null &&
-  'name' in error &&
-  error.name === 'ZodFastifySchemaValidationError';
+  ZodFastifySchemaValidationErrorSymbol in error &&
+  error[ZodFastifySchemaValidationErrorSymbol] === true;
 
 export const hasZodFastifySchemaValidationErrors = (
   error: unknown,
@@ -54,13 +55,12 @@ export const hasZodFastifySchemaValidationErrors = (
 
 export const createValidationError = (error: ZodError): ZodFastifySchemaValidationError[] =>
   error.errors.map((issue) => ({
-    name: 'ZodFastifySchemaValidationError',
+    [ZodFastifySchemaValidationErrorSymbol]: true,
     keyword: issue.code,
     instancePath: `/${issue.path.join('/')}`,
     schemaPath: `#/${issue.path.join('/')}/${issue.code}`,
     params: {
       issue,
-      zodError: error,
     },
     message: issue.message,
   }));
