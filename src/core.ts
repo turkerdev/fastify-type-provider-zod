@@ -10,7 +10,7 @@ import type {
 } from 'fastify';
 import type { FastifySerializerCompiler } from 'fastify/types/schema';
 import type { OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from 'openapi-types';
-import type { z } from 'zod';
+import type { z, ZodType, ZodTypeDef } from 'zod';
 
 import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors';
 import { resolveRefs } from './ref';
@@ -30,8 +30,8 @@ const defaultSkipList = [
 ];
 
 export interface ZodTypeProvider extends FastifyTypeProvider {
-  validator: this['schema'] extends z.ZodTypeAny ? z.output<this['schema']> : unknown;
-  serializer: this['schema'] extends z.ZodTypeAny ? z.input<this['schema']> : unknown;
+  validator: this['schema'] extends ZodType<unknown, ZodTypeDef, infer Input> ? Input : unknown;
+  serializer: this['schema'] extends ZodType<unknown, ZodTypeDef, infer Input> ? Input : unknown;
 }
 
 interface Schema extends FastifySchema {
