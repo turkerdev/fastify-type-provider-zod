@@ -16,4 +16,5 @@ export {
   ResponseSerializationError,
   InvalidSchemaError,
   hasZodFastifySchemaValidationErrors,
+  isResponseSerializationError,
 } from './src/errors'

@@ -50,7 +50,7 @@ describe('response schema with custom error handler', () => {
           method: 'GET',
           url: '/no-schema',
           schema: undefined,
-          handler: (req, res) => {
+          handler: (_req, res) => {
             res.send({
               status: 'ok',
             })

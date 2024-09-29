@@ -7,7 +7,7 @@ export class ResponseSerializationError extends createError<[{ cause: ZodError }
   "Response doesn't match the schema",
   500,
 ) {
-  cause: ZodError
+  cause!: ZodError
 
   constructor(
     public method: string,

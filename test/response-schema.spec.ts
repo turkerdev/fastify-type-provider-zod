@@ -45,7 +45,7 @@ describe('response schema', () => {
             },
           })
       })
-      app.setErrorHandler((err, req, reply) => {
+      app.setErrorHandler((err, _req, reply) => {
         if (isResponseSerializationError(err)) {
           return reply.code(500).send({
             error: 'Internal Server Error',
