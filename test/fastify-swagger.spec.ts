@@ -1,22 +1,23 @@
-import fastifySwagger from '@fastify/swagger';
-import fastifySwaggerUI from '@fastify/swagger-ui';
-import Fastify from 'fastify';
-import * as validator from 'oas-validator';
-import { z } from 'zod';
+import fastifySwagger from '@fastify/swagger'
+import fastifySwaggerUI from '@fastify/swagger-ui'
+import Fastify from 'fastify'
+import * as validator from 'oas-validator'
+import { describe, expect, it } from 'vitest'
+import { z } from 'zod'
 
-import type { ZodTypeProvider } from '../src/core';
+import type { ZodTypeProvider } from '../src/core'
 import {
   createJsonSchemaTransformObject,
   jsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
-} from '../src/core';
+} from '../src/core'
 
 describe('transformer', () => {
   it('generates types for fastify-swagger correctly', async () => {
-    const app = Fastify();
-    app.setValidatorCompiler(validatorCompiler);
-    app.setSerializerCompiler(serializerCompiler);
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
 
     app.register(fastifySwagger, {
       openapi: {
@@ -28,21 +29,21 @@ describe('transformer', () => {
         servers: [],
       },
       transform: jsonSchemaTransform,
-    });
+    })
 
     app.register(fastifySwaggerUI, {
       routePrefix: '/documentation',
-    });
+    })
 
     const LOGIN_SCHEMA = z.object({
       username: z.string().max(32).describe('someDescription'),
       seed: z.number().positive(),
       password: z.string().max(32),
-    });
+    })
 
     const UNAUTHORIZED_SCHEMA = z.object({
       required_role: z.literal('admin'),
-    });
+    })
 
     app.after(() => {
       app
@@ -65,7 +66,7 @@ describe('transformer', () => {
             },
           },
           handler: (req, res) => {
-            res.send('ok');
+            res.send('ok')
           },
         })
         .route({
@@ -73,7 +74,7 @@ describe('transformer', () => {
           url: '/no-schema',
           schema: undefined,
           handler: (req, res) => {
-            res.send('ok');
+            res.send('ok')
           },
         })
         .route({
@@ -86,24 +87,24 @@ describe('transformer', () => {
             },
           },
           handler: (req, res) => {
-            res.status(204).send();
+            res.status(204).send()
           },
-        });
-    });
+        })
+    })
 
-    await app.ready();
+    await app.ready()
 
-    const openApiSpecResponse = await app.inject().get('/documentation/json');
-    const openApiSpec = JSON.parse(openApiSpecResponse.body);
+    const openApiSpecResponse = await app.inject().get('/documentation/json')
+    const openApiSpec = JSON.parse(openApiSpecResponse.body)
 
-    expect(openApiSpec).toMatchSnapshot();
-    await validator.validate(openApiSpec, {});
-  });
+    expect(openApiSpec).toMatchSnapshot()
+    await validator.validate(openApiSpec, {})
+  })
 
   it('should not generate ref', async () => {
-    const app = Fastify();
-    app.setValidatorCompiler(validatorCompiler);
-    app.setSerializerCompiler(serializerCompiler);
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
 
     app.register(fastifySwagger, {
       openapi: {
@@ -115,13 +116,13 @@ describe('transformer', () => {
         servers: [],
       },
       transform: jsonSchemaTransform,
-    });
+    })
 
     app.register(fastifySwaggerUI, {
       routePrefix: '/documentation',
-    });
+    })
 
-    const TOKEN_SCHEMA = z.string().length(12);
+    const TOKEN_SCHEMA = z.string().length(12)
 
     app.after(() => {
       app.withTypeProvider<ZodTypeProvider>().route({
@@ -134,26 +135,26 @@ describe('transformer', () => {
           }),
         },
         handler: (req, res) => {
-          res.send('ok');
+          res.send('ok')
         },
-      });
-    });
+      })
+    })
 
-    await app.ready();
+    await app.ready()
 
-    const openApiSpecResponse = await app.inject().get('/documentation/json');
-    const openApiSpec = JSON.parse(openApiSpecResponse.body);
+    const openApiSpecResponse = await app.inject().get('/documentation/json')
+    const openApiSpec = JSON.parse(openApiSpecResponse.body)
 
-    expect(openApiSpec).toMatchSnapshot();
-    await validator.validate(openApiSpec, {});
-  });
+    expect(openApiSpec).toMatchSnapshot()
+    await validator.validate(openApiSpec, {})
+  })
 
   it('should generate ref correctly', async () => {
-    const app = Fastify();
-    app.setValidatorCompiler(validatorCompiler);
-    app.setSerializerCompiler(serializerCompiler);
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
 
-    const TOKEN_SCHEMA = z.string().length(12);
+    const TOKEN_SCHEMA = z.string().length(12)
 
     app.register(fastifySwagger, {
       openapi: {
@@ -170,11 +171,11 @@ describe('transformer', () => {
           Token: TOKEN_SCHEMA,
         },
       }),
-    });
+    })
 
     app.register(fastifySwaggerUI, {
       routePrefix: '/documentation',
-    });
+    })
 
     app.after(() => {
       app.withTypeProvider<ZodTypeProvider>().route({
@@ -187,17 +188,17 @@ describe('transformer', () => {
           }),
         },
         handler: (req, res) => {
-          res.send('ok');
+          res.send('ok')
         },
-      });
-    });
+      })
+    })
 
-    await app.ready();
+    await app.ready()
 
-    const openApiSpecResponse = await app.inject().get('/documentation/json');
-    const openApiSpec = JSON.parse(openApiSpecResponse.body);
+    const openApiSpecResponse = await app.inject().get('/documentation/json')
+    const openApiSpec = JSON.parse(openApiSpecResponse.body)
 
-    expect(openApiSpec).toMatchSnapshot();
-    await validator.validate(openApiSpec, {});
-  });
-});
+    expect(openApiSpec).toMatchSnapshot()
+    await validator.validate(openApiSpec, {})
+  })
+})

@@ -9,11 +9,11 @@ export {
   serializerCompiler,
   validatorCompiler,
   createSerializerCompiler,
-} from './src/core';
+} from './src/core'
 
 export {
   type ZodFastifySchemaValidationError,
   ResponseSerializationError,
   InvalidSchemaError,
   hasZodFastifySchemaValidationErrors,
-} from './src/errors';
+} from './src/errors'
