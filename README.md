@@ -142,6 +142,44 @@ async function run() {
 run();
 ```
 
+## Customizing error responses
+
+You can add custom handling of request and response validation errors to your fastify error handler like this:
+
+```ts
+import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod'
+
+fastifyApp.setErrorHandler((err, req, reply) => {
+    if (hasZodFastifySchemaValidationErrors(err)) {
+        return reply.code(400).send({
+            error: 'Response Validation Error',
+            message: "Request doesn't match the schema",
+            statusCode: 400,
+            details: {
+                issues: err.validation,
+                method: req.method,
+                url: req.url,
+            },
+        })
+    }
+
+    if (isResponseSerializationError(err)) {
+        return reply.code(500).send({
+            error: 'Internal Server Error',
+            message: "Response doesn't match the schema",
+            statusCode: 500,
+            details: {
+                issues: err.cause.issues,
+                method: err.method,
+                url: err.url,
+            },
+        })
+    }
+    
+    // the rest of the error handler
+})
+```
+
 ## How to create refs to the schemas?
 
 It is possible to create refs to the schemas by using the `createJsonSchemaTransformObject` function. You provide the schemas as an object and fastifySwagger will create a OpenAPI document in which the schemas are referenced. The following example creates a ref to the `User` schema and will include the `User` schema in the OpenAPI document.
