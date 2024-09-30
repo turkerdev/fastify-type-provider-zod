@@ -51,7 +51,7 @@ const isZodFastifySchemaValidationError = (
 
 export const hasZodFastifySchemaValidationErrors = (
   error: unknown,
-): error is FastifyError & { validation: ZodFastifySchemaValidationError[] } =>
+): error is Omit<FastifyError, 'validation'> & { validation: ZodFastifySchemaValidationError[] } =>
   typeof error === 'object' &&
   error !== null &&
   'validation' in error &&
