@@ -152,7 +152,7 @@ import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod'
 fastifyApp.setErrorHandler((err, req, reply) => {
     if (hasZodFastifySchemaValidationErrors(err)) {
         return reply.code(400).send({
-            error: 'Response Validation Error',
+            error: 'Schema Validation Error',
             message: "Request doesn't match the schema",
             statusCode: 400,
             details: {
