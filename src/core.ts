@@ -10,7 +10,7 @@ import type {
 } from 'fastify'
 import type { FastifySerializerCompiler } from 'fastify/types/schema'
 import type { OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from 'openapi-types'
-import type { z } from 'zod'
+import { ZodSchema, type z } from 'zod'
 
 import { InvalidSchemaError, ResponseSerializationError, createValidationError } from './errors'
 import { resolveRefs } from './ref'
@@ -70,10 +70,14 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       for (const prop in response as any) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const schema = resolveSchema((response as any)[prop])
+        const responseSchema = response[prop]
 
-        const transformedResponse = convertZodToJsonSchema(schema)
+        if (responseSchema instanceof ZodSchema === false) {
+          transformed.response[prop] = responseSchema
+          continue
+        }
+
+        const transformedResponse = convertZodToJsonSchema(responseSchema)
         transformed.response[prop] = transformedResponse
       }
     }
