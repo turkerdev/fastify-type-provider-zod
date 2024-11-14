@@ -80,6 +80,37 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
             },
             "description": "Default Response",
           },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Successful response",
+                  "properties": {
+                    "hello": {
+                      "type": "string",
+                    },
+                  },
+                  "type": "object",
+                },
+              },
+            },
+            "description": "Successful response",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Cookies for session and refresh tokens",
+                "schema": {
+                  "items": {
+                    "example": [
+                      "refreshToken=tokenValue; Path=/; HttpOnly; Secure; SameSite=Strict",
+                      "sessionToken=tokenValue; Path=/; HttpOnly; Secure; SameSite=Strict",
+                    ],
+                    "type": "string",
+                  },
+                  "type": "array",
+                },
+              },
+            },
+          },
           "401": {
             "content": {
               "application/json": {

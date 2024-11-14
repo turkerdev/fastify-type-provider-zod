@@ -63,6 +63,26 @@ describe('transformer', () => {
             response: {
               200: z.string(),
               401: UNAUTHORIZED_SCHEMA,
+              201: {
+                description: 'Successful response',
+                type: 'object',
+                properties: {
+                  hello: { type: 'string' },
+                },
+                headers: {
+                  'Set-Cookie': {
+                    type: 'array',
+                    items: {
+                      type: 'string',
+                      example: [
+                        'refreshToken=tokenValue; Path=/; HttpOnly; Secure; SameSite=Strict',
+                        'sessionToken=tokenValue; Path=/; HttpOnly; Secure; SameSite=Strict',
+                      ],
+                    },
+                    description: 'Cookies for session and refresh tokens',
+                  },
+                },
+              },
             },
           },
           handler: (req, res) => {
