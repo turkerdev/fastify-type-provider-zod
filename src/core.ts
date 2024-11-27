@@ -14,7 +14,9 @@ import type { z } from 'zod'
 
 import { InvalidSchemaError, ResponseSerializationError, createValidationError } from './errors'
 import { resolveRefs } from './ref'
-import { convertZodToJsonSchema } from './zod-to-json'
+import { type ZodToJsonSchemaOptions, convertZodToJsonSchema } from './zod-to-json'
+
+export type { ZodToJsonSchemaOptions } from './zod-to-json'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FreeformRecord = Record<string, any>
@@ -38,7 +40,15 @@ interface Schema extends FastifySchema {
   hide?: boolean
 }
 
-export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly string[] }) => {
+interface CreateJsonSchemaTransformOptions {
+  skipList?: readonly string[]
+  zodToJsonSchemaOptions?: ZodToJsonSchemaOptions
+}
+
+export const createJsonSchemaTransform = ({
+  skipList = defaultSkipList,
+  zodToJsonSchemaOptions,
+}: CreateJsonSchemaTransformOptions = {}) => {
   return ({ schema, url }: { schema: Schema; url: string }) => {
     if (!schema) {
       return {
@@ -61,7 +71,7 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
     for (const prop in zodSchemas) {
       const zodSchema = zodSchemas[prop]
       if (zodSchema) {
-        transformed[prop] = convertZodToJsonSchema(zodSchema)
+        transformed[prop] = convertZodToJsonSchema(zodSchema, zodToJsonSchemaOptions)
       }
     }
 
@@ -73,7 +83,7 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const schema = resolveSchema((response as any)[prop])
 
-        const transformedResponse = convertZodToJsonSchema(schema)
+        const transformedResponse = convertZodToJsonSchema(schema, zodToJsonSchemaOptions)
         transformed.response[prop] = transformedResponse
       }
     }
@@ -89,12 +99,15 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
   }
 }
 
-export const jsonSchemaTransform = createJsonSchemaTransform({
-  skipList: defaultSkipList,
-})
+export const jsonSchemaTransform = createJsonSchemaTransform()
+
+interface CreateJsonSchemaTransformObjectOptions {
+  schemas: Record<string, z.ZodTypeAny>
+  zodToJsonSchemaOptions?: ZodToJsonSchemaOptions
+}
 
 export const createJsonSchemaTransformObject =
-  ({ schemas }: { schemas: Record<string, z.ZodTypeAny> }) =>
+  ({ schemas, zodToJsonSchemaOptions }: CreateJsonSchemaTransformObjectOptions) =>
   (
     input:
       | { swaggerObject: Partial<OpenAPIV2.Document> }
@@ -105,7 +118,7 @@ export const createJsonSchemaTransformObject =
       return input.swaggerObject
     }
 
-    return resolveRefs(input.openapiObject, schemas)
+    return resolveRefs(input.openapiObject, schemas, zodToJsonSchemaOptions)
   }
 
 export const validatorCompiler: FastifySchemaCompiler<z.ZodTypeAny> =

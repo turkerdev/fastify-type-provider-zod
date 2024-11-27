@@ -1,7 +1,7 @@
 import type { OpenAPIV3, OpenAPIV3_1 } from 'openapi-types'
 import type { z } from 'zod'
 
-import { convertZodToJsonSchema } from './zod-to-json'
+import { type ZodToJsonSchemaOptions, convertZodToJsonSchema } from './zod-to-json'
 
 const createComponentMap = (
   schemas: Record<string, OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject>,
@@ -46,10 +46,11 @@ const createComponentReplacer = (componentMapVK: Map<string, string>, schemasObj
 export const resolveRefs = (
   openapiObject: Partial<OpenAPIV3.Document | OpenAPIV3_1.Document>,
   zodSchemas: Record<string, z.ZodTypeAny>,
+  zodToJsonSchemaOptions?: Omit<ZodToJsonSchemaOptions, 'target' | '$refStrategy'>,
 ) => {
   const schemas: Record<string, OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject> = {}
   for (const key in zodSchemas) {
-    schemas[key] = convertZodToJsonSchema(zodSchemas[key])
+    schemas[key] = convertZodToJsonSchema(zodSchemas[key], zodToJsonSchemaOptions)
   }
 
   const document = {
