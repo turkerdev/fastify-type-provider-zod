@@ -16,8 +16,6 @@ import { InvalidSchemaError, ResponseSerializationError, createValidationError }
 import { resolveRefs } from './ref'
 import { type ZodToJsonSchemaOptions, convertZodToJsonSchema } from './zod-to-json'
 
-export type { ZodToJsonSchemaOptions } from './zod-to-json'
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FreeformRecord = Record<string, any>
 

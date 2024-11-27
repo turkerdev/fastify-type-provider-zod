@@ -18,3 +18,5 @@ export {
   hasZodFastifySchemaValidationErrors,
   isResponseSerializationError,
 } from './src/errors'
+
+export type { ZodToJsonSchemaOptions } from './src/zod-to-json'
