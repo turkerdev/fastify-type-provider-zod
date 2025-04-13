@@ -5,7 +5,7 @@ export {
   type ZodSerializerCompilerOptions,
   jsonSchemaTransform,
   createJsonSchemaTransform,
-  createJsonSchemaTransformObject,
+  jsonSchemaTransformObject,
   serializerCompiler,
   validatorCompiler,
   createSerializerCompiler,

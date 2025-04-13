@@ -7,8 +7,8 @@ import { z } from 'zod'
 
 import type { ZodTypeProvider } from '../src/core'
 import {
-  createJsonSchemaTransformObject,
   jsonSchemaTransform,
+  jsonSchemaTransformObject,
   serializerCompiler,
   validatorCompiler,
 } from '../src/core'
@@ -37,7 +37,7 @@ describe('transformer', () => {
 
     const LOGIN_SCHEMA = z.object({
       username: z.string().max(32).describe('someDescription'),
-      seed: z.number().positive(),
+      seed: z.number().min(1),
       password: z.string().max(32),
     })
 
@@ -156,6 +156,8 @@ describe('transformer', () => {
 
     const TOKEN_SCHEMA = z.string().length(12)
 
+    z.globalRegistry.add(TOKEN_SCHEMA, { id: 'Token' })
+
     app.register(fastifySwagger, {
       openapi: {
         info: {
@@ -166,11 +168,7 @@ describe('transformer', () => {
         servers: [],
       },
       transform: jsonSchemaTransform,
-      transformObject: createJsonSchemaTransformObject({
-        schemas: {
-          Token: TOKEN_SCHEMA,
-        },
-      }),
+      transformObject: jsonSchemaTransformObject,
     })
 
     app.register(fastifySwaggerUI, {

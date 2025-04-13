@@ -17,14 +17,6 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
         "description": "delete route",
         "responses": {
           "204": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Empty response",
-                  "not": {},
-                },
-              },
-            },
             "description": "Empty response",
           },
         },
@@ -41,15 +33,13 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": false,
                 "properties": {
                   "password": {
                     "maxLength": 32,
                     "type": "string",
                   },
                   "seed": {
-                    "exclusiveMinimum": true,
-                    "minimum": 0,
+                    "minimum": 1,
                     "type": "number",
                   },
                   "username": {
@@ -84,13 +74,11 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": false,
                   "properties": {
                     "required_role": {
                       "enum": [
                         "admin",
                       ],
-                      "type": "string",
                     },
                   },
                   "required": [
@@ -128,6 +116,7 @@ exports[`transformer > should generate ref correctly 1`] = `
   "components": {
     "schemas": {
       "Token": {
+        "id": "Token",
         "maxLength": 12,
         "minLength": 12,
         "type": "string",
@@ -147,7 +136,6 @@ exports[`transformer > should generate ref correctly 1`] = `
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": false,
                 "properties": {
                   "access_token": {
                     "$ref": "#/components/schemas/Token",
@@ -196,7 +184,6 @@ exports[`transformer > should not generate ref 1`] = `
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": false,
                 "properties": {
                   "access_token": {
                     "maxLength": 12,

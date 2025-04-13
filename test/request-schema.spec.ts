@@ -91,7 +91,7 @@ describe('response schema', () => {
       {
         "code": "FST_ERR_VALIDATION",
         "error": "Bad Request",
-        "message": "querystring/name Required",
+        "message": "querystring/name Invalid input: expected string, received undefined",
         "statusCode": 400,
       }
     `)
@@ -107,7 +107,7 @@ describe('response schema', () => {
       {
         "code": "FST_ERR_VALIDATION",
         "error": "Bad Request",
-        "message": "body/name Required",
+        "message": "body/name Invalid input: expected string, received undefined",
         "statusCode": 400,
       }
     `)
@@ -121,7 +121,7 @@ describe('response schema', () => {
       {
         "code": "FST_ERR_VALIDATION",
         "error": "Bad Request",
-        "message": "body/ Expected object, received null",
+        "message": "body/ Invalid input: expected object, received null",
         "statusCode": 400,
       }
     `)

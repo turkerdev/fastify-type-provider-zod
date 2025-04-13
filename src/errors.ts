@@ -1,6 +1,6 @@
 import createError from '@fastify/error'
 import type { FastifyError } from 'fastify'
-import type { ZodError, ZodIssue, ZodIssueCode } from 'zod'
+import type { ZodError, ZodIssue } from 'zod'
 
 export class ResponseSerializationError extends createError<[{ cause: ZodError }]>(
   'FST_ERR_RESPONSE_SERIALIZATION',
@@ -32,7 +32,7 @@ const ZodFastifySchemaValidationErrorSymbol = Symbol.for('ZodFastifySchemaValida
 
 export type ZodFastifySchemaValidationError = {
   [ZodFastifySchemaValidationErrorSymbol]: true
-  keyword: ZodIssueCode
+  keyword: string
   instancePath: string
   schemaPath: string
   params: {
@@ -60,9 +60,9 @@ export const hasZodFastifySchemaValidationErrors = (
   isZodFastifySchemaValidationError(error.validation[0])
 
 export const createValidationError = (error: ZodError): ZodFastifySchemaValidationError[] =>
-  error.errors.map((issue) => ({
+  error.issues.map((issue) => ({
     [ZodFastifySchemaValidationErrorSymbol]: true,
-    keyword: issue.code,
+    keyword: issue.code ?? 'custom',
     instancePath: `/${issue.path.join('/')}`,
     schemaPath: `#/${issue.path.join('/')}/${issue.code}`,
     params: {

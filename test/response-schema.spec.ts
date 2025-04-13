@@ -85,9 +85,8 @@ describe('response schema', () => {
               {
                 "code": "invalid_type",
                 "expected": "undefined",
-                "message": "Expected undefined, received object",
+                "message": "Invalid input: expected undefined, received object",
                 "path": [],
-                "received": "object",
               },
             ],
             "method": "GET",

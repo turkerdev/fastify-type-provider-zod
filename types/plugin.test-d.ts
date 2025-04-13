@@ -1,12 +1,12 @@
-import type { Http2Server } from 'http2';
+import type { Http2Server } from 'http2'
 
-import type { FastifyPluginAsync, FastifyPluginCallback } from 'fastify';
-import Fastify from 'fastify';
-import fp from 'fastify-plugin';
-import { expectType } from 'tsd';
-import { z } from 'zod';
+import type { FastifyPluginAsync, FastifyPluginCallback } from 'fastify'
+import Fastify from 'fastify'
+import fp from 'fastify-plugin'
+import { expectType } from 'tsd'
+import { z } from 'zod'
 
-import type { FastifyPluginAsyncZod, FastifyPluginCallbackZod } from '../src/core';
+import type { FastifyPluginAsyncZod, FastifyPluginCallbackZod } from '../src/core'
 
 // Ensure the defaults of FastifyPluginAsyncZod are the same as FastifyPluginAsync
 export const pluginAsyncDefaults: FastifyPluginAsync = async (fastify, options) => {
@@ -85,8 +85,8 @@ const callbackPlugin: FastifyPluginCallbackZod<{ optionA: string }, Http2Server>
 
 const fastify = Fastify();
 
-fastify.register(asyncPlugin);
-fastify.register(callbackPlugin);
+fastify.register(asyncPlugin, { optionA: 'test' });
+fastify.register(callbackPlugin, { optionA: 'test' });
 
 const asyncPluginHttpDefault: FastifyPluginAsyncZod<{ optionA: string }> = async (
   fastify,

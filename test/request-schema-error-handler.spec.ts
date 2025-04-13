@@ -92,16 +92,15 @@ describe('response schema with custom error handler', () => {
             {
               "instancePath": "/name",
               "keyword": "invalid_type",
-              "message": "Required",
+              "message": "Invalid input: expected string, received undefined",
               "params": {
                 "issue": {
                   "code": "invalid_type",
                   "expected": "string",
-                  "message": "Required",
+                  "message": "Invalid input: expected string, received undefined",
                   "path": [
                     "name",
                   ],
-                  "received": "undefined",
                 },
               },
               "schemaPath": "#/name/invalid_type",

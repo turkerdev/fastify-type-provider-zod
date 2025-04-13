@@ -9,12 +9,10 @@ import type {
   RawServerDefault,
 } from 'fastify'
 import type { FastifySerializerCompiler } from 'fastify/types/schema'
-import type { OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from 'openapi-types'
-import type { z } from 'zod'
+import type { OpenAPIV3, OpenAPIV3_1 } from 'openapi-types'
+import { z } from 'zod'
 
 import { InvalidSchemaError, ResponseSerializationError, createValidationError } from './errors'
-import { resolveRefs } from './ref'
-import { convertZodToJsonSchema } from './zod-to-json'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FreeformRecord = Record<string, any>
@@ -36,6 +34,15 @@ export interface ZodTypeProvider extends FastifyTypeProvider {
 
 interface Schema extends FastifySchema {
   hide?: boolean
+}
+
+const zodtoJSONSchemaOptions = {
+  uri: (id: string) => `#/components/schemas/${id}`,
+  external: {
+    registry: z.globalRegistry,
+    uri: (id: string) => `#/components/schemas/${id}`,
+    defs: {},
+  },
 }
 
 export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly string[] }) => {
@@ -61,7 +68,7 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
     for (const prop in zodSchemas) {
       const zodSchema = zodSchemas[prop]
       if (zodSchema) {
-        transformed[prop] = convertZodToJsonSchema(zodSchema)
+        transformed[prop] = z.toJSONSchema(zodSchema, zodtoJSONSchemaOptions)
       }
     }
 
@@ -71,9 +78,9 @@ export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly str
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       for (const prop in response as any) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const schema = resolveSchema((response as any)[prop])
+        const zodSchema = resolveSchema((response as any)[prop])
 
-        const transformedResponse = convertZodToJsonSchema(schema)
+        const transformedResponse = z.toJSONSchema(zodSchema, zodtoJSONSchemaOptions)
         transformed.response[prop] = transformedResponse
       }
     }
@@ -93,20 +100,29 @@ export const jsonSchemaTransform = createJsonSchemaTransform({
   skipList: defaultSkipList,
 })
 
-export const createJsonSchemaTransformObject =
-  ({ schemas }: { schemas: Record<string, z.ZodTypeAny> }) =>
-  (
-    input:
-      | { swaggerObject: Partial<OpenAPIV2.Document> }
-      | { openapiObject: Partial<OpenAPIV3.Document | OpenAPIV3_1.Document> },
-  ) => {
-    if ('swaggerObject' in input) {
-      console.warn('This package currently does not support component references for Swagger 2.0')
-      return input.swaggerObject
-    }
-
-    return resolveRefs(input.openapiObject, schemas)
+export const jsonSchemaTransformObject = (
+  input:
+    | { swaggerObject: any }
+    | { openapiObject: Partial<OpenAPIV3.Document | OpenAPIV3_1.Document> },
+) => {
+  if ('swaggerObject' in input) {
+    console.warn('This package currently does not support component references for Swagger 2.0')
+    return input.swaggerObject
   }
+
+  const { schemas } = z.toJSONSchema(z.globalRegistry, zodtoJSONSchemaOptions)
+
+  return {
+    ...input.openapiObject,
+    components: {
+      ...input.openapiObject.components,
+      schemas: {
+        ...input.openapiObject.components?.schemas,
+        ...schemas,
+      },
+    },
+  }
+}
 
 export const validatorCompiler: FastifySchemaCompiler<z.ZodTypeAny> =
   ({ schema }) =>
