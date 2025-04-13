@@ -38,7 +38,7 @@ interface Schema extends FastifySchema {
 
 type CreateJsonSchemaTransformOptions = {
   skipList?: readonly string[]
-  schemaRegistry?: z.core.$ZodJSONSchemaRegistry
+  schemaRegistry?: z.core.$ZodRegistry<{ id?: string | undefined }>
 }
 
 export const createJsonSchemaTransform = ({
@@ -110,7 +110,7 @@ export const createJsonSchemaTransform = ({
 export const jsonSchemaTransform = createJsonSchemaTransform({})
 
 type CreateJsonSchemaTransformObjectOptions = {
-  schemaRegistry?: z.core.$ZodJSONSchemaRegistry
+  schemaRegistry?: z.core.$ZodRegistry<{ id?: string | undefined }>
 }
 
 export const createJsonSchemaTransformObject =
