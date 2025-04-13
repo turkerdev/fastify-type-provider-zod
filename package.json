@@ -4,11 +4,7 @@
   "description": "Zod Type Provider for Fastify@5",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": [
-    "README.md",
-    "LICENSE",
-    "dist"
-  ],
+  "files": ["README.md", "LICENSE", "dist"],
   "scripts": {
     "build": "tsc",
     "test": "npm run build && npm run typescript && vitest",
@@ -25,12 +21,7 @@
   "repository": {
     "url": "https://github.com/turkerdev/fastify-type-provider-zod"
   },
-  "keywords": [
-    "fastify",
-    "zod",
-    "type",
-    "provider"
-  ],
+  "keywords": ["fastify", "zod", "type", "provider"],
   "author": "turkerd",
   "license": "MIT",
   "bugs": {

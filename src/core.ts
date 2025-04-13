@@ -45,9 +45,13 @@ const zodtoJSONSchemaOptions = {
   },
 }
 
+type CreateJsonSchemaTransformOptions = {
+  skipList: readonly string[]
+}
+
 export const createJsonSchemaTransform = ({
   skipList,
-}: { skipList: readonly string[] }): SwaggerTransform<Schema> => {
+}: CreateJsonSchemaTransformOptions): SwaggerTransform<Schema> => {
   return ({ schema, url }) => {
     if (!schema) {
       return {
@@ -102,25 +106,35 @@ export const jsonSchemaTransform = createJsonSchemaTransform({
   skipList: defaultSkipList,
 })
 
-export const jsonSchemaTransformObject: SwaggerTransformObject = (input) => {
-  if ('swaggerObject' in input) {
-    console.warn('This package currently does not support component references for Swagger 2.0')
-    return input.swaggerObject
+type CreateJsonSchemaTransformObjectOptions = {
+  schemaRegistry: z.core.$ZodJSONSchemaRegistry
+}
+
+export const createJsonSchemaTransformObject =
+  ({ schemaRegistry }: CreateJsonSchemaTransformObjectOptions): SwaggerTransformObject =>
+  (input) => {
+    if ('swaggerObject' in input) {
+      console.warn('This package currently does not support component references for Swagger 2.0')
+      return input.swaggerObject
+    }
+
+    const { schemas } = z.toJSONSchema(schemaRegistry, zodtoJSONSchemaOptions)
+
+    return {
+      ...input.openapiObject,
+      components: {
+        ...input.openapiObject.components,
+        schemas: {
+          ...input.openapiObject.components?.schemas,
+          ...schemas,
+        },
+      },
+    } as ReturnType<SwaggerTransformObject>
   }
 
-  const { schemas } = z.toJSONSchema(z.globalRegistry, zodtoJSONSchemaOptions)
-
-  return {
-    ...input.openapiObject,
-    components: {
-      ...input.openapiObject.components,
-      schemas: {
-        ...input.openapiObject.components?.schemas,
-        ...schemas,
-      },
-    },
-  } as ReturnType<SwaggerTransformObject>
-}
+export const jsonSchemaTransformObject = createJsonSchemaTransformObject({
+  schemaRegistry: z.globalRegistry,
+})
 
 export const validatorCompiler: FastifySchemaCompiler<z.ZodTypeAny> =
   ({ schema }) =>
