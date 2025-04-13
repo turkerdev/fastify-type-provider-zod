@@ -6,6 +6,7 @@ export {
   jsonSchemaTransform,
   createJsonSchemaTransform,
   jsonSchemaTransformObject,
+  createJsonSchemaTransformObject,
   serializerCompiler,
   validatorCompiler,
   createSerializerCompiler,
