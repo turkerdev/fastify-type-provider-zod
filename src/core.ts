@@ -36,21 +36,14 @@ interface Schema extends FastifySchema {
   hide?: boolean
 }
 
-const zodtoJSONSchemaOptions = {
-  uri: (id: string) => `#/components/schemas/${id}`,
-  external: {
-    registry: z.globalRegistry,
-    uri: (id: string) => `#/components/schemas/${id}`,
-    defs: {},
-  },
-}
-
 type CreateJsonSchemaTransformOptions = {
-  skipList: readonly string[]
+  skipList?: readonly string[]
+  schemaRegistry?: z.core.$ZodJSONSchemaRegistry
 }
 
 export const createJsonSchemaTransform = ({
-  skipList,
+  skipList = defaultSkipList,
+  schemaRegistry = z.globalRegistry,
 }: CreateJsonSchemaTransformOptions): SwaggerTransform<Schema> => {
   return ({ schema, url }) => {
     if (!schema) {
@@ -74,7 +67,13 @@ export const createJsonSchemaTransform = ({
     for (const prop in zodSchemas) {
       const zodSchema = zodSchemas[prop]
       if (zodSchema) {
-        transformed[prop] = z.toJSONSchema(zodSchema, zodtoJSONSchemaOptions)
+        transformed[prop] = z.toJSONSchema(zodSchema, {
+          external: {
+            registry: schemaRegistry,
+            uri: (id: string) => `#/components/schemas/${id}`,
+            defs: {},
+          },
+        })
       }
     }
 
@@ -86,7 +85,13 @@ export const createJsonSchemaTransform = ({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const zodSchema = resolveSchema((response as any)[prop])
 
-        const transformedResponse = z.toJSONSchema(zodSchema, zodtoJSONSchemaOptions)
+        const transformedResponse = z.toJSONSchema(zodSchema, {
+          external: {
+            registry: schemaRegistry,
+            uri: (id: string) => `#/components/schemas/${id}`,
+            defs: {},
+          },
+        })
         transformed.response[prop] = transformedResponse
       }
     }
@@ -102,23 +107,30 @@ export const createJsonSchemaTransform = ({
   }
 }
 
-export const jsonSchemaTransform = createJsonSchemaTransform({
-  skipList: defaultSkipList,
-})
+export const jsonSchemaTransform = createJsonSchemaTransform({})
 
 type CreateJsonSchemaTransformObjectOptions = {
-  schemaRegistry: z.core.$ZodJSONSchemaRegistry
+  schemaRegistry?: z.core.$ZodJSONSchemaRegistry
 }
 
 export const createJsonSchemaTransformObject =
-  ({ schemaRegistry }: CreateJsonSchemaTransformObjectOptions): SwaggerTransformObject =>
+  ({
+    schemaRegistry = z.globalRegistry,
+  }: CreateJsonSchemaTransformObjectOptions): SwaggerTransformObject =>
   (input) => {
     if ('swaggerObject' in input) {
       console.warn('This package currently does not support component references for Swagger 2.0')
       return input.swaggerObject
     }
 
-    const { schemas } = z.toJSONSchema(schemaRegistry, zodtoJSONSchemaOptions)
+    const { schemas } = z.toJSONSchema(schemaRegistry, {
+      uri: (id: string) => `#/components/schemas/${id}`,
+      external: {
+        registry: schemaRegistry,
+        uri: (id: string) => `#/components/schemas/${id}`,
+        defs: {},
+      },
+    })
 
     return {
       ...input.openapiObject,
@@ -132,9 +144,7 @@ export const createJsonSchemaTransformObject =
     } as ReturnType<SwaggerTransformObject>
   }
 
-export const jsonSchemaTransformObject = createJsonSchemaTransformObject({
-  schemaRegistry: z.globalRegistry,
-})
+export const jsonSchemaTransformObject = createJsonSchemaTransformObject({})
 
 export const validatorCompiler: FastifySchemaCompiler<z.ZodTypeAny> =
   ({ schema }) =>
