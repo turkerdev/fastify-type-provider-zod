@@ -1,3 +1,4 @@
+import type { SwaggerTransform, SwaggerTransformObject } from '@fastify/swagger'
 import type {
   FastifyPluginAsync,
   FastifyPluginCallback,
@@ -9,7 +10,6 @@ import type {
   RawServerDefault,
 } from 'fastify'
 import type { FastifySerializerCompiler } from 'fastify/types/schema'
-import type { OpenAPIV3, OpenAPIV3_1 } from 'openapi-types'
 import { z } from 'zod'
 
 import { InvalidSchemaError, ResponseSerializationError, createValidationError } from './errors'
@@ -45,8 +45,10 @@ const zodtoJSONSchemaOptions = {
   },
 }
 
-export const createJsonSchemaTransform = ({ skipList }: { skipList: readonly string[] }) => {
-  return ({ schema, url }: { schema: Schema; url: string }) => {
+export const createJsonSchemaTransform = ({
+  skipList,
+}: { skipList: readonly string[] }): SwaggerTransform<Schema> => {
+  return ({ schema, url }) => {
     if (!schema) {
       return {
         schema,
@@ -100,11 +102,7 @@ export const jsonSchemaTransform = createJsonSchemaTransform({
   skipList: defaultSkipList,
 })
 
-export const jsonSchemaTransformObject = (
-  input:
-    | { swaggerObject: any }
-    | { openapiObject: Partial<OpenAPIV3.Document | OpenAPIV3_1.Document> },
-) => {
+export const jsonSchemaTransformObject: SwaggerTransformObject = (input) => {
   if ('swaggerObject' in input) {
     console.warn('This package currently does not support component references for Swagger 2.0')
     return input.swaggerObject
@@ -121,7 +119,7 @@ export const jsonSchemaTransformObject = (
         ...schemas,
       },
     },
-  }
+  } as ReturnType<SwaggerTransformObject>
 }
 
 export const validatorCompiler: FastifySchemaCompiler<z.ZodTypeAny> =
