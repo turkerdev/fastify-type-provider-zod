@@ -158,9 +158,15 @@ describe('transformer', () => {
 
     const TOKEN_SCHEMA = z.string().length(12)
 
-    const schemaRegistry = z.registry<{ id?: string | undefined }>()
+    const schemaRegistry = z.registry<{
+      id?: string | undefined
+      description?: string | undefined
+    }>()
 
-    schemaRegistry.add(TOKEN_SCHEMA, { id: 'Token' })
+    schemaRegistry.add(TOKEN_SCHEMA, {
+      id: 'Token',
+      description: 'Token description',
+    })
 
     app.register(fastifySwagger, {
       openapi: {
@@ -211,7 +217,10 @@ describe('transformer', () => {
 
     const TOKEN_SCHEMA = z.string().length(12)
 
-    z.globalRegistry.add(TOKEN_SCHEMA, { id: 'Token' })
+    z.globalRegistry.add(TOKEN_SCHEMA, {
+      id: 'Token',
+      description: 'Token description',
+    })
 
     app.register(fastifySwagger, {
       openapi: {
@@ -242,6 +251,86 @@ describe('transformer', () => {
         },
         handler: (req, res) => {
           res.send('ok')
+        },
+      })
+    })
+
+    await app.ready()
+
+    const openApiSpecResponse = await app.inject().get('/documentation/json')
+    const openApiSpec = JSON.parse(openApiSpecResponse.body)
+
+    expect(openApiSpec).toMatchSnapshot()
+    await validator.validate(openApiSpec, {})
+  })
+
+  it('should generate nested and circular refs correctly', async () => {
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
+
+    const GROUP_SCHEMA = z.interface({
+      id: z.string(),
+      get subgroups() {
+        return z.array(GROUP_SCHEMA)
+      },
+    })
+
+    const USER_SCHEMA = z.interface({
+      id: z.string(),
+      groups: z.array(GROUP_SCHEMA),
+    })
+
+    const schemaRegistry = z.registry<{
+      id?: string | undefined
+      description?: string | undefined
+    }>()
+
+    schemaRegistry.add(GROUP_SCHEMA, {
+      id: 'Group',
+    })
+    schemaRegistry.add(USER_SCHEMA, {
+      id: 'User',
+      description: 'User description',
+    })
+
+    app.register(fastifySwagger, {
+      openapi: {
+        info: {
+          title: 'SampleApi',
+          description: 'Sample backend service',
+          version: '1.0.0',
+        },
+        servers: [],
+      },
+      transform: createJsonSchemaTransform({ schemaRegistry }),
+      transformObject: createJsonSchemaTransformObject({ schemaRegistry }),
+    })
+
+    app.register(fastifySwaggerUI, {
+      routePrefix: '/documentation',
+    })
+
+    app.after(() => {
+      app.withTypeProvider<ZodTypeProvider>().route({
+        method: 'POST',
+        url: '/login',
+        schema: {
+          response: {
+            200: z.object({
+              groups: z.array(GROUP_SCHEMA),
+              user: USER_SCHEMA,
+            }),
+          },
+        },
+        handler: (req, res) => {
+          res.send({
+            groups: [],
+            user: {
+              id: '1',
+              groups: [],
+            },
+          })
         },
       })
     })

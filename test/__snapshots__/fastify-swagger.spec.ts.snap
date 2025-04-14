@@ -114,7 +114,45 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
 exports[`transformer > should generate nested and circular refs correctly 1`] = `
 {
   "components": {
-    "schemas": {},
+    "schemas": {
+      "Group": {
+        "properties": {
+          "id": {
+            "type": "string",
+          },
+          "subgroups": {
+            "items": {
+              "$ref": "#",
+            },
+            "type": "array",
+          },
+        },
+        "required": [
+          "id",
+          "subgroups",
+        ],
+        "type": "object",
+      },
+      "User": {
+        "description": "User description",
+        "properties": {
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/Group",
+            },
+            "type": "array",
+          },
+          "id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "groups",
+        ],
+        "type": "object",
+      },
+    },
   },
   "info": {
     "description": "Sample backend service",
@@ -133,27 +171,12 @@ exports[`transformer > should generate nested and circular refs correctly 1`] = 
                   "properties": {
                     "groups": {
                       "items": {
-                        "$ref": "#/components/schemas/__shared#/$defs/schema0",
+                        "$ref": "#/components/schemas/Group",
                       },
                       "type": "array",
                     },
                     "user": {
-                      "properties": {
-                        "groups": {
-                          "items": {
-                            "$ref": "#/components/schemas/__shared#/$defs/schema0",
-                          },
-                          "type": "array",
-                        },
-                        "id": {
-                          "type": "string",
-                        },
-                      },
-                      "required": [
-                        "id",
-                        "groups",
-                      ],
-                      "type": "object",
+                      "$ref": "#/components/schemas/User",
                     },
                   },
                   "required": [
@@ -179,6 +202,7 @@ exports[`transformer > should generate ref correctly 1`] = `
   "components": {
     "schemas": {
       "Token": {
+        "description": "Token description",
         "maxLength": 12,
         "minLength": 12,
         "type": "string",
@@ -233,6 +257,7 @@ exports[`transformer > should generate ref correctly using global registry 1`] =
   "components": {
     "schemas": {
       "Token": {
+        "description": "Token description",
         "maxLength": 12,
         "minLength": 12,
         "type": "string",
@@ -287,6 +312,7 @@ exports[`transformer > should generate ref correctly using z.registry 1`] = `
   "components": {
     "schemas": {
       "Token": {
+        "description": "Token description",
         "maxLength": 12,
         "minLength": 12,
         "type": "string",
@@ -341,6 +367,7 @@ exports[`transformer > should generate ref correctly using z.registry 2`] = `
   "components": {
     "schemas": {
       "Token": {
+        "description": "Token description",
         "maxLength": 12,
         "minLength": 12,
         "type": "string",
