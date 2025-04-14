@@ -150,7 +150,60 @@ describe('transformer', () => {
     await validator.validate(openApiSpec, {})
   })
 
-  it('should generate ref correctly', async () => {
+  it('should generate ref correctly using z.registry', async () => {
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
+
+    const TOKEN_SCHEMA = z.string().length(12)
+
+    const schemaRegistry = z.registry<{ id?: string | undefined }>()
+
+    schemaRegistry.add(TOKEN_SCHEMA, { id: 'Token' })
+
+    app.register(fastifySwagger, {
+      openapi: {
+        info: {
+          title: 'SampleApi',
+          description: 'Sample backend service',
+          version: '1.0.0',
+        },
+        servers: [],
+      },
+      transform: createJsonSchemaTransform({ schemaRegistry }),
+      transformObject: createJsonSchemaTransformObject({ schemaRegistry }),
+    })
+
+    app.register(fastifySwaggerUI, {
+      routePrefix: '/documentation',
+    })
+
+    app.after(() => {
+      app.withTypeProvider<ZodTypeProvider>().route({
+        method: 'POST',
+        url: '/login',
+        schema: {
+          body: z.object({
+            access_token: TOKEN_SCHEMA,
+            refresh_token: TOKEN_SCHEMA,
+          }),
+        },
+        handler: (req, res) => {
+          res.send('ok')
+        },
+      })
+    })
+
+    await app.ready()
+
+    const openApiSpecResponse = await app.inject().get('/documentation/json')
+    const openApiSpec = JSON.parse(openApiSpecResponse.body)
+
+    expect(openApiSpec).toMatchSnapshot()
+    await validator.validate(openApiSpec, {})
+  })
+
+  it('should generate ref correctly using z.registry', async () => {
     const app = Fastify()
     app.setValidatorCompiler(validatorCompiler)
     app.setSerializerCompiler(serializerCompiler)
