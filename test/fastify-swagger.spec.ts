@@ -10,6 +10,7 @@ import {
   createJsonSchemaTransform,
   createJsonSchemaTransformObject,
   jsonSchemaTransform,
+  jsonSchemaTransformObject,
   serializerCompiler,
   validatorCompiler,
 } from '../src/core'
@@ -203,16 +204,14 @@ describe('transformer', () => {
     await validator.validate(openApiSpec, {})
   })
 
-  it('should generate ref correctly using z.registry', async () => {
+  it('should generate ref correctly using global registry', async () => {
     const app = Fastify()
     app.setValidatorCompiler(validatorCompiler)
     app.setSerializerCompiler(serializerCompiler)
 
     const TOKEN_SCHEMA = z.string().length(12)
 
-    const schemaRegistry = z.registry<{ id?: string | undefined }>()
-
-    schemaRegistry.add(TOKEN_SCHEMA, { id: 'Token' })
+    z.globalRegistry.add(TOKEN_SCHEMA, { id: 'Token' })
 
     app.register(fastifySwagger, {
       openapi: {
@@ -223,8 +222,8 @@ describe('transformer', () => {
         },
         servers: [],
       },
-      transform: createJsonSchemaTransform({ schemaRegistry }),
-      transformObject: createJsonSchemaTransformObject({ schemaRegistry }),
+      transform: jsonSchemaTransform,
+      transformObject: jsonSchemaTransformObject,
     })
 
     app.register(fastifySwaggerUI, {
