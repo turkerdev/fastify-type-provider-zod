@@ -158,14 +158,10 @@ describe('transformer', () => {
 
     const TOKEN_SCHEMA = z.string().length(12)
 
-    const schemaRegistry = z.registry<{
-      id?: string | undefined
-      description?: string | undefined
-    }>()
+    const schemaRegistry = z.registry<{ id?: string | undefined }>()
 
     schemaRegistry.add(TOKEN_SCHEMA, {
       id: 'Token',
-      description: 'Token description',
     })
 
     app.register(fastifySwagger, {
@@ -281,17 +277,13 @@ describe('transformer', () => {
       groups: z.array(GROUP_SCHEMA),
     })
 
-    const schemaRegistry = z.registry<{
-      id?: string | undefined
-      description?: string | undefined
-    }>()
+    const schemaRegistry = z.registry<{ id?: string | undefined }>()
 
     schemaRegistry.add(GROUP_SCHEMA, {
       id: 'Group',
     })
     schemaRegistry.add(USER_SCHEMA, {
       id: 'User',
-      description: 'User description',
     })
 
     app.register(fastifySwagger, {

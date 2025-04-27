@@ -16,7 +16,7 @@
   },
   "peerDependencies": {
     "fastify": "^5.0.0",
-    "zod": "^4.0.0-beta.20250420T053007"
+    "zod": "^4.0.0-beta.20250424T163858"
   },
   "repository": {
     "url": "https://github.com/turkerdev/fastify-type-provider-zod"
@@ -44,7 +44,7 @@
     "tsd": "^0.31.2",
     "typescript": "^5.6.2",
     "vitest": "^2.1.2",
-    "zod": "^4.0.0-beta.20250420T053007"
+    "zod": "^4.0.0-beta.20250424T163858"
   },
   "tsd": {
     "directory": "types"
