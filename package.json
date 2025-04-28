@@ -12,6 +12,7 @@
     "lint": "biome check . && tsc --project tsconfig.lint.json --noEmit",
     "lint:fix": "biome check --write .",
     "typescript": "tsd",
+    "prepare": "npm run build",
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
