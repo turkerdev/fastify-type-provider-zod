@@ -2,11 +2,19 @@
   "name": "fastify-type-provider-zod",
   "version": "4.0.2",
   "description": "Zod Type Provider for Fastify@5",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "exports": {
+    "require": "./dist/cjs/index.js",
+    "import": "./dist/esm/index.js"
+  },
+  "types": "./dist/index.d.ts",
   "files": ["README.md", "LICENSE", "dist"],
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build:cjs && npm run build:esm",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
     "test": "npm run build && npm run typescript && vitest",
     "test:coverage": "vitest --coverage",
     "lint": "biome check . && tsc --project tsconfig.lint.json --noEmit",

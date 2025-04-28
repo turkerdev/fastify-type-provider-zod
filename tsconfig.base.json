@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+      "target": "ES2020",
+      "moduleResolution": "Node",
+      "skipLibCheck": true,
+      "esModuleInterop": true,
+      "strict": true,
+    },
+    "exclude": ["./node_modules", "types/**/*.test-d.ts", "test", "dist", "vitest.config.mts"]
+  }  
