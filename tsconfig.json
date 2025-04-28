@@ -4,6 +4,7 @@
       "moduleResolution": "Node",
       "skipLibCheck": true,
       "esModuleInterop": true,
+      "declaration": true,
       "strict": true,
     },
     "exclude": ["./node_modules", "types/**/*.test-d.ts", "test", "dist", "vitest.config.mts"]

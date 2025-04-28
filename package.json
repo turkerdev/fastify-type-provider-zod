@@ -9,13 +9,12 @@
     "require": "./dist/cjs/index.js",
     "import": "./dist/esm/index.js"
   },
-  "types": "./dist/types/index.d.ts",
+  "types": "./dist/cjs/index.d.ts",
   "files": ["README.md", "LICENSE", "dist"],
   "scripts": {
-    "build": "npm run build:cjs && npm run build:esm && npm run build:types",
+    "build": "npm run build:cjs && npm run build:esm",
     "build:cjs": "tsc --module CommonJS --outDir dist/cjs",
     "build:esm": "tsc --module ES2022 --outDir dist/esm",
-    "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist/types",
     "test": "npm run build && npm run typescript && vitest",
     "test:coverage": "vitest --coverage",
     "lint": "biome check . && tsc --project tsconfig.lint.json --noEmit",
