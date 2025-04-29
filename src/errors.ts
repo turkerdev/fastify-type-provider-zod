@@ -15,6 +15,8 @@ export class ResponseSerializationError extends createError<[{ cause: z.core.$Zo
     options: { cause: z.core.$ZodError },
   ) {
     super({ cause: options.cause })
+
+    this.cause = options.cause
   }
 }
 
