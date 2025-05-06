@@ -335,4 +335,61 @@ describe('transformer', () => {
     expect(openApiSpec).toMatchSnapshot()
     await validator.validate(openApiSpec, {})
   })
+
+  it('should generate input and output schemas correctly', async () => {
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
+
+    const schemaRegistry = z.registry<{ id?: string | undefined }>()
+
+    const ID_SCHEMA = z.string().default('1')
+
+    app.register(fastifySwagger, {
+      openapi: {
+        info: {
+          title: 'SampleApi',
+          description: 'Sample backend service',
+          version: '1.0.0',
+        },
+        servers: [],
+      },
+      transform: createJsonSchemaTransform({ schemaRegistry }),
+      transformObject: createJsonSchemaTransformObject({ schemaRegistry }),
+    })
+
+    app.register(fastifySwaggerUI, {
+      routePrefix: '/documentation',
+    })
+
+    app.after(() => {
+      app.withTypeProvider<ZodTypeProvider>().route({
+        method: 'GET',
+        url: '/',
+        schema: {
+          querystring: z.object({
+            id: ID_SCHEMA,
+          }),
+          response: {
+            200: z.object({
+              id: ID_SCHEMA,
+            }),
+          },
+        },
+        handler: (req, res) => {
+          res.send({
+            id: undefined,
+          })
+        },
+      })
+    })
+
+    await app.ready()
+
+    const openApiSpecResponse = await app.inject().get('/documentation/json')
+    const openApiSpec = JSON.parse(openApiSpecResponse.body)
+
+    expect(openApiSpec).toMatchSnapshot()
+    await validator.validate(openApiSpec, {})
+  })
 })
