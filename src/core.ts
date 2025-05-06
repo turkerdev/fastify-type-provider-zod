@@ -69,6 +69,7 @@ export const createJsonSchemaTransform = ({
       if (zodSchema) {
         transformed[prop] = z.toJSONSchema(zodSchema, {
           io: 'input',
+          unrepresentable: 'any',
           external: {
             registry: schemaRegistry,
             uri: (id: string) => `#/components/schemas/${id}`,
@@ -88,6 +89,7 @@ export const createJsonSchemaTransform = ({
 
         const transformedResponse = z.toJSONSchema(zodSchema, {
           io: 'output',
+          unrepresentable: 'any',
           external: {
             registry: schemaRegistry,
             uri: (id: string) => `#/components/schemas/${id}`,
@@ -127,6 +129,7 @@ export const createJsonSchemaTransformObject =
 
     const { schemas } = z.toJSONSchema(schemaRegistry, {
       io: 'output',
+      unrepresentable: 'any',
       uri: (id: string) => `#/components/schemas/${id}`,
       external: {
         registry: schemaRegistry,

@@ -265,14 +265,14 @@ describe('transformer', () => {
     app.setValidatorCompiler(validatorCompiler)
     app.setSerializerCompiler(serializerCompiler)
 
-    const GROUP_SCHEMA = z.interface({
+    const GROUP_SCHEMA = z.object({
       id: z.string(),
       get subgroups() {
         return z.array(GROUP_SCHEMA)
       },
     })
 
-    const USER_SCHEMA = z.interface({
+    const USER_SCHEMA = z.object({
       id: z.string(),
       groups: z.array(GROUP_SCHEMA),
     })
