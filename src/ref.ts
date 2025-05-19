@@ -18,7 +18,7 @@ const createComponentMap = (
 const createComponentReplacer = (componentMapVK: Map<string, string>, schemasObject: object) =>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function componentReplacer(this: any, key: string, value: any) {
-    if (typeof value !== 'object') return value
+    if (typeof value !== 'object' || value === null) return value
 
     // Check if the parent is the schemas object, if so, return the value as is. This is where the schemas are defined.
     if (this === schemasObject) return value
