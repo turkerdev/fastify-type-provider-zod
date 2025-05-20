@@ -13,8 +13,8 @@
   "files": ["README.md", "LICENSE", "dist"],
   "scripts": {
     "build": "npm run build:cjs && npm run build:esm",
-    "build:cjs": "tsc -p tsconfig.esm.json",
-    "build:esm": "tsc -p tsconfig.cjs.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
     "test": "npm run build && npm run typescript && vitest",
     "test:coverage": "vitest --coverage",
     "lint": "biome check . && tsc --project tsconfig.lint.json --noEmit",
@@ -25,7 +25,7 @@
   },
   "peerDependencies": {
     "fastify": "^5.0.0",
-    "zod": "^4.0.0-beta.20250505T195954"
+    "zod": "^3.25.7"
   },
   "repository": {
     "url": "https://github.com/turkerdev/fastify-type-provider-zod"
@@ -53,7 +53,7 @@
     "tsd": "^0.31.2",
     "typescript": "^5.6.2",
     "vitest": "^2.1.2",
-    "zod": "^4.0.0-beta.20250505T195954"
+    "zod": "^3.25.7"
   },
   "tsd": {
     "directory": "types"

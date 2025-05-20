@@ -12,6 +12,4 @@ updates:
       interval: 'weekly'
     open-pull-requests-limit: 10
     ignore:
-      - dependency-name: '@typescript-eslint/eslint-plugin'
-      - dependency-name: '@typescript-eslint/parser'
       - dependency-name: '@types/node'

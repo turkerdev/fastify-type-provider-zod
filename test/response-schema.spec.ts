@@ -132,7 +132,6 @@ describe('response schema', () => {
             },
           },
           handler: (req, res) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             res.send({ name: 'test' } as any)
           },
         })
@@ -198,7 +197,6 @@ describe('response schema', () => {
             },
           },
           handler: (req, res) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             res.send('test' as any)
           },
         })
@@ -238,7 +236,6 @@ describe('response schema', () => {
       app = Fastify()
       app.setValidatorCompiler(validatorCompiler)
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       function replacer(key: any, value: any) {
         if (this[key] instanceof Date) {
           return { _date: this[key].toISOString() }

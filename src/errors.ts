@@ -1,6 +1,6 @@
 import createError from '@fastify/error'
 import type { FastifyError } from 'fastify'
-import type { z } from 'zod'
+import type { z } from 'zod/v4'
 
 export class ResponseSerializationError extends createError<[{ cause: z.core.$ZodError }]>(
   'FST_ERR_RESPONSE_SERIALIZATION',

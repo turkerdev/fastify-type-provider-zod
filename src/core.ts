@@ -10,11 +10,10 @@ import type {
   RawServerDefault,
 } from 'fastify'
 import type { FastifySerializerCompiler } from 'fastify/types/schema'
-import { z } from 'zod'
+import { z } from 'zod/v4'
 
 import { InvalidSchemaError, ResponseSerializationError, createValidationError } from './errors'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FreeformRecord = Record<string, any>
 
 const defaultSkipList = [
@@ -82,9 +81,7 @@ export const createJsonSchemaTransform = ({
     if (response) {
       transformed.response = {}
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       for (const prop in response as any) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const zodSchema = resolveSchema((response as any)[prop])
 
         const transformedResponse = z.toJSONSchema(zodSchema, {
@@ -173,7 +170,6 @@ function resolveSchema(maybeSchema: z.ZodTypeAny | { properties: z.ZodTypeAny })
   throw new InvalidSchemaError(JSON.stringify(maybeSchema))
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ReplacerFunction = (this: any, key: string, value: any) => any
 
 export type ZodSerializerCompilerOptions = {
