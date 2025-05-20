@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
       "target": "ES2022",
-      "moduleResolution": "Node",
+      "moduleResolution": "bundler",
       "skipLibCheck": true,
       "esModuleInterop": true,
       "declaration": true,

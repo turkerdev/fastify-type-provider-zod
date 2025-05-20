@@ -13,6 +13,7 @@ import type { FastifySerializerCompiler } from 'fastify/types/schema'
 import { z } from 'zod/v4'
 
 import { InvalidSchemaError, ResponseSerializationError, createValidationError } from './errors'
+import { zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
 
 type FreeformRecord = Record<string, any>
 
@@ -66,15 +67,7 @@ export const createJsonSchemaTransform = ({
     for (const prop in zodSchemas) {
       const zodSchema = zodSchemas[prop]
       if (zodSchema) {
-        transformed[prop] = z.toJSONSchema(zodSchema, {
-          io: 'input',
-          unrepresentable: 'any',
-          external: {
-            registry: schemaRegistry,
-            uri: (id: string) => `#/components/schemas/${id}`,
-            defs: {},
-          },
-        })
+        transformed[prop] = zodSchemaToJson(zodSchema, schemaRegistry, 'input')
       }
     }
 
@@ -84,16 +77,7 @@ export const createJsonSchemaTransform = ({
       for (const prop in response as any) {
         const zodSchema = resolveSchema((response as any)[prop])
 
-        const transformedResponse = z.toJSONSchema(zodSchema, {
-          io: 'output',
-          unrepresentable: 'any',
-          external: {
-            registry: schemaRegistry,
-            uri: (id: string) => `#/components/schemas/${id}`,
-            defs: {},
-          },
-        })
-        transformed.response[prop] = transformedResponse
+        transformed.response[prop] = zodSchemaToJson(zodSchema, schemaRegistry, 'output')
       }
     }
 
@@ -124,16 +108,7 @@ export const createJsonSchemaTransformObject =
       return input.swaggerObject
     }
 
-    const { schemas } = z.toJSONSchema(schemaRegistry, {
-      io: 'output',
-      unrepresentable: 'any',
-      uri: (id: string) => `#/components/schemas/${id}`,
-      external: {
-        registry: schemaRegistry,
-        uri: (id: string) => `#/components/schemas/${id}`,
-        defs: {},
-      },
-    })
+    const schemas = zodRegistryToJson(schemaRegistry, 'output')
 
     return {
       ...input.openapiObject,

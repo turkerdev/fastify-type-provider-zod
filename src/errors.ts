@@ -2,17 +2,17 @@ import createError from '@fastify/error'
 import type { FastifyError } from 'fastify'
 import type { z } from 'zod/v4'
 
-export class ResponseSerializationError extends createError<[{ cause: z.core.$ZodError }]>(
+export class ResponseSerializationError extends createError<[{ cause: z.ZodError }]>(
   'FST_ERR_RESPONSE_SERIALIZATION',
   "Response doesn't match the schema",
   500,
 ) {
-  cause!: z.core.$ZodError
+  cause!: z.ZodError
 
   constructor(
     public method: string,
     public url: string,
-    options: { cause: z.core.$ZodError },
+    options: { cause: z.ZodError },
   ) {
     super({ cause: options.cause })
 
@@ -38,7 +38,7 @@ export type ZodFastifySchemaValidationError = {
   instancePath: string
   schemaPath: string
   params: {
-    issue: z.core.$ZodIssue
+    issue: z.ZodIssue
   }
   message: string
 }
@@ -61,7 +61,7 @@ export const hasZodFastifySchemaValidationErrors = (
   error.validation.length > 0 &&
   isZodFastifySchemaValidationError(error.validation[0])
 
-export const createValidationError = (error: z.core.$ZodError): ZodFastifySchemaValidationError[] =>
+export const createValidationError = (error: z.ZodError): ZodFastifySchemaValidationError[] =>
   error.issues.map((issue) => ({
     [ZodFastifySchemaValidationErrorSymbol]: true,
     keyword: issue.code ?? 'custom',
