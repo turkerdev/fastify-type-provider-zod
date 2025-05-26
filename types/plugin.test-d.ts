@@ -4,7 +4,7 @@ import type { FastifyPluginAsync, FastifyPluginCallback } from 'fastify'
 import Fastify from 'fastify'
 import fp from 'fastify-plugin'
 import { expectType } from 'tsd'
-import { z } from 'zod'
+import { z } from 'zod/v4'
 
 import type { FastifyPluginAsyncZod, FastifyPluginCallbackZod } from '../src/core'
 

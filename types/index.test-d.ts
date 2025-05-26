@@ -1,13 +1,13 @@
 import type {
-  FastifyInstance,
-  FastifyLoggerInstance,
-  RawReplyDefaultExpression,
-  RawRequestDefaultExpression,
-  RawServerDefault,
+    FastifyInstance,
+    FastifyLoggerInstance,
+    RawReplyDefaultExpression,
+    RawRequestDefaultExpression,
+    RawServerDefault,
 } from 'fastify';
 import Fastify from 'fastify';
 import { expectAssignable, expectType } from 'tsd';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 import { serializerCompiler, validatorCompiler } from '../src/core';
 import type { ZodTypeProvider } from '../src/core';

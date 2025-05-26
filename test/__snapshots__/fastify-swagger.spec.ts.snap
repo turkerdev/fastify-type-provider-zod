@@ -74,6 +74,7 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
             "content": {
               "application/json": {
                 "schema": {
+                  "additionalProperties": false,
                   "properties": {
                     "required_role": {
                       "enum": [
@@ -141,6 +142,7 @@ exports[`transformer > should generate input and output schemas correctly 1`] = 
             "content": {
               "application/json": {
                 "schema": {
+                  "additionalProperties": false,
                   "properties": {
                     "id": {
                       "default": "1",
@@ -169,6 +171,7 @@ exports[`transformer > should generate nested and circular refs correctly 1`] = 
   "components": {
     "schemas": {
       "Group": {
+        "additionalProperties": false,
         "properties": {
           "id": {
             "type": "string",
@@ -186,11 +189,48 @@ exports[`transformer > should generate nested and circular refs correctly 1`] = 
         ],
         "type": "object",
       },
+      "GroupInput": {
+        "properties": {
+          "id": {
+            "type": "string",
+          },
+          "subgroups": {
+            "items": {
+              "$ref": "#/components/schemas/GroupInput",
+            },
+            "type": "array",
+          },
+        },
+        "required": [
+          "id",
+          "subgroups",
+        ],
+        "type": "object",
+      },
       "User": {
+        "additionalProperties": false,
         "properties": {
           "groups": {
             "items": {
               "$ref": "#/components/schemas/Group",
+            },
+            "type": "array",
+          },
+          "id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "groups",
+        ],
+        "type": "object",
+      },
+      "UserInput": {
+        "properties": {
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/GroupInput",
             },
             "type": "array",
           },
@@ -220,6 +260,7 @@ exports[`transformer > should generate nested and circular refs correctly 1`] = 
             "content": {
               "application/json": {
                 "schema": {
+                  "additionalProperties": false,
                   "properties": {
                     "groups": {
                       "items": {
@@ -255,7 +296,12 @@ exports[`transformer > should generate ref correctly using global registry 1`] =
     "schemas": {
       "Token": {
         "description": "Token description",
-        "id": "Token",
+        "maxLength": 12,
+        "minLength": 12,
+        "type": "string",
+      },
+      "TokenInput": {
+        "description": "Token description",
         "maxLength": 12,
         "minLength": 12,
         "type": "string",
@@ -277,10 +323,10 @@ exports[`transformer > should generate ref correctly using global registry 1`] =
               "schema": {
                 "properties": {
                   "access_token": {
-                    "$ref": "#/components/schemas/Token",
+                    "$ref": "#/components/schemas/TokenInput",
                   },
                   "refresh_token": {
-                    "$ref": "#/components/schemas/Token",
+                    "$ref": "#/components/schemas/TokenInput",
                   },
                 },
                 "required": [
@@ -314,6 +360,11 @@ exports[`transformer > should generate ref correctly using z.registry 1`] = `
         "minLength": 12,
         "type": "string",
       },
+      "TokenInput": {
+        "maxLength": 12,
+        "minLength": 12,
+        "type": "string",
+      },
     },
   },
   "info": {
@@ -331,10 +382,10 @@ exports[`transformer > should generate ref correctly using z.registry 1`] = `
               "schema": {
                 "properties": {
                   "access_token": {
-                    "$ref": "#/components/schemas/Token",
+                    "$ref": "#/components/schemas/TokenInput",
                   },
                   "refresh_token": {
-                    "$ref": "#/components/schemas/Token",
+                    "$ref": "#/components/schemas/TokenInput",
                   },
                 },
                 "required": [
@@ -349,6 +400,90 @@ exports[`transformer > should generate ref correctly using z.registry 1`] = `
         },
         "responses": {
           "200": {
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": [],
+}
+`;
+
+exports[`transformer > should generate referenced input and output schemas correctly 1`] = `
+{
+  "components": {
+    "schemas": {
+      "User": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "default": "1",
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+        ],
+        "type": "object",
+      },
+      "UserInput": {
+        "properties": {
+          "id": {
+            "default": "1",
+            "type": "string",
+          },
+        },
+        "required": [],
+        "type": "object",
+      },
+    },
+  },
+  "info": {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "user": {
+                    "$ref": "#/components/schemas/UserInput",
+                  },
+                },
+                "required": [
+                  "user",
+                ],
+                "type": "object",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "user": {
+                      "$ref": "#/components/schemas/User",
+                    },
+                  },
+                  "required": [
+                    "user",
+                  ],
+                  "type": "object",
+                },
+              },
+            },
             "description": "Default Response",
           },
         },

@@ -48,7 +48,7 @@ type ZodSerializerCompilerOptions = {
 ```js
 import Fastify from 'fastify';
 import { createSerializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
-import z from 'zod';
+import { z } from 'zod/v4';
 
 const app = Fastify();
 
@@ -77,7 +77,7 @@ app.listen({ port: 4949 });
 import fastify from 'fastify';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUI from '@fastify/swagger-ui';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 import {
   jsonSchemaTransform,
@@ -188,7 +188,7 @@ When provided, this package will automatically create refs using the `jsonSchema
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUI from '@fastify/swagger-ui';
 import fastify from 'fastify';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import {
   jsonSchemaTransformObject,
@@ -256,7 +256,7 @@ run();
 ## How to create a plugin?
 
 ```ts
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 
 const plugin: FastifyPluginAsyncZod = async function (fastify, _opts) {

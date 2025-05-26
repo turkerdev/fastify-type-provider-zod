@@ -3,7 +3,7 @@ import fastifySwaggerUI from '@fastify/swagger-ui'
 import Fastify from 'fastify'
 import * as validator from 'oas-validator'
 import { describe, expect, it } from 'vitest'
-import { z } from 'zod'
+import { z } from 'zod/v4'
 
 import type { ZodTypeProvider } from '../src/core'
 import {
@@ -158,7 +158,7 @@ describe('transformer', () => {
 
     const TOKEN_SCHEMA = z.string().length(12)
 
-    const schemaRegistry = z.registry<{ id?: string | undefined }>()
+    const schemaRegistry = z.registry<{ id: string }>()
 
     schemaRegistry.add(TOKEN_SCHEMA, {
       id: 'Token',
@@ -256,6 +256,8 @@ describe('transformer', () => {
     const openApiSpecResponse = await app.inject().get('/documentation/json')
     const openApiSpec = JSON.parse(openApiSpecResponse.body)
 
+    z.globalRegistry.remove(TOKEN_SCHEMA)
+
     expect(openApiSpec).toMatchSnapshot()
     await validator.validate(openApiSpec, {})
   })
@@ -277,7 +279,7 @@ describe('transformer', () => {
       groups: z.array(GROUP_SCHEMA),
     })
 
-    const schemaRegistry = z.registry<{ id?: string | undefined }>()
+    const schemaRegistry = z.registry<{ id: string }>()
 
     schemaRegistry.add(GROUP_SCHEMA, {
       id: 'Group',
@@ -341,7 +343,7 @@ describe('transformer', () => {
     app.setValidatorCompiler(validatorCompiler)
     app.setSerializerCompiler(serializerCompiler)
 
-    const schemaRegistry = z.registry<{ id?: string | undefined }>()
+    const schemaRegistry = z.registry<{ id: string }>()
 
     const ID_SCHEMA = z.string().default('1')
 
@@ -379,6 +381,71 @@ describe('transformer', () => {
         handler: (req, res) => {
           res.send({
             id: undefined,
+          })
+        },
+      })
+    })
+
+    await app.ready()
+
+    const openApiSpecResponse = await app.inject().get('/documentation/json')
+    const openApiSpec = JSON.parse(openApiSpecResponse.body)
+
+    expect(openApiSpec).toMatchSnapshot()
+    await validator.validate(openApiSpec, {})
+  })
+
+  it('should generate referenced input and output schemas correctly', async () => {
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
+
+    const schemaRegistry = z.registry<{ id: string }>()
+
+    const USER_SCHEMA = z.object({
+      id: z.string().default('1'),
+    })
+
+    schemaRegistry.add(USER_SCHEMA, {
+      id: 'User',
+    })
+
+    app.register(fastifySwagger, {
+      openapi: {
+        info: {
+          title: 'SampleApi',
+          description: 'Sample backend service',
+          version: '1.0.0',
+        },
+        servers: [],
+      },
+      transform: createJsonSchemaTransform({ schemaRegistry }),
+      transformObject: createJsonSchemaTransformObject({ schemaRegistry }),
+    })
+
+    app.register(fastifySwaggerUI, {
+      routePrefix: '/documentation',
+    })
+
+    app.after(() => {
+      app.withTypeProvider<ZodTypeProvider>().route({
+        method: 'POST',
+        url: '/',
+        schema: {
+          body: z.object({
+            user: USER_SCHEMA,
+          }),
+          response: {
+            200: z.object({
+              user: USER_SCHEMA,
+            }),
+          },
+        },
+        handler: (req, res) => {
+          res.send({
+            user: {
+              id: undefined,
+            },
           })
         },
       })

@@ -12,12 +12,10 @@
   "types": "./dist/cjs/index.d.ts",
   "files": ["README.md", "LICENSE", "dist"],
   "scripts": {
-    "build": "npm run build:esm",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
-    "build:esm": "tsc -p tsconfig.esm.json",
+    "build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json",
     "test": "npm run build && npm run typescript && vitest",
     "test:coverage": "vitest --coverage",
-    "lint": "biome check . && tsc --project tsconfig.lint.json --noEmit",
+    "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "typescript": "tsd",
     "prepare": "npm run build",
@@ -53,7 +51,7 @@
     "tsd": "^0.32.0",
     "typescript": "^5.8.3",
     "vitest": "^3.1.4",
-    "zod": "^3.25.20"
+    "zod": "^3.25.28"
   },
   "tsd": {
     "directory": "types"
