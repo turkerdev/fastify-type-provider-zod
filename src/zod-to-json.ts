@@ -8,6 +8,22 @@ const getReferenceUri = (id: string, io: 'input' | 'output') => {
   return `#/components/schemas/${getSchemaId(id, io)}`
 }
 
+const getOverride = (
+  ctx: {
+    zodSchema: z.core.$ZodType
+    jsonSchema: z.core.JSONSchema.BaseSchema
+  },
+  io: 'input' | 'output',
+) => {
+  if (io === 'output') {
+    // Allow dates to be represented as strings in output schemas
+    if (ctx.zodSchema instanceof z.ZodDate) {
+      ctx.jsonSchema.type = 'string'
+      ctx.jsonSchema.format = 'date-time'
+    }
+  }
+}
+
 const deleteInvalidProperties = (schema: z.core.JSONSchema.BaseSchema) => {
   const object = { ...schema }
 
@@ -25,11 +41,14 @@ export const zodSchemaToJson = (
   const result = z.toJSONSchema(zodSchema, {
     io,
     unrepresentable: 'any',
+    cycles: 'ref',
+    reused: 'inline',
     external: {
       registry,
       uri: (id) => getReferenceUri(id, io),
       defs: {},
     },
+    override: (ctx) => getOverride(ctx, io),
   })
 
   const jsonSchema = deleteInvalidProperties(result)
@@ -44,12 +63,15 @@ export const zodRegistryToJson = (
   const result = z.toJSONSchema(registry, {
     io,
     unrepresentable: 'any',
+    cycles: 'ref',
+    reused: 'inline',
     uri: (id) => getReferenceUri(id, io),
     external: {
       registry,
       uri: (id) => getReferenceUri(id, io),
       defs: {},
     },
+    override: (ctx) => getOverride(ctx, io),
   }).schemas
 
   const jsonSchemas: Record<string, z.core.JSONSchema.BaseSchema> = {}

@@ -417,6 +417,10 @@ exports[`transformer > should generate referenced input and output schemas corre
       "User": {
         "additionalProperties": false,
         "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+          },
           "id": {
             "default": "1",
             "type": "string",
@@ -424,17 +428,21 @@ exports[`transformer > should generate referenced input and output schemas corre
         },
         "required": [
           "id",
+          "createdAt",
         ],
         "type": "object",
       },
       "UserInput": {
         "properties": {
+          "createdAt": {},
           "id": {
             "default": "1",
             "type": "string",
           },
         },
-        "required": [],
+        "required": [
+          "createdAt",
+        ],
         "type": "object",
       },
     },

@@ -404,6 +404,7 @@ describe('transformer', () => {
 
     const USER_SCHEMA = z.object({
       id: z.string().default('1'),
+      createdAt: z.date(),
     })
 
     schemaRegistry.add(USER_SCHEMA, {
@@ -445,6 +446,7 @@ describe('transformer', () => {
           res.send({
             user: {
               id: undefined,
+              createdAt: new Date(0),
             },
           })
         },
