@@ -15,7 +15,7 @@
     "build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json",
     "test:coverage": "vitest --coverage",
     "test:ci": "npm run build && npm run typescript && npm run test:coverage",
-    "lint": "biome check .",
+    "lint": "biome check . && tsc --noEmit",
     "lint:fix": "biome check --write .",
     "typescript": "tsd",
     "prepublishOnly": "npm run build"
