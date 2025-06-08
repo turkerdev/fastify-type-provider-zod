@@ -48,7 +48,7 @@ type ZodSerializerCompilerOptions = {
 ```js
 import Fastify from 'fastify';
 import { createSerializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
-import z from 'zod';
+import { z } from 'zod/v4';
 
 const app = Fastify();
 
@@ -77,7 +77,7 @@ app.listen({ port: 4949 });
 import fastify from 'fastify';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUI from '@fastify/swagger-ui';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 import {
   jsonSchemaTransform,
@@ -182,16 +182,16 @@ fastifyApp.setErrorHandler((err, req, reply) => {
 
 ## How to create refs to the schemas?
 
-It is possible to create refs to the schemas by using the `createJsonSchemaTransformObject` function. You provide the schemas as an object and fastifySwagger will create a OpenAPI document in which the schemas are referenced. The following example creates a ref to the `User` schema and will include the `User` schema in the OpenAPI document.
+When provided, this package will automatically create refs using the `jsonSchemaTransformObject` function. You register the schemas to the global zod registry and give it an `id` and fastifySwagger will create a OpenAPI document in which the schemas are referenced. The following example creates a ref to the `User` schema and will include the `User` schema in the OpenAPI document.
 
 ```ts
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUI from '@fastify/swagger-ui';
 import fastify from 'fastify';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import {
-  createJsonSchemaTransformObject,
+  jsonSchemaTransformObject,
   jsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
@@ -201,6 +201,8 @@ const USER_SCHEMA = z.object({
   id: z.number().int().positive(),
   name: z.string().describe('The name of the user'),
 });
+
+z.globalRegistry.add(USER_SCHEMA, { id: 'User' })
 
 const app = fastify();
 app.setValidatorCompiler(validatorCompiler);
@@ -216,11 +218,7 @@ app.register(fastifySwagger, {
     servers: [],
   },
   transform: jsonSchemaTransform,
-  transformObject: createJsonSchemaTransformObject({
-    schemas: {
-      User: USER_SCHEMA,
-    },
-  }),
+  transformObject: jsonSchemaTransformObject,
 });
 
 app.register(fastifySwaggerUI, {
@@ -258,7 +256,7 @@ run();
 ## How to create a plugin?
 
 ```ts
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 
 const plugin: FastifyPluginAsyncZod = async function (fastify, _opts) {

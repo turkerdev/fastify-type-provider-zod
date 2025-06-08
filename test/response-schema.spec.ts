@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import Fastify from 'fastify'
-import { z } from 'zod'
+import { z } from 'zod/v4'
 
 import type { ZodTypeProvider } from '../src/core'
 import { createSerializerCompiler, serializerCompiler, validatorCompiler } from '../src/core'
@@ -85,9 +85,8 @@ describe('response schema', () => {
               {
                 "code": "invalid_type",
                 "expected": "undefined",
-                "message": "Expected undefined, received object",
+                "message": "Invalid input: expected undefined, received object",
                 "path": [],
-                "received": "object",
               },
             ],
             "method": "GET",
@@ -133,7 +132,6 @@ describe('response schema', () => {
             },
           },
           handler: (req, res) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             res.send({ name: 'test' } as any)
           },
         })
@@ -199,7 +197,6 @@ describe('response schema', () => {
             },
           },
           handler: (req, res) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             res.send('test' as any)
           },
         })
@@ -239,7 +236,6 @@ describe('response schema', () => {
       app = Fastify()
       app.setValidatorCompiler(validatorCompiler)
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       function replacer(key: any, value: any) {
         if (this[key] instanceof Date) {
           return { _date: this[key].toISOString() }

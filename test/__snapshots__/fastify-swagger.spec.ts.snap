@@ -17,14 +17,6 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
         "description": "delete route",
         "responses": {
           "204": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "description": "Empty response",
-                  "not": {},
-                },
-              },
-            },
             "description": "Empty response",
           },
         },
@@ -41,15 +33,13 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": false,
                 "properties": {
                   "password": {
                     "maxLength": 32,
                     "type": "string",
                   },
                   "seed": {
-                    "exclusiveMinimum": true,
-                    "minimum": 0,
+                    "minimum": 1,
                     "type": "number",
                   },
                   "username": {
@@ -90,7 +80,6 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
                       "enum": [
                         "admin",
                       ],
-                      "type": "string",
                     },
                   },
                   "required": [
@@ -123,11 +112,196 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
 }
 `;
 
-exports[`transformer > should generate ref correctly 1`] = `
+exports[`transformer > should generate input and output schemas correctly 1`] = `
+{
+  "components": {
+    "schemas": {},
+  },
+  "info": {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "id",
+            "required": false,
+            "schema": {
+              "default": "1",
+              "type": "string",
+            },
+          },
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "default": "1",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "id",
+                  ],
+                  "type": "object",
+                },
+              },
+            },
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": [],
+}
+`;
+
+exports[`transformer > should generate nested and circular refs correctly 1`] = `
+{
+  "components": {
+    "schemas": {
+      "Group": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+          },
+          "subgroups": {
+            "items": {
+              "$ref": "#/components/schemas/Group",
+            },
+            "type": "array",
+          },
+        },
+        "required": [
+          "id",
+          "subgroups",
+        ],
+        "type": "object",
+      },
+      "GroupInput": {
+        "properties": {
+          "id": {
+            "type": "string",
+          },
+          "subgroups": {
+            "items": {
+              "$ref": "#/components/schemas/GroupInput",
+            },
+            "type": "array",
+          },
+        },
+        "required": [
+          "id",
+          "subgroups",
+        ],
+        "type": "object",
+      },
+      "User": {
+        "additionalProperties": false,
+        "properties": {
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/Group",
+            },
+            "type": "array",
+          },
+          "id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "groups",
+        ],
+        "type": "object",
+      },
+      "UserInput": {
+        "properties": {
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/GroupInput",
+            },
+            "type": "array",
+          },
+          "id": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "groups",
+        ],
+        "type": "object",
+      },
+    },
+  },
+  "info": {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/login": {
+      "post": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "groups": {
+                      "items": {
+                        "$ref": "#/components/schemas/Group",
+                      },
+                      "type": "array",
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/User",
+                    },
+                  },
+                  "required": [
+                    "groups",
+                    "user",
+                  ],
+                  "type": "object",
+                },
+              },
+            },
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": [],
+}
+`;
+
+exports[`transformer > should generate ref correctly using global registry 1`] = `
 {
   "components": {
     "schemas": {
       "Token": {
+        "description": "Token description",
+        "maxLength": 12,
+        "minLength": 12,
+        "type": "string",
+      },
+      "TokenInput": {
+        "description": "Token description",
         "maxLength": 12,
         "minLength": 12,
         "type": "string",
@@ -147,13 +321,12 @@ exports[`transformer > should generate ref correctly 1`] = `
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": false,
                 "properties": {
                   "access_token": {
-                    "$ref": "#/components/schemas/Token",
+                    "$ref": "#/components/schemas/TokenInput",
                   },
                   "refresh_token": {
-                    "$ref": "#/components/schemas/Token",
+                    "$ref": "#/components/schemas/TokenInput",
                   },
                 },
                 "required": [
@@ -168,6 +341,157 @@ exports[`transformer > should generate ref correctly 1`] = `
         },
         "responses": {
           "200": {
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": [],
+}
+`;
+
+exports[`transformer > should generate ref correctly using z.registry 1`] = `
+{
+  "components": {
+    "schemas": {
+      "Token": {
+        "maxLength": 12,
+        "minLength": 12,
+        "type": "string",
+      },
+      "TokenInput": {
+        "maxLength": 12,
+        "minLength": 12,
+        "type": "string",
+      },
+    },
+  },
+  "info": {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/login": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "access_token": {
+                    "$ref": "#/components/schemas/TokenInput",
+                  },
+                  "refresh_token": {
+                    "$ref": "#/components/schemas/TokenInput",
+                  },
+                },
+                "required": [
+                  "access_token",
+                  "refresh_token",
+                ],
+                "type": "object",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": [],
+}
+`;
+
+exports[`transformer > should generate referenced input and output schemas correctly 1`] = `
+{
+  "components": {
+    "schemas": {
+      "User": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+          },
+          "id": {
+            "default": "1",
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "createdAt",
+        ],
+        "type": "object",
+      },
+      "UserInput": {
+        "properties": {
+          "createdAt": {},
+          "id": {
+            "default": "1",
+            "type": "string",
+          },
+        },
+        "required": [
+          "createdAt",
+        ],
+        "type": "object",
+      },
+    },
+  },
+  "info": {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "user": {
+                    "$ref": "#/components/schemas/UserInput",
+                  },
+                },
+                "required": [
+                  "user",
+                ],
+                "type": "object",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "user": {
+                      "$ref": "#/components/schemas/User",
+                    },
+                  },
+                  "required": [
+                    "user",
+                  ],
+                  "type": "object",
+                },
+              },
+            },
             "description": "Default Response",
           },
         },
@@ -196,7 +520,6 @@ exports[`transformer > should not generate ref 1`] = `
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": false,
                 "properties": {
                   "access_token": {
                     "maxLength": 12,

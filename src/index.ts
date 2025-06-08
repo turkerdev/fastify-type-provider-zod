@@ -5,11 +5,12 @@ export {
   type ZodSerializerCompilerOptions,
   jsonSchemaTransform,
   createJsonSchemaTransform,
+  jsonSchemaTransformObject,
   createJsonSchemaTransformObject,
   serializerCompiler,
   validatorCompiler,
   createSerializerCompiler,
-} from './src/core'
+} from './core'
 
 export {
   type ZodFastifySchemaValidationError,
@@ -17,4 +18,4 @@ export {
   InvalidSchemaError,
   hasZodFastifySchemaValidationErrors,
   isResponseSerializationError,
-} from './src/errors'
+} from './errors'

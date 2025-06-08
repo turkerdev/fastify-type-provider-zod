@@ -1,11 +1,84 @@
-import type { z } from 'zod'
-import { zodToJsonSchema } from 'zod-to-json-schema'
+import { z } from 'zod/v4'
 
-const zodToJsonSchemaOptions = {
-  target: 'openApi3',
-  $refStrategy: 'none',
-} as const
+const getSchemaId = (id: string, io: 'input' | 'output') => {
+  return io === 'input' ? `${id}Input` : id
+}
 
-export const convertZodToJsonSchema = (zodSchema: z.ZodTypeAny) => {
-  return zodToJsonSchema(zodSchema, zodToJsonSchemaOptions)
+const getReferenceUri = (id: string, io: 'input' | 'output') => {
+  return `#/components/schemas/${getSchemaId(id, io)}`
+}
+
+const getOverride = (
+  ctx: {
+    zodSchema: z.core.$ZodType
+    jsonSchema: z.core.JSONSchema.BaseSchema
+  },
+  io: 'input' | 'output',
+) => {
+  if (io === 'output') {
+    // Allow dates to be represented as strings in output schemas
+    if (ctx.zodSchema instanceof z.ZodDate) {
+      ctx.jsonSchema.type = 'string'
+      ctx.jsonSchema.format = 'date-time'
+    }
+  }
+}
+
+const deleteInvalidProperties = (schema: z.core.JSONSchema.BaseSchema) => {
+  const object = { ...schema }
+
+  delete object.id
+  delete object.$schema
+
+  return object
+}
+
+export const zodSchemaToJson = (
+  zodSchema: z.ZodType,
+  registry: z.core.$ZodRegistry<{ id?: string }>,
+  io: 'input' | 'output',
+) => {
+  const result = z.toJSONSchema(zodSchema, {
+    io,
+    unrepresentable: 'any',
+    cycles: 'ref',
+    reused: 'inline',
+    external: {
+      registry,
+      uri: (id) => getReferenceUri(id, io),
+      defs: {},
+    },
+    override: (ctx) => getOverride(ctx, io),
+  })
+
+  const jsonSchema = deleteInvalidProperties(result)
+
+  return jsonSchema
+}
+
+export const zodRegistryToJson = (
+  registry: z.core.$ZodRegistry<{ id?: string }>,
+  io: 'input' | 'output',
+) => {
+  const result = z.toJSONSchema(registry, {
+    io,
+    unrepresentable: 'any',
+    cycles: 'ref',
+    reused: 'inline',
+    uri: (id) => getReferenceUri(id, io),
+    external: {
+      registry,
+      uri: (id) => getReferenceUri(id, io),
+      defs: {},
+    },
+    override: (ctx) => getOverride(ctx, io),
+  }).schemas
+
+  const jsonSchemas: Record<string, z.core.JSONSchema.BaseSchema> = {}
+
+  for (const id in result) {
+    jsonSchemas[getSchemaId(id, io)] = deleteInvalidProperties(result[id])
+  }
+
+  return jsonSchemas
 }
