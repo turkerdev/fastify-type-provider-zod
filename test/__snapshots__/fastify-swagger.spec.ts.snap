@@ -80,6 +80,7 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
                       "enum": [
                         "admin",
                       ],
+                      "type": "string",
                     },
                   },
                   "required": [
