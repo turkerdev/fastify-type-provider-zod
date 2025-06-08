@@ -5,11 +5,11 @@
   "type": "module",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
   "exports": {
-    "require": "./dist/cjs/index.js",
-    "import": "./dist/esm/index.js"
+    "import": "./dist/esm/index.js",
+    "require": "./dist/cjs/index.js"
   },
-  "types": "./dist/cjs/index.d.ts",
   "files": ["README.md", "LICENSE", "dist"],
   "scripts": {
     "build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json",
