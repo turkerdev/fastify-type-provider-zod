@@ -189,7 +189,9 @@ fastifyApp.setErrorHandler((err, req, reply) => {
 
 ## How to create refs to the schemas?
 
-When provided, this package will automatically create refs using the `jsonSchemaTransformObject` function. You register the schemas to the global zod registry and give it an `id` and fastifySwagger will create a OpenAPI document in which the schemas are referenced. The following example creates a ref to the `User` schema and will include the `User` schema in the OpenAPI document.
+When provided, this package will automatically create refs using the `jsonSchemaTransformObject` function. You register the schemas with the global Zod registry and assign them an `id`. `fastifySwagger` will then create an OpenAPI document that references the schemas.
+
+The following example creates a ref to the `User` schema and will include the `User` schema in the OpenAPI document.
 
 ```ts
 import fastifySwagger from '@fastify/swagger';
