@@ -8,6 +8,11 @@ const getReferenceUri = (id: string, io: 'input' | 'output') => {
   return `#/components/schemas/${getSchemaId(id, io)}`
 }
 
+function isZodDate(entity: unknown): entity is z.ZodDate {
+  // @ts-expect-error this is expected
+  return entity.constructor.name === 'ZodDate'
+}
+
 const getOverride = (
   ctx: {
     zodSchema: z.core.$ZodType
@@ -17,7 +22,7 @@ const getOverride = (
 ) => {
   if (io === 'output') {
     // Allow dates to be represented as strings in output schemas
-    if (ctx.zodSchema instanceof z.ZodDate) {
+    if (isZodDate(ctx.zodSchema)) {
       ctx.jsonSchema.type = 'string'
       ctx.jsonSchema.format = 'date-time'
     }
