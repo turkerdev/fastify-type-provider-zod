@@ -1,6 +1,19 @@
 import createError from '@fastify/error'
 import type { FastifyError } from 'fastify'
+import type { FastifySchemaValidationError } from 'fastify/types/schema'
 import type { z } from 'zod/v4'
+
+export const InvalidSchemaError = createError<[string]>(
+  'FST_ERR_INVALID_SCHEMA',
+  'Invalid schema passed: %s',
+  500,
+)
+
+const ZodFastifySchemaValidationErrorSymbol = Symbol.for('ZodFastifySchemaValidationError')
+
+export type ZodFastifySchemaValidationError = FastifySchemaValidationError & {
+  [ZodFastifySchemaValidationErrorSymbol]: true
+}
 
 export class ResponseSerializationError extends createError<[{ cause: z.ZodError }]>(
   'FST_ERR_RESPONSE_SERIALIZATION',
@@ -24,51 +37,51 @@ export function isResponseSerializationError(value: unknown): value is ResponseS
   return 'method' in (value as ResponseSerializationError)
 }
 
-export const InvalidSchemaError = createError<[string]>(
-  'FST_ERR_INVALID_SCHEMA',
-  'Invalid schema passed: %s',
-  500,
-)
-
-const ZodFastifySchemaValidationErrorSymbol = Symbol.for('ZodFastifySchemaValidationError')
-
-export type ZodFastifySchemaValidationError = {
-  [ZodFastifySchemaValidationErrorSymbol]: true
-  keyword: string
-  instancePath: string
-  schemaPath: string
-  params: {
-    issue: z.ZodIssue
-  }
-  message: string
+function isZodFastifySchemaValidationError(
+  error: unknown,
+): error is ZodFastifySchemaValidationError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    (error as ZodFastifySchemaValidationError)[ZodFastifySchemaValidationErrorSymbol] === true
+  )
 }
 
-const isZodFastifySchemaValidationError = (
+export function hasZodFastifySchemaValidationErrors(
   error: unknown,
-): error is ZodFastifySchemaValidationError =>
-  typeof error === 'object' &&
-  error !== null &&
-  ZodFastifySchemaValidationErrorSymbol in error &&
-  error[ZodFastifySchemaValidationErrorSymbol] === true
+): error is Omit<FastifyError, 'validation'> & { validation: ZodFastifySchemaValidationError[] } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'validation' in error &&
+    Array.isArray(error.validation) &&
+    error.validation.length > 0 &&
+    isZodFastifySchemaValidationError(error.validation[0])
+  )
+}
 
-export const hasZodFastifySchemaValidationErrors = (
-  error: unknown,
-): error is Omit<FastifyError, 'validation'> & { validation: ZodFastifySchemaValidationError[] } =>
-  typeof error === 'object' &&
-  error !== null &&
-  'validation' in error &&
-  Array.isArray(error.validation) &&
-  error.validation.length > 0 &&
-  isZodFastifySchemaValidationError(error.validation[0])
+function omit<T extends object, K extends keyof T>(obj: T, keys: readonly K[]): Omit<T, K> {
+  const result = {} as Omit<T, K>
+  for (const key of Object.keys(obj) as Array<keyof T>) {
+    if (!keys.includes(key as K)) {
+      // @ts-expect-error
+      result[key] = obj[key]
+    }
+  }
+  return result
+}
 
-export const createValidationError = (error: z.ZodError): ZodFastifySchemaValidationError[] =>
-  error.issues.map((issue) => ({
-    [ZodFastifySchemaValidationErrorSymbol]: true,
-    keyword: issue.code ?? 'custom',
-    instancePath: `/${issue.path.join('/')}`,
-    schemaPath: `#/${issue.path.join('/')}/${issue.code}`,
-    params: {
-      issue,
-    },
-    message: issue.message,
-  }))
+export function createValidationError(error: z.ZodError): ZodFastifySchemaValidationError[] {
+  return error.issues.map((issue) => {
+    return {
+      [ZodFastifySchemaValidationErrorSymbol]: true,
+      keyword: issue.code,
+      instancePath: `/${issue.path.join('/')}`,
+      schemaPath: `#/${issue.path.join('/')}/${issue.code}`,
+      message: issue.message,
+      params: {
+        ...omit(issue, ['path', 'code', 'message']),
+      },
+    }
+  })
+}
