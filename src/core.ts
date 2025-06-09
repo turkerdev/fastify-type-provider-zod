@@ -92,7 +92,7 @@ export const createJsonSchemaTransform = ({
   }
 }
 
-export const jsonSchemaTransform = createJsonSchemaTransform({})
+export const jsonSchemaTransform: SwaggerTransform<Schema> = createJsonSchemaTransform({})
 
 type CreateJsonSchemaTransformObjectOptions = {
   schemaRegistry?: z.core.$ZodRegistry<{ id?: string | undefined }>
@@ -132,7 +132,7 @@ export const createJsonSchemaTransformObject =
     } as ReturnType<SwaggerTransformObject>
   }
 
-export const jsonSchemaTransformObject = createJsonSchemaTransformObject({})
+export const jsonSchemaTransformObject: SwaggerTransformObject = createJsonSchemaTransformObject({})
 
 export const validatorCompiler: FastifySchemaCompiler<z.ZodTypeAny> =
   ({ schema }) =>
@@ -177,7 +177,8 @@ export const createSerializerCompiler =
     return JSON.stringify(result.data, options?.replacer)
   }
 
-export const serializerCompiler = createSerializerCompiler({})
+export const serializerCompiler: ReturnType<typeof createSerializerCompiler> =
+  createSerializerCompiler({})
 
 /**
  * FastifyPluginCallbackZod with Zod automatic type inference

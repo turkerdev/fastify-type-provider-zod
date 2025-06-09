@@ -6,6 +6,7 @@
       "esModuleInterop": true,
       "declaration": true,
       "strict": true,
+      "isolatedDeclarations": true
     },
-    "exclude": ["./node_modules", "types/**/*.test-d.ts", "test", "dist", "vitest.config.mts"]
+    "exclude": ["./node_modules", "types/**/*.test-d.ts", "test", "dist", "vite.config.ts", "vitest.config.ts"]
   }  

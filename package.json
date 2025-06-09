@@ -3,16 +3,22 @@
   "version": "5.0.0",
   "description": "Zod Type Provider for Fastify@5",
   "type": "module",
-  "main": "./dist/cjs/index.js",
+  "main": "./dist/cjs/index.cjs",
   "module": "./dist/esm/index.js",
+  "types": "./dist/cjs/index.d.cts",
   "exports": {
-    "require": "./dist/cjs/index.js",
-    "import": "./dist/esm/index.js"
+    "require": {
+      "types": "./dist/cjs/index.d.cts",
+      "default": "./dist/cjs/index.cjs"
+    },
+    "default": {
+      "types": "./dist/esm/index.d.ts",
+      "default": "./dist/esm/index.js"
+    }
   },
-  "types": "./dist/cjs/index.d.ts",
   "files": ["README.md", "LICENSE", "dist"],
   "scripts": {
-    "build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json",
+    "build": "vite build",
     "test:coverage": "vitest --coverage",
     "test:ci": "npm run build && npm run typescript && npm run test:coverage",
     "lint": "biome check . && tsc --noEmit",
@@ -50,6 +56,7 @@
     "oas-validator": "^5.0.8",
     "tsd": "^0.32.0",
     "typescript": "^5.8.3",
+    "unplugin-isolated-decl": "^0.14.3",
     "vitest": "^3.2.2",
     "zod": "^3.25.56"
   },

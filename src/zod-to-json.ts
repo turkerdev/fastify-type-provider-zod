@@ -29,7 +29,9 @@ const getOverride = (
   }
 }
 
-const deleteInvalidProperties = (schema: z.core.JSONSchema.BaseSchema) => {
+const deleteInvalidProperties: (
+  schema: z.core.JSONSchema.BaseSchema,
+) => Omit<z.core.JSONSchema.BaseSchema, 'id' | '$schema'> = (schema) => {
   const object = { ...schema }
 
   delete object.id
@@ -38,11 +40,11 @@ const deleteInvalidProperties = (schema: z.core.JSONSchema.BaseSchema) => {
   return object
 }
 
-export const zodSchemaToJson = (
+export const zodSchemaToJson: (
   zodSchema: z.ZodType,
   registry: z.core.$ZodRegistry<{ id?: string }>,
   io: 'input' | 'output',
-) => {
+) => ReturnType<typeof deleteInvalidProperties> = (zodSchema, registry, io) => {
   const result = z.toJSONSchema(zodSchema, {
     io,
     unrepresentable: 'any',
@@ -61,10 +63,10 @@ export const zodSchemaToJson = (
   return jsonSchema
 }
 
-export const zodRegistryToJson = (
+export const zodRegistryToJson: (
   registry: z.core.$ZodRegistry<{ id?: string }>,
   io: 'input' | 'output',
-) => {
+) => Record<string, z.core.JSONSchema.BaseSchema> = (registry, io) => {
   const result = z.toJSONSchema(registry, {
     io,
     unrepresentable: 'any',

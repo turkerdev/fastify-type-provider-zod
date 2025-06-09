@@ -1,25 +1,37 @@
-import createError from '@fastify/error'
+import createError, { type FastifyErrorConstructor } from '@fastify/error'
 import type { FastifyError } from 'fastify'
 import type { FastifySchemaValidationError } from 'fastify/types/schema'
 import type { z } from 'zod/v4'
 
-export const InvalidSchemaError = createError<[string]>(
-  'FST_ERR_INVALID_SCHEMA',
-  'Invalid schema passed: %s',
-  500,
-)
+export const InvalidSchemaError: FastifyErrorConstructor<
+  {
+    code: string
+  },
+  [string]
+> = createError<[string]>('FST_ERR_INVALID_SCHEMA', 'Invalid schema passed: %s', 500)
 
-const ZodFastifySchemaValidationErrorSymbol = Symbol.for('ZodFastifySchemaValidationError')
+const ZodFastifySchemaValidationErrorSymbol: symbol = Symbol.for('ZodFastifySchemaValidationError')
 
 export type ZodFastifySchemaValidationError = FastifySchemaValidationError & {
   [ZodFastifySchemaValidationErrorSymbol]: true
 }
 
-export class ResponseSerializationError extends createError<[{ cause: z.ZodError }]>(
+const ResponseSerializationBase: FastifyErrorConstructor<
+  {
+    code: string
+  },
+  [
+    {
+      cause: z.ZodError
+    },
+  ]
+> = createError<[{ cause: z.ZodError }]>(
   'FST_ERR_RESPONSE_SERIALIZATION',
   "Response doesn't match the schema",
   500,
-) {
+)
+
+export class ResponseSerializationError extends ResponseSerializationBase {
   cause!: z.ZodError
 
   constructor(
