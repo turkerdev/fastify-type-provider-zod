@@ -5,11 +5,11 @@ import type {
   FastifyPluginOptions,
   FastifySchema,
   FastifySchemaCompiler,
+  FastifySerializerCompiler,
   FastifyTypeProvider,
   RawServerBase,
   RawServerDefault,
 } from 'fastify'
-import type { FastifySerializerCompiler } from 'fastify/types/schema'
 import { z } from 'zod/v4'
 
 import { InvalidSchemaError, ResponseSerializationError, createValidationError } from './errors'
