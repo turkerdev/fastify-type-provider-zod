@@ -41,7 +41,7 @@
   },
   "peerDependencies": {
     "@fastify/swagger": ">=9.5.1",
-    "fastify": "^5.0.0",
+    "fastify": "^5.4.1",
     "zod": ">=3.25.56"
   },
   "devDependencies": {
