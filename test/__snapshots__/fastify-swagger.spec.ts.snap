@@ -503,6 +503,80 @@ exports[`transformer > should generate referenced input and output schemas corre
 }
 `;
 
+exports[`transformer > should generate referenced input and output schemas correctly when referencing a registered schema 1`] = `
+{
+  "components": {
+    "schemas": {
+      "User": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+          },
+          "id": {
+            "default": "1",
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "createdAt",
+        ],
+        "type": "object",
+      },
+      "UserInput": {
+        "properties": {
+          "createdAt": {},
+          "id": {
+            "default": "1",
+            "type": "string",
+          },
+        },
+        "required": [
+          "createdAt",
+        ],
+        "type": "object",
+      },
+    },
+  },
+  "info": {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserInput",
+              },
+            },
+          },
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User",
+                },
+              },
+            },
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": [],
+}
+`;
+
 exports[`transformer > should not generate ref 1`] = `
 {
   "components": {
