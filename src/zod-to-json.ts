@@ -45,6 +45,17 @@ export const zodSchemaToJson: (
   registry: z.core.$ZodRegistry<{ id?: string }>,
   io: 'input' | 'output',
 ) => ReturnType<typeof deleteInvalidProperties> = (zodSchema, registry, io) => {
+  const schemaRegistryEntry = registry.get(zodSchema)
+  /**
+   * Checks whether the provided schema is registered in the given registry.
+   * If it is present and has an `id`, it can be referenced as component.
+   *
+   * @see https://github.com/turkerdev/fastify-type-provider-zod/issues/173
+   */
+  if (schemaRegistryEntry?.id) {
+    return { $ref: getReferenceUri(schemaRegistryEntry.id, io) }
+  }
+
   const result = z.toJSONSchema(zodSchema, {
     io,
     unrepresentable: 'any',
