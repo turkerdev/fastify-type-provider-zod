@@ -1,4 +1,5 @@
-import { z } from 'zod/v4'
+import type { z } from 'zod/v4'
+import { JSONSchemaGenerator, toJSONSchema } from 'zod/v4/core'
 
 const getSchemaId = (id: string, io: 'input' | 'output') => {
   return io === 'input' ? `${id}Input` : id
@@ -45,9 +46,16 @@ export const zodSchemaToJson: (
   registry: z.core.$ZodRegistry<{ id?: string }>,
   io: 'input' | 'output',
 ) => ReturnType<typeof deleteInvalidProperties> = (zodSchema, registry, io) => {
-  const result = z.toJSONSchema(zodSchema, {
-    io,
+  const jsonSchemaGenerator = new JSONSchemaGenerator({
+    metadata: registry,
     unrepresentable: 'any',
+    override: (ctx) => getOverride(ctx, io),
+    io,
+  })
+
+  jsonSchemaGenerator.process(zodSchema)
+
+  const result = jsonSchemaGenerator.emit(zodSchema, {
     cycles: 'ref',
     reused: 'inline',
     external: {
@@ -55,7 +63,6 @@ export const zodSchemaToJson: (
       uri: (id) => getReferenceUri(id, io),
       defs: {},
     },
-    override: (ctx) => getOverride(ctx, io),
   })
 
   const jsonSchema = deleteInvalidProperties(result)
@@ -67,17 +74,12 @@ export const zodRegistryToJson: (
   registry: z.core.$ZodRegistry<{ id?: string }>,
   io: 'input' | 'output',
 ) => Record<string, z.core.JSONSchema.BaseSchema> = (registry, io) => {
-  const result = z.toJSONSchema(registry, {
+  const result = toJSONSchema(registry, {
     io,
     unrepresentable: 'any',
     cycles: 'ref',
     reused: 'inline',
     uri: (id) => getReferenceUri(id, io),
-    external: {
-      registry,
-      uri: (id) => getReferenceUri(id, io),
-      defs: {},
-    },
     override: (ctx) => getOverride(ctx, io),
   }).schemas
 
