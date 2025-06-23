@@ -45,7 +45,7 @@
     "zod": ">=3.25.56"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2.0.5",
     "@fastify/swagger": "^9.5.1",
     "@fastify/swagger-ui": "^5.2.3",
     "@kibertoad/biome-config": "^1.2.1",
