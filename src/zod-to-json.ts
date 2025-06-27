@@ -45,6 +45,7 @@ export const zodSchemaToJson: (
   registry: z.core.$ZodRegistry<{ id?: string }>,
   io: 'input' | 'output',
 ) => ReturnType<typeof deleteInvalidProperties> = (zodSchema, registry, io) => {
+  // @ts-expect-error
   const result = z.toJSONSchema(zodSchema, {
     io,
     unrepresentable: 'any',
@@ -52,7 +53,7 @@ export const zodSchemaToJson: (
     reused: 'inline',
     external: {
       registry,
-      uri: (id) => getReferenceUri(id, io),
+      uri: (id: string) => getReferenceUri(id, io),
       defs: {},
     },
     override: (ctx) => getOverride(ctx, io),
@@ -67,6 +68,7 @@ export const zodRegistryToJson: (
   registry: z.core.$ZodRegistry<{ id?: string }>,
   io: 'input' | 'output',
 ) => Record<string, z.core.JSONSchema.BaseSchema> = (registry, io) => {
+  // @ts-expect-error
   const result = z.toJSONSchema(registry, {
     io,
     unrepresentable: 'any',
@@ -75,7 +77,7 @@ export const zodRegistryToJson: (
     uri: (id) => getReferenceUri(id, io),
     external: {
       registry,
-      uri: (id) => getReferenceUri(id, io),
+      uri: (id: string) => getReferenceUri(id, io),
       defs: {},
     },
     override: (ctx) => getOverride(ctx, io),
