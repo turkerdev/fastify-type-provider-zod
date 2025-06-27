@@ -9,7 +9,7 @@ export default defineConfig({
     minify: false,
     sourcemap: true,
     rollupOptions: {
-      external: ["fastify", "zod/v4", "@fastify/swagger", "@fastify/error"],
+      external: ["fastify", /zod\/v4*?/,  "@fastify/swagger", "@fastify/error"],
       output: [{
         preserveModules: true,
         entryFileNames: 'cjs/[name].cjs',
