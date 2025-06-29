@@ -1,12 +1,10 @@
 import type { FastifyInstance } from 'fastify'
 import Fastify from 'fastify'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { z } from 'zod/v4'
-
 import type { ZodTypeProvider } from '../src/core'
 import { createSerializerCompiler, serializerCompiler, validatorCompiler } from '../src/core'
 import { isResponseSerializationError } from '../src/errors'
-
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 describe('response schema', () => {
   describe('does not fail on empty response schema (204)', () => {
@@ -27,7 +25,7 @@ describe('response schema', () => {
                 204: z.undefined().describe('test'),
               },
             },
-            handler: (req, res) => {
+            handler: (_req, res) => {
               res.status(204).send()
             },
           })
@@ -118,7 +116,7 @@ describe('response schema', () => {
               200: REPLY_SCHEMA,
             },
           },
-          handler: (req, res) => {
+          handler: (_req, res) => {
             res.send('test')
           },
         })
@@ -131,7 +129,7 @@ describe('response schema', () => {
               200: REPLY_SCHEMA,
             },
           },
-          handler: (req, res) => {
+          handler: (_req, res) => {
             res.send({ name: 'test' } as any)
           },
         })
@@ -181,7 +179,7 @@ describe('response schema', () => {
               200: REPLY_SCHEMA,
             },
           },
-          handler: (req, res) => {
+          handler: (_req, res) => {
             res.send({
               name: 'test',
             })
@@ -196,7 +194,7 @@ describe('response schema', () => {
               200: REPLY_SCHEMA,
             },
           },
-          handler: (req, res) => {
+          handler: (_req, res) => {
             res.send('test' as any)
           },
         })
@@ -256,7 +254,7 @@ describe('response schema', () => {
               200: REPLY_SCHEMA,
             },
           },
-          handler: (req, res) => {
+          handler: (_req, res) => {
             res.send({
               createdAt: new Date('2021-01-01T00:00:00Z'),
             })

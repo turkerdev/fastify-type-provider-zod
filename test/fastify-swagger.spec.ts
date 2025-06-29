@@ -67,7 +67,7 @@ describe('transformer', () => {
               401: UNAUTHORIZED_SCHEMA,
             },
           },
-          handler: (req, res) => {
+          handler: (_req, res) => {
             res.send('ok')
           },
         })
@@ -75,7 +75,7 @@ describe('transformer', () => {
           method: 'POST',
           url: '/no-schema',
           schema: undefined,
-          handler: (req, res) => {
+          handler: (_req, res) => {
             res.send('ok')
           },
         })
@@ -88,7 +88,7 @@ describe('transformer', () => {
               204: z.undefined().describe('Empty response'),
             },
           },
-          handler: (req, res) => {
+          handler: (_req, res) => {
             res.status(204).send()
           },
         })
@@ -136,7 +136,7 @@ describe('transformer', () => {
             refresh_token: TOKEN_SCHEMA,
           }),
         },
-        handler: (req, res) => {
+        handler: (_req, res) => {
           res.send('ok')
         },
       })
@@ -191,7 +191,7 @@ describe('transformer', () => {
             refresh_token: TOKEN_SCHEMA,
           }),
         },
-        handler: (req, res) => {
+        handler: (_req, res) => {
           res.send('ok')
         },
       })
@@ -245,7 +245,7 @@ describe('transformer', () => {
             refresh_token: TOKEN_SCHEMA,
           }),
         },
-        handler: (req, res) => {
+        handler: (_req, res) => {
           res.send('ok')
         },
       })
@@ -317,7 +317,7 @@ describe('transformer', () => {
             }),
           },
         },
-        handler: (req, res) => {
+        handler: (_req, res) => {
           res.send({
             groups: [],
             user: {
@@ -378,7 +378,7 @@ describe('transformer', () => {
             }),
           },
         },
-        handler: (req, res) => {
+        handler: (_req, res) => {
           res.send({
             id: undefined,
           })
@@ -442,7 +442,7 @@ describe('transformer', () => {
             }),
           },
         },
-        handler: (req, res) => {
+        handler: (_req, res) => {
           res.send({
             user: {
               id: undefined,

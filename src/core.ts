@@ -12,7 +12,7 @@ import type {
 import type { FastifySerializerCompiler } from 'fastify/types/schema'
 import { z } from 'zod/v4'
 
-import { InvalidSchemaError, ResponseSerializationError, createValidationError } from './errors'
+import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors'
 import { zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
 
 type FreeformRecord = Record<string, any>
