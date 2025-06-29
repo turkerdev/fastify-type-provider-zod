@@ -16,7 +16,9 @@
       "default": "./dist/esm/index.js"
     }
   },
-  "files": ["README.md", "LICENSE", "dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "vite build",
     "test:coverage": "vitest --coverage",
@@ -29,7 +31,12 @@
   "repository": {
     "url": "https://github.com/turkerdev/fastify-type-provider-zod"
   },
-  "keywords": ["fastify", "zod", "type", "provider"],
+  "keywords": [
+    "fastify",
+    "zod",
+    "type",
+    "provider"
+  ],
   "author": "turkerd",
   "license": "MIT",
   "bugs": {
@@ -45,10 +52,10 @@
     "zod": ">=3.25.67"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.0.5",
+    "@biomejs/biome": "^2.0.0",
     "@fastify/swagger": "^9.5.1",
     "@fastify/swagger-ui": "^5.2.3",
-    "@kibertoad/biome-config": "^1.2.1",
+    "@kibertoad/biome-config": "^2.0.0",
     "@types/node": "^22.15.30",
     "@vitest/coverage-v8": "^3.2.2",
     "fastify": "^5.3.3",

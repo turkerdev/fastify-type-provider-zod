@@ -1,11 +1,9 @@
 import type { FastifyInstance } from 'fastify'
 import Fastify from 'fastify'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { z } from 'zod/v4'
-
 import type { ZodTypeProvider } from '../src/core'
 import { serializerCompiler, validatorCompiler } from '../src/core'
-
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 describe('response schema', () => {
   let app: FastifyInstance
@@ -49,7 +47,7 @@ describe('response schema', () => {
           method: 'GET',
           url: '/no-schema',
           schema: undefined,
-          handler: (req, res) => {
+          handler: (_req, res) => {
             res.send({
               status: 'ok',
             })

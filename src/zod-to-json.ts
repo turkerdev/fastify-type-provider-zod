@@ -91,7 +91,7 @@ export const zodSchemaToJson: (
    * Replace the previous generated placeholders with the final `$ref` value
    */
   const jsonSchemaReplaceRef = JSON.stringify(jsonSchema).replaceAll(
-    /"__SCHEMA__PLACEHOLDER__\#\/\$defs\/(.+?)"/g,
+    /"__SCHEMA__PLACEHOLDER__#\/\$defs\/(.+?)"/g,
     (_, id) => `"${getReferenceUri(id, io)}"`,
   )
 

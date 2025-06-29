@@ -3,7 +3,7 @@
   "extends": ["./node_modules/@kibertoad/biome-config/configs/biome-package.json"],
   "overrides": [
     {
-      "include": ["**/*.ts"],
+      "includes": ["**/*.ts"],
       "linter": {
         "rules": {
           "performance": {
@@ -18,7 +18,13 @@
             "useOptionalChain": "off"
           },
           "suspicious": {
-            "noExplicitAny": "off"
+            "noExplicitAny": "off",
+            "noConsole": {
+              "level": "error",
+              "options": {
+                "allow": ["warn"]
+              }
+            }
           }
         }
       }
