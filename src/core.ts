@@ -10,7 +10,8 @@ import type {
   RawServerDefault,
 } from 'fastify'
 import type { FastifySerializerCompiler } from 'fastify/types/schema'
-import { $ZodRegistry, $ZodType, globalRegistry, input, output, safeParse } from 'zod/v4/core'
+import type { $ZodRegistry, input, output } from 'zod/v4/core'
+import { $ZodType, globalRegistry, safeParse } from 'zod/v4/core'
 
 import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors'
 import { zodRegistryToJson, zodSchemaToJson } from './zod-to-json'

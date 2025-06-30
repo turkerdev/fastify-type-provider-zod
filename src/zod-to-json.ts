@@ -1,4 +1,5 @@
-import { $ZodDate, $ZodRegistry, $ZodType, JSONSchema, toJSONSchema } from 'zod/v4/core'
+import type { $ZodDate, $ZodRegistry, JSONSchema } from 'zod/v4/core'
+import { $ZodType, toJSONSchema } from 'zod/v4/core'
 
 const getSchemaId = (id: string, io: 'input' | 'output') => {
   return io === 'input' ? `${id}Input` : id
