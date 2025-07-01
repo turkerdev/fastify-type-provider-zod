@@ -13,20 +13,20 @@
 
 ## How to use?
 
-```js
-import Fastify from "fastify";
-import { serializerCompiler, validatorCompiler, ZodTypeProvider } from "fastify-type-provider-zod";
-import z from "zod";
+```ts
+import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
+import { z } from 'zod/v4';
 
-const app = Fastify()
+const app = Fastify();
 
 // Add schema validator and serializer
 app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
 
 app.withTypeProvider<ZodTypeProvider>().route({
-  method: "GET",
-  url: "/",
+  method: 'GET',
+  url: '/',
   // Define your schema
   schema: {
     querystring: z.object({
@@ -52,10 +52,9 @@ type ZodSerializerCompilerOptions = {
 };
 ```
 
-```js
+```ts
 import Fastify from 'fastify';
 import { createSerializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
-import { z } from 'zod/v4';
 
 const app = Fastify();
 
@@ -85,13 +84,12 @@ import fastify from 'fastify';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUI from '@fastify/swagger-ui';
 import { z } from 'zod/v4';
-
+import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import {
   jsonSchemaTransform,
   createJsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
-  ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 
 const app = fastify();
@@ -154,37 +152,37 @@ run();
 You can add custom handling of request and response validation errors to your fastify error handler like this:
 
 ```ts
-import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod'
+import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
 
 fastifyApp.setErrorHandler((err, req, reply) => {
-    if (hasZodFastifySchemaValidationErrors(err)) {
-        return reply.code(400).send({
-            error: 'Response Validation Error',
-            message: "Request doesn't match the schema",
-            statusCode: 400,
-            details: {
-                issues: err.validation,
-                method: req.method,
-                url: req.url,
-            },
-        })
-    }
+  if (hasZodFastifySchemaValidationErrors(err)) {
+    return reply.code(400).send({
+      error: 'Response Validation Error',
+      message: "Request doesn't match the schema",
+      statusCode: 400,
+      details: {
+        issues: err.validation,
+        method: req.method,
+        url: req.url,
+      },
+    });
+  }
 
-    if (isResponseSerializationError(err)) {
-        return reply.code(500).send({
-            error: 'Internal Server Error',
-            message: "Response doesn't match the schema",
-            statusCode: 500,
-            details: {
-                issues: err.cause.issues,
-                method: err.method,
-                url: err.url,
-            },
-        })
-    }
-    
-    // the rest of the error handler
-})
+  if (isResponseSerializationError(err)) {
+    return reply.code(500).send({
+      error: 'Internal Server Error',
+      message: "Response doesn't match the schema",
+      statusCode: 500,
+      details: {
+        issues: err.cause.issues,
+        method: err.method,
+        url: err.url,
+      },
+    });
+  }
+
+  // the rest of the error handler
+});
 ```
 
 ## How to create refs to the schemas?
@@ -211,7 +209,7 @@ const USER_SCHEMA = z.object({
   name: z.string().describe('The name of the user'),
 });
 
-z.globalRegistry.add(USER_SCHEMA, { id: 'User' })
+z.globalRegistry.add(USER_SCHEMA, { id: 'User' });
 
 const app = fastify();
 app.setValidatorCompiler(validatorCompiler);
@@ -266,7 +264,7 @@ run();
 
 ```ts
 import { z } from 'zod/v4';
-import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
+import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 
 const plugin: FastifyPluginAsyncZod = async function (fastify, _opts) {
   fastify.route({
