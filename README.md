@@ -16,7 +16,7 @@
 ```ts
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
-import z from 'zod/v4';
+import { z } from 'zod/v4';
 
 const app = Fastify();
 
