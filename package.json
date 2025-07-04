@@ -49,7 +49,7 @@
   "peerDependencies": {
     "@fastify/swagger": ">=9.5.1",
     "fastify": "^5.0.0",
-    "zod": ">=3.25.56"
+    "zod": ">=3.25.67"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.0.0",
@@ -65,7 +65,7 @@
     "typescript": "^5.8.3",
     "unplugin-isolated-decl": "^0.14.3",
     "vitest": "^3.2.2",
-    "zod": "^3.25.56"
+    "zod": "^3.25.67"
   },
   "tsd": {
     "directory": "types"
