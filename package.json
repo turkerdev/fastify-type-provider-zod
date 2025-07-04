@@ -48,7 +48,7 @@
   },
   "peerDependencies": {
     "@fastify/swagger": ">=9.5.1",
-    "fastify": "^5.0.0",
+    "fastify": "^5.4.1",
     "zod": ">=3.25.67"
   },
   "devDependencies": {
@@ -58,7 +58,7 @@
     "@kibertoad/biome-config": "^2.0.0",
     "@types/node": "^22.16.0",
     "@vitest/coverage-v8": "^3.2.4",
-    "fastify": "^5.4.0",
+    "fastify": "^5.4.1",
     "fastify-plugin": "^5.0.1",
     "oas-validator": "^5.0.8",
     "tsd": "^0.32.0",
