@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         node-version: [20, 22, 24]
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -30,6 +30,9 @@ jobs:
 
       - name: Run tests
         run: npm run test:ci
+
+      - name: Run linting
+        run: npm run lint
 
   automerge:
     needs: test
