@@ -601,6 +601,16 @@ exports[`transformer > should not generate ref 1`] = `
                     "minLength": 12,
                     "type": "string",
                   },
+                  "age": {
+                    "nullable": true,
+                    "type": "number",
+                  },
+                  "metadata": {
+                    "additionalProperties": {
+                      "type": "string",
+                    },
+                    "type": "object",
+                  },
                   "refresh_token": {
                     "maxLength": 12,
                     "minLength": 12,
@@ -610,6 +620,7 @@ exports[`transformer > should not generate ref 1`] = `
                 "required": [
                   "access_token",
                   "refresh_token",
+                  "metadata",
                 ],
                 "type": "object",
               },

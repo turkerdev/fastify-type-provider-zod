@@ -134,6 +134,8 @@ describe('transformer', () => {
           body: z.object({
             access_token: TOKEN_SCHEMA,
             refresh_token: TOKEN_SCHEMA,
+            metadata: z.record(z.string(), z.string()),
+            age: z.optional(z.nullable(z.coerce.number())),
           }),
         },
         handler: (_req, res) => {
@@ -147,8 +149,8 @@ describe('transformer', () => {
     const openApiSpecResponse = await app.inject().get('/documentation/json')
     const openApiSpec = JSON.parse(openApiSpecResponse.body)
 
-    expect(openApiSpec).toMatchSnapshot()
     await validator.validate(openApiSpec, {})
+    expect(openApiSpec).toMatchSnapshot()
   })
 
   it('should generate ref correctly using z.registry', async () => {
@@ -202,8 +204,8 @@ describe('transformer', () => {
     const openApiSpecResponse = await app.inject().get('/documentation/json')
     const openApiSpec = JSON.parse(openApiSpecResponse.body)
 
-    expect(openApiSpec).toMatchSnapshot()
     await validator.validate(openApiSpec, {})
+    expect(openApiSpec).toMatchSnapshot()
   })
 
   it('should generate ref correctly using global registry', async () => {

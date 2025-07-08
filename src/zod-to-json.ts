@@ -26,6 +26,24 @@ const getOverride = (
       ctx.jsonSchema.type = 'string'
       ctx.jsonSchema.format = 'date-time'
     }
+
+    if (ctx.zodSchema._zod.def.type === 'undefined') {
+      ctx.jsonSchema.type = 'null'
+    }
+  }
+
+  // ToDo should be unnecessary after https://github.com/colinhacks/zod/pull/4811 is released
+  // Remove propertyNames from record schemas
+  if (ctx.jsonSchema.propertyNames) {
+    delete ctx.jsonSchema.propertyNames
+  }
+
+  // ToDo should be unnecessary after https://github.com/colinhacks/zod/pull/4811 is released
+  // Transform anyOf with type: null to nullable: true
+  if (ctx.jsonSchema.anyOf && ctx.jsonSchema.anyOf.some((s) => s.type === 'null')) {
+    ctx.jsonSchema.type = ctx.jsonSchema.anyOf.find((s) => s.type !== 'null')?.type
+    ctx.jsonSchema.nullable = true
+    delete ctx.jsonSchema.anyOf
   }
 }
 
@@ -36,6 +54,9 @@ const deleteInvalidProperties: (
 
   delete object.id
   delete object.$schema
+
+  // ToDo added in newer zod
+  delete object.$id
 
   return object
 }

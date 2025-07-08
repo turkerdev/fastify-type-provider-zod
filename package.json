@@ -65,7 +65,7 @@
     "typescript": "^5.8.3",
     "unplugin-isolated-decl": "^0.14.5",
     "vitest": "^3.2.4",
-    "zod": "3.25.71"
+    "zod": "^3.25.76"
   },
   "tsd": {
     "directory": "types"
