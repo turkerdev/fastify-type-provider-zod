@@ -204,8 +204,8 @@ describe('transformer', () => {
     const openApiSpecResponse = await app.inject().get('/documentation/json')
     const openApiSpec = JSON.parse(openApiSpecResponse.body)
 
-    expect(openApiSpec).toMatchSnapshot()
     await validator.validate(openApiSpec, {})
+    expect(openApiSpec).toMatchSnapshot()
   })
 
   it('should generate ref correctly using global registry', async () => {
