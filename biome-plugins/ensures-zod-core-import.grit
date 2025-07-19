@@ -1,0 +1,12 @@
+// Ensures that only `zod/v4/core` is imported.
+// https://zod.dev/library-authors?id=how-to-support-zod-and-zod-mini-simultaneously
+// > Your library code should only import from "zod/v4/core". 
+// > This sub-package defines the interfaces, classes, and utilities that are shared between zod/v4 and zod/v4-mini.
+
+`import $imports from $source` where {
+    $source <: or {`'zod'`, `'zod/v4'`},
+    register_diagnostic(
+        span = $source,
+        message = "This plugins supports both `zod` and `zod-mini`, so please import only from `zod/v4/core`"
+    )
+}
