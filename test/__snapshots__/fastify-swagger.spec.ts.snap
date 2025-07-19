@@ -113,6 +113,90 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
 }
 `;
 
+exports[`transformer > null type > should replace \`anyOf\` when it contains 2 elements: \`{ anyOf: [<null>, <non-null>]} s\` and one of them is \`"type": "null" with \`{...<non-null>, nullable: true }\` 1`] = `
+{
+  "components": {
+    "schemas": {},
+  },
+  "info": {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/": {
+      "post": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "type": "string",
+                      },
+                      "type": "array",
+                    },
+                    {
+                      "enum": [
+                        "any",
+                      ],
+                      "type": "string",
+                    },
+                  ],
+                  "nullable": true,
+                },
+              },
+            },
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": [],
+}
+`;
+
+exports[`transformer > null type > should replace \`anyOf\` with \`"allOf": [...], "nullable": true\`  when schema contains only two elements and one is \`"type": "null"\` 1`] = `
+{
+  "components": {
+    "schemas": {},
+  },
+  "info": {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/": {
+      "post": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string",
+                  },
+                  "nullable": true,
+                  "type": "array",
+                },
+              },
+            },
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": [],
+}
+`;
+
 exports[`transformer > should generate input and output schemas correctly 1`] = `
 {
   "components": {
@@ -602,6 +686,7 @@ exports[`transformer > should not generate ref 1`] = `
                     "type": "string",
                   },
                   "age": {
+                    "minimum": 0,
                     "nullable": true,
                     "type": "number",
                   },
