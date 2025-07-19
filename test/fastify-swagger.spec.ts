@@ -1,6 +1,6 @@
 import fastifySwagger from '@fastify/swagger'
 import fastifySwaggerUI from '@fastify/swagger-ui'
-import Fastify from 'fastify'
+import Fastify, { type FastifyInstance } from 'fastify'
 import * as validator from 'oas-validator'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod/v4'
@@ -103,6 +103,93 @@ describe('transformer', () => {
     await validator.validate(openApiSpec, {})
   })
 
+  describe('null type', () => {
+    const createNullCaseApp = (): FastifyInstance => {
+      const app = Fastify()
+      app.setValidatorCompiler(validatorCompiler)
+      app.setSerializerCompiler(serializerCompiler)
+
+      app.register(fastifySwagger, {
+        openapi: {
+          info: {
+            title: 'SampleApi',
+            description: 'Sample backend service',
+            version: '1.0.0',
+          },
+          servers: [],
+        },
+        transform: jsonSchemaTransform,
+        transformObject: jsonSchemaTransformObject,
+      })
+
+      app.register(fastifySwaggerUI, {
+        routePrefix: '/documentation',
+      })
+
+      return app
+    }
+
+    it('should replace `anyOf` with `"allOf": [...], "nullable": true`  when schema contains only two elements and one is `"type": "null"`', async () => {
+      const app = createNullCaseApp()
+
+      const VALUE_SCHEMA = z.union([z.null(), z.array(z.string())])
+
+      app.after(() => {
+        app.withTypeProvider<ZodTypeProvider>().route({
+          method: 'POST',
+          url: '/',
+          schema: {
+            response: { 200: VALUE_SCHEMA },
+          },
+          handler: (_, res) => {
+            res.send(null)
+          },
+        })
+      })
+
+      await app.ready()
+
+      const openApiSpecResponse = await app.inject().get('/documentation/json')
+      const openApiSpec = JSON.parse(openApiSpecResponse.body)
+
+      expect(openApiSpec).toMatchSnapshot()
+      await validator.validate(openApiSpec, {})
+    })
+
+    it(
+      [
+        'should replace `anyOf` when it contains 2 elements: `{ anyOf: [<null>, <non-null>]} s`',
+        'and one of them is `"type": "null" with `{...<non-null>, nullable: true }`',
+      ].join(' '),
+      async () => {
+        const app = createNullCaseApp()
+
+        const VALUE_SCHEMA = z.union([z.null(), z.array(z.string()), z.literal('any')])
+
+        app.after(() => {
+          app.withTypeProvider<ZodTypeProvider>().route({
+            method: 'POST',
+            url: '/',
+            schema: {
+              response: { 200: VALUE_SCHEMA },
+            },
+            handler: (_, res) => {
+              res.send(null)
+            },
+          })
+        })
+
+        await app.ready()
+
+        const openApiSpecResponse = await app.inject().get('/documentation/json')
+        const openApiSpec = JSON.parse(openApiSpecResponse.body)
+
+        expect(openApiSpec).toMatchSnapshot()
+        await validator.validate(openApiSpec, {})
+      },
+    )
+  })
+
   it('should not generate ref', async () => {
     const app = Fastify()
     app.setValidatorCompiler(validatorCompiler)
@@ -135,7 +222,7 @@ describe('transformer', () => {
             access_token: TOKEN_SCHEMA,
             refresh_token: TOKEN_SCHEMA,
             metadata: z.record(z.string(), z.string()),
-            age: z.optional(z.nullable(z.coerce.number())),
+            age: z.optional(z.nullable(z.coerce.number().min(0))),
           }),
         },
         handler: (_req, res) => {

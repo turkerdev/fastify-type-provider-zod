@@ -40,10 +40,27 @@ const getOverride = (
 
   // ToDo should be unnecessary after https://github.com/colinhacks/zod/pull/4811 is released
   // Transform anyOf with type: null to nullable: true
-  if (ctx.jsonSchema.anyOf && ctx.jsonSchema.anyOf.some((s) => s.type === 'null')) {
-    ctx.jsonSchema.type = ctx.jsonSchema.anyOf.find((s) => s.type !== 'null')?.type
-    ctx.jsonSchema.nullable = true
-    delete ctx.jsonSchema.anyOf
+  if (ctx.jsonSchema.anyOf?.some((s) => s.type === 'null')) {
+    const notNullableItems = ctx.jsonSchema.anyOf.filter((s) => s.type !== 'null')
+    /**
+     * Convert any `anyOf` schemas with two elements, one of which is `"type": "null"`,
+     * into a single schema with nullable: true."
+     * @see https://github.com/turkerdev/fastify-type-provider-zod/issues/192
+     * @see https://stackoverflow.com/a/48114924
+     */
+    if (ctx.jsonSchema.anyOf.length === 2) {
+      Object.assign(
+        ctx.jsonSchema,
+        // If length is 2 it means there is only one element besides `null`
+        notNullableItems[0],
+        { nullable: true },
+      )
+      delete ctx.jsonSchema.anyOf
+    } else {
+      ctx.jsonSchema.nullable = true
+      // `nullable` replaces the `type: null` so replace anyOf with all other items
+      ctx.jsonSchema.anyOf = notNullableItems
+    }
   }
 }
 
