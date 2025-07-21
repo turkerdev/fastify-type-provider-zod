@@ -89,6 +89,13 @@ export const createJsonSchemaTransform = ({
       for (const prop in response as any) {
         const zodSchema = resolveSchema((response as any)[prop])
         const jsonSchema = zodSchemaToJson(zodSchema, schemaRegistry, 'output')
+
+        // Check is the JSON schema is null then return as it is since fastify-swagger will handle it
+        if (jsonSchema.type === 'null') {
+          transformed.response[prop] = jsonSchema
+          continue
+        }
+
         const oasSchema = jsonSchemaToOAS(jsonSchema, oasVersion)
 
         transformed.response[prop] = oasSchema
