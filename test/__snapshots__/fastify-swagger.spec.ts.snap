@@ -34,11 +34,17 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
             "application/json": {
               "schema": {
                 "properties": {
+                  "code": {
+                    "exclusiveMaximum": true,
+                    "maximum": 10000,
+                    "type": "number",
+                  },
                   "password": {
                     "maxLength": 32,
                     "type": "string",
                   },
                   "seed": {
+                    "maximum": 1000,
                     "minimum": 1,
                     "type": "number",
                   },
@@ -51,6 +57,7 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
                 "required": [
                   "username",
                   "seed",
+                  "code",
                   "password",
                 ],
                 "type": "object",
@@ -185,11 +192,16 @@ exports[`transformer > generates types for fastify-swagger with OAS 3.1.0 correc
             "application/json": {
               "schema": {
                 "properties": {
+                  "code": {
+                    "exclusiveMaximum": 10000,
+                    "type": "number",
+                  },
                   "password": {
                     "maxLength": 32,
                     "type": "string",
                   },
                   "seed": {
+                    "maximum": 1000,
                     "minimum": 1,
                     "type": "number",
                   },
@@ -202,6 +214,7 @@ exports[`transformer > generates types for fastify-swagger with OAS 3.1.0 correc
                 "required": [
                   "username",
                   "seed",
+                  "code",
                   "password",
                 ],
                 "type": "object",

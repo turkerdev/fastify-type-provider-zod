@@ -40,7 +40,8 @@ describe('transformer', () => {
 
     const LOGIN_SCHEMA = z.object({
       username: z.string().max(32).describe('someDescription'),
-      seed: z.number().min(1),
+      seed: z.number().min(1).max(1000),
+      code: z.number().lt(10000),
       password: z.string().max(32),
     })
 
@@ -129,7 +130,8 @@ describe('transformer', () => {
 
     const LOGIN_SCHEMA = z.object({
       username: z.string().max(32).describe('someDescription'),
-      seed: z.number().min(1),
+      seed: z.number().min(1).max(1000),
+      code: z.number().lt(10000),
       password: z.string().max(32),
     })
 
@@ -212,7 +214,8 @@ describe('transformer', () => {
 
     const LOGIN_SCHEMA = z.object({
       username: z.string().max(32).describe('someDescription'),
-      seed: z.number().min(1),
+      seed: z.number().min(1).max(1000),
+      code: z.number().lt(10000),
       password: z.string().max(32),
     })
 
