@@ -17,6 +17,17 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
         "description": "delete route",
         "responses": {
           "204": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Empty response",
+                  "enum": [
+                    null,
+                  ],
+                  "nullable": true,
+                },
+              },
+            },
             "description": "Empty response",
           },
         },
@@ -602,8 +613,17 @@ exports[`transformer > should not generate ref 1`] = `
                     "type": "string",
                   },
                   "age": {
-                    "nullable": true,
-                    "type": "number",
+                    "anyOf": [
+                      {
+                        "type": "number",
+                      },
+                      {
+                        "enum": [
+                          null,
+                        ],
+                        "nullable": true,
+                      },
+                    ],
                   },
                   "metadata": {
                     "additionalProperties": {

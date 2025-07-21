@@ -12,8 +12,8 @@ import type {
 import type { FastifySerializerCompiler } from 'fastify/types/schema'
 import type { $ZodRegistry, input, output } from 'zod/v4/core'
 import { $ZodType, globalRegistry, safeParse } from 'zod/v4/core'
-
 import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors'
+import { getOASVersion, jsonSchemaToOAS } from './json-to-oas'
 import { zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
 
 type FreeformRecord = Record<string, any>
@@ -46,7 +46,13 @@ export const createJsonSchemaTransform = ({
   skipList = defaultSkipList,
   schemaRegistry = globalRegistry,
 }: CreateJsonSchemaTransformOptions): SwaggerTransform<Schema> => {
-  return ({ schema, url }) => {
+  return (input) => {
+    if ('swaggerObject' in input) {
+      throw new Error('OpenAPI 2.0 is not supported')
+    }
+
+    const { schema, url } = input
+
     if (!schema) {
       return {
         schema,
@@ -68,7 +74,10 @@ export const createJsonSchemaTransform = ({
     for (const prop in zodSchemas) {
       const zodSchema = zodSchemas[prop]
       if (zodSchema) {
-        transformed[prop] = zodSchemaToJson(zodSchema, schemaRegistry, 'input')
+        const jsonSchema = zodSchemaToJson(zodSchema, schemaRegistry, 'input')
+        const oasSchema = jsonSchemaToOAS(jsonSchema, '3.0')
+
+        transformed[prop] = oasSchema
       }
     }
 
@@ -77,8 +86,10 @@ export const createJsonSchemaTransform = ({
 
       for (const prop in response as any) {
         const zodSchema = resolveSchema((response as any)[prop])
+        const jsonSchema = zodSchemaToJson(zodSchema, schemaRegistry, 'output')
+        const oasSchema = jsonSchemaToOAS(jsonSchema, '3.0')
 
-        transformed.response[prop] = zodSchemaToJson(zodSchema, schemaRegistry, 'output')
+        transformed.response[prop] = oasSchema
       }
     }
 
@@ -105,9 +116,10 @@ export const createJsonSchemaTransformObject =
   }: CreateJsonSchemaTransformObjectOptions): SwaggerTransformObject =>
   (input) => {
     if ('swaggerObject' in input) {
-      console.warn('This package currently does not support component references for Swagger 2.0')
-      return input.swaggerObject
+      throw new Error('OpenAPI 2.0 is not supported')
     }
+
+    const oasVersion = getOASVersion(input)
 
     const inputSchemas = zodRegistryToJson(schemaRegistry, 'input')
     const outputSchemas = zodRegistryToJson(schemaRegistry, 'output')
@@ -120,14 +132,22 @@ export const createJsonSchemaTransformObject =
       }
     }
 
+    const jsonSchemas = {
+      ...inputSchemas,
+      ...outputSchemas,
+    }
+
+    const oasSchemas = Object.fromEntries(
+      Object.entries(jsonSchemas).map(([key, value]) => [key, jsonSchemaToOAS(value, oasVersion)]),
+    )
+
     return {
       ...input.openapiObject,
       components: {
         ...input.openapiObject.components,
         schemas: {
           ...input.openapiObject.components?.schemas,
-          ...inputSchemas,
-          ...outputSchemas,
+          ...oasSchemas,
         },
       },
     } as ReturnType<SwaggerTransformObject>
