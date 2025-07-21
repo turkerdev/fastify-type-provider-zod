@@ -22,6 +22,7 @@
   ],
   "scripts": {
     "build": "vite build",
+    "prepare": "npm run build",
     "test:coverage": "vitest --coverage",
     "test:ci": "npm run build && npm run typescript && npm run test:coverage",
     "lint": "biome check . && tsc --noEmit",
