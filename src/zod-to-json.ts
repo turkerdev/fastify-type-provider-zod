@@ -91,6 +91,7 @@ export const zodSchemaToJson: (
   const {
     schemas: { [tempID]: result },
   } = toJSONSchema(tempRegistry, {
+    target: 'draft-2020-12',
     metadata: registry,
     io,
     unrepresentable: 'any',
@@ -133,6 +134,7 @@ export const zodRegistryToJson: (
   io: 'input' | 'output',
 ) => Record<string, JSONSchema.BaseSchema> = (registry, io) => {
   const result = toJSONSchema(registry, {
+    target: 'draft-2020-12',
     io,
     unrepresentable: 'any',
     cycles: 'ref',

@@ -23,6 +23,7 @@ describe('transformer', () => {
 
     app.register(fastifySwagger, {
       openapi: {
+        openapi: '3.0.3',
         info: {
           title: 'SampleApi',
           description: 'Sample backend service',
@@ -110,6 +111,7 @@ describe('transformer', () => {
 
     app.register(fastifySwagger, {
       openapi: {
+        openapi: '3.0.3',
         info: {
           title: 'SampleApi',
           description: 'Sample backend service',
@@ -168,6 +170,7 @@ describe('transformer', () => {
 
     app.register(fastifySwagger, {
       openapi: {
+        openapi: '3.0.3',
         info: {
           title: 'SampleApi',
           description: 'Sample backend service',
@@ -222,6 +225,7 @@ describe('transformer', () => {
 
     app.register(fastifySwagger, {
       openapi: {
+        openapi: '3.0.3',
         info: {
           title: 'SampleApi',
           description: 'Sample backend service',
@@ -292,6 +296,7 @@ describe('transformer', () => {
 
     app.register(fastifySwagger, {
       openapi: {
+        openapi: '3.0.3',
         info: {
           title: 'SampleApi',
           description: 'Sample backend service',
@@ -351,6 +356,7 @@ describe('transformer', () => {
 
     app.register(fastifySwagger, {
       openapi: {
+        openapi: '3.0.3',
         info: {
           title: 'SampleApi',
           description: 'Sample backend service',
@@ -415,6 +421,7 @@ describe('transformer', () => {
 
     app.register(fastifySwagger, {
       openapi: {
+        openapi: '3.0.3',
         info: {
           title: 'SampleApi',
           description: 'Sample backend service',
@@ -480,6 +487,7 @@ describe('transformer', () => {
 
     app.register(fastifySwagger, {
       openapi: {
+        openapi: '3.0.3',
         info: {
           title: 'SampleApi',
           description: 'Sample backend service',
