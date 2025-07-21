@@ -124,6 +124,126 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
 }
 `;
 
+exports[`transformer > generates types for fastify-swagger with OAS 3.1.0 correctly 1`] = `
+{
+  "components": {
+    "schemas": {},
+  },
+  "info": {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/delete": {
+      "delete": {
+        "description": "delete route",
+        "responses": {
+          "204": {
+            "description": "Empty response",
+          },
+        },
+      },
+    },
+    "/login": {
+      "post": {
+        "description": "login route",
+        "externalDocs": {
+          "description": "check google",
+          "url": "https://google.com",
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "password": {
+                    "maxLength": 32,
+                    "type": "string",
+                  },
+                  "seed": {
+                    "minimum": 1,
+                    "type": "number",
+                  },
+                  "username": {
+                    "description": "someDescription",
+                    "maxLength": 32,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "username",
+                  "seed",
+                  "password",
+                ],
+                "type": "object",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                },
+              },
+            },
+            "description": "Default Response",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "required_role": {
+                      "anyOf": [
+                        {
+                          "enum": [
+                            "admin",
+                          ],
+                          "type": "string",
+                        },
+                        {
+                          "type": "null",
+                        },
+                      ],
+                    },
+                  },
+                  "required": [
+                    "required_role",
+                  ],
+                  "type": "object",
+                },
+              },
+            },
+            "description": "Default Response",
+          },
+        },
+        "summary": "login your account",
+        "tags": [
+          "auth",
+        ],
+      },
+    },
+    "/no-schema": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": [],
+}
+`;
+
 exports[`transformer > should generate input and output schemas correctly 1`] = `
 {
   "components": {

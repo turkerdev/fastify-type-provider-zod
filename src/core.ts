@@ -71,11 +71,13 @@ export const createJsonSchemaTransform = ({
 
     const zodSchemas: FreeformRecord = { headers, querystring, body, params }
 
+    const oasVersion = getOASVersion(input)
+
     for (const prop in zodSchemas) {
       const zodSchema = zodSchemas[prop]
       if (zodSchema) {
         const jsonSchema = zodSchemaToJson(zodSchema, schemaRegistry, 'input')
-        const oasSchema = jsonSchemaToOAS(jsonSchema, '3.0')
+        const oasSchema = jsonSchemaToOAS(jsonSchema, oasVersion)
 
         transformed[prop] = oasSchema
       }
@@ -87,7 +89,7 @@ export const createJsonSchemaTransform = ({
       for (const prop in response as any) {
         const zodSchema = resolveSchema((response as any)[prop])
         const jsonSchema = zodSchemaToJson(zodSchema, schemaRegistry, 'output')
-        const oasSchema = jsonSchemaToOAS(jsonSchema, '3.0')
+        const oasSchema = jsonSchemaToOAS(jsonSchema, oasVersion)
 
         transformed.response[prop] = oasSchema
       }

@@ -104,6 +104,93 @@ describe('transformer', () => {
     await validator.validate(openApiSpec, {})
   })
 
+  it('generates types for fastify-swagger with OAS 3.1.0 correctly', async () => {
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
+
+    app.register(fastifySwagger, {
+      openapi: {
+        openapi: '3.1.0',
+        info: {
+          title: 'SampleApi',
+          description: 'Sample backend service',
+          version: '1.0.0',
+        },
+        servers: [],
+      },
+      transform: jsonSchemaTransform,
+    })
+
+    app.register(fastifySwaggerUI, {
+      routePrefix: '/documentation',
+    })
+
+    const LOGIN_SCHEMA = z.object({
+      username: z.string().max(32).describe('someDescription'),
+      seed: z.number().min(1),
+      password: z.string().max(32),
+    })
+
+    const UNAUTHORIZED_SCHEMA = z.object({
+      required_role: z.literal('admin').nullable(),
+    })
+
+    app.after(() => {
+      app
+        .withTypeProvider<ZodTypeProvider>()
+        .route({
+          method: 'POST',
+          url: '/login',
+          schema: {
+            description: 'login route',
+            summary: 'login your account',
+            consumes: ['application/json'],
+            deprecated: false,
+            hide: false,
+            tags: ['auth'],
+            externalDocs: { url: 'https://google.com', description: 'check google' },
+            body: LOGIN_SCHEMA,
+            response: {
+              200: z.string(),
+              401: UNAUTHORIZED_SCHEMA,
+            },
+          },
+          handler: (_req, res) => {
+            res.send('ok')
+          },
+        })
+        .route({
+          method: 'POST',
+          url: '/no-schema',
+          schema: undefined,
+          handler: (_req, res) => {
+            res.send('ok')
+          },
+        })
+        .route({
+          method: 'DELETE',
+          url: '/delete',
+          schema: {
+            description: 'delete route',
+            response: {
+              204: z.undefined().describe('Empty response'),
+            },
+          },
+          handler: (_req, res) => {
+            res.status(204).send()
+          },
+        })
+    })
+
+    await app.ready()
+
+    const openApiSpecResponse = await app.inject().get('/documentation/json')
+    const openApiSpec = JSON.parse(openApiSpecResponse.body)
+
+    expect(openApiSpec).toMatchSnapshot()
+  })
+
   it('should not generate ref', async () => {
     const app = Fastify()
     app.setValidatorCompiler(validatorCompiler)
