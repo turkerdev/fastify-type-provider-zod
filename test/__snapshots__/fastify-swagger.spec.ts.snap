@@ -88,14 +88,52 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
                   "additionalProperties": false,
                   "properties": {
                     "required_role": {
-                      "enum": [
-                        "admin",
+                      "anyOf": [
+                        {
+                          "enum": [
+                            "admin",
+                          ],
+                          "type": "string",
+                        },
+                        {
+                          "enum": [
+                            null,
+                          ],
+                          "nullable": true,
+                        },
                       ],
-                      "type": "string",
+                    },
+                    "scopes": {
+                      "items": {
+                        "oneOf": [
+                          {
+                            "enum": [
+                              "read",
+                            ],
+                            "type": "string",
+                          },
+                          {
+                            "enum": [
+                              "write",
+                            ],
+                            "type": "string",
+                          },
+                          {
+                            "enum": [
+                              null,
+                            ],
+                            "nullable": true,
+                          },
+                        ],
+                      },
+                      "maxItems": 3,
+                      "minItems": 3,
+                      "type": "array",
                     },
                   },
                   "required": [
                     "required_role",
+                    "scopes",
                   ],
                   "type": "object",
                 },
@@ -213,9 +251,30 @@ exports[`transformer > generates types for fastify-swagger with OAS 3.1.0 correc
                         },
                       ],
                     },
+                    "scopes": {
+                      "prefixItems": [
+                        {
+                          "enum": [
+                            "read",
+                          ],
+                          "type": "string",
+                        },
+                        {
+                          "enum": [
+                            "write",
+                          ],
+                          "type": "string",
+                        },
+                        {
+                          "type": "null",
+                        },
+                      ],
+                      "type": "array",
+                    },
                   },
                   "required": [
                     "required_role",
+                    "scopes",
                   ],
                   "type": "object",
                 },

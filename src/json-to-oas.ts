@@ -22,22 +22,7 @@ export const getOASVersion = (documentObject: {
 export const jsonSchemaToOAS_3_0 = (jsonSchema: JSONSchema.BaseSchema): OpenAPIV3.SchemaObject => {
   const clone: any = { ...jsonSchema }
 
-  if (Array.isArray(clone.type)) {
-    const types: string[] = clone.type
-    const nullPos = types.indexOf('null')
-
-    if (nullPos > -1) {
-      clone.nullable = true
-      types.splice(nullPos, 1)
-    }
-
-    if (types.length === 1) {
-      clone.type = types[0]
-    } else if (types.length > 1) {
-      clone.oneOf = types.map((t: string) => ({ type: t }))
-      delete clone.type
-    }
-  } else if (clone.type === 'null') {
+  if (clone.type === 'null') {
     clone.nullable = true
     delete clone.type
     clone.enum = [null]
