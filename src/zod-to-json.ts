@@ -32,13 +32,13 @@ const getOverride = (
     }
   }
 
-  // ToDo should be unnecessary after https://github.com/colinhacks/zod/pull/4811 is released
+  // TODO: should be unnecessary after https://github.com/colinhacks/zod/pull/4811 is released
   // Remove propertyNames from record schemas
   if (ctx.jsonSchema.propertyNames) {
     delete ctx.jsonSchema.propertyNames
   }
 
-  // ToDo should be unnecessary after https://github.com/colinhacks/zod/pull/4811 is released
+  // TODO: should be unnecessary after https://github.com/colinhacks/zod/pull/4811 is released
   // Transform anyOf with type: null to nullable: true
   if (ctx.jsonSchema.anyOf && ctx.jsonSchema.anyOf.some((s) => s.type === 'null')) {
     ctx.jsonSchema.type = ctx.jsonSchema.anyOf.find((s) => s.type !== 'null')?.type
@@ -55,7 +55,7 @@ const deleteInvalidProperties: (
   delete object.id
   delete object.$schema
 
-  // ToDo added in newer zod
+  // TODO: added in newer zod
   delete object.$id
 
   return object
