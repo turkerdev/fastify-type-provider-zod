@@ -31,7 +31,7 @@ const getOverride = (
   if (isZodUnion(ctx.zodSchema)) {
     // Filter unrepresentable types in unions
     // TODO: Should be fixed upstream and not merged in this plugin.
-    // Remove when passed:
+    // Remove when passed: https://github.com/colinhacks/zod/pull/5013
     ctx.jsonSchema.anyOf = ctx.jsonSchema.anyOf?.filter((schema) => Object.keys(schema).length > 0)
   }
 
