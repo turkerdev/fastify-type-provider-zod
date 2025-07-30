@@ -1,4 +1,4 @@
-import type { $ZodDate, $ZodUndefined, JSONSchema } from 'zod/v4/core'
+import type { $ZodDate, $ZodUndefined, $ZodUnion, JSONSchema } from 'zod/v4/core'
 import { $ZodRegistry, $ZodType, toJSONSchema } from 'zod/v4/core'
 
 const getSchemaId = (id: string, io: 'input' | 'output') => {
@@ -13,6 +13,10 @@ function isZodDate(entity: unknown): entity is $ZodDate {
   return entity instanceof $ZodType && entity._zod.def.type === 'date'
 }
 
+function isZodUnion(entity: unknown): entity is $ZodUnion {
+  return entity instanceof $ZodType && entity._zod.def.type === 'union'
+}
+
 function isZodUndefined(entity: unknown): entity is $ZodUndefined {
   return entity instanceof $ZodType && entity._zod.def.type === 'undefined'
 }
@@ -24,15 +28,24 @@ const getOverride = (
   },
   io: 'input' | 'output',
 ) => {
-  if (io === 'output') {
+  if (isZodUnion(ctx.zodSchema)) {
+    // Filter unrepresentable types in unions
+    // TODO: Should be fixed upstream and not merged in this plugin.
+    // Remove when passed:
+    ctx.jsonSchema.anyOf = ctx.jsonSchema.anyOf?.filter((schema) => Object.keys(schema).length > 0)
+  }
+
+  if (isZodDate(ctx.zodSchema)) {
     // Allow dates to be represented as strings in output schemas
-    if (isZodDate(ctx.zodSchema)) {
+    if (io === 'output') {
       ctx.jsonSchema.type = 'string'
       ctx.jsonSchema.format = 'date-time'
     }
+  }
 
+  if (isZodUndefined(ctx.zodSchema)) {
     // Allow undefined to be represented as null in output schemas
-    if (isZodUndefined(ctx.zodSchema)) {
+    if (io === 'output') {
       ctx.jsonSchema.type = 'null'
     }
   }
