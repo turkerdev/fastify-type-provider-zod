@@ -1,4 +1,4 @@
-import type { $ZodDate, JSONSchema } from 'zod/v4/core'
+import type { $ZodDate, $ZodUndefined, $ZodUnion, JSONSchema } from 'zod/v4/core'
 import { $ZodRegistry, $ZodType, toJSONSchema } from 'zod/v4/core'
 
 const getSchemaId = (id: string, io: 'input' | 'output') => {
@@ -13,6 +13,14 @@ function isZodDate(entity: unknown): entity is $ZodDate {
   return entity instanceof $ZodType && entity._zod.def.type === 'date'
 }
 
+function isZodUnion(entity: unknown): entity is $ZodUnion {
+  return entity instanceof $ZodType && entity._zod.def.type === 'union'
+}
+
+function isZodUndefined(entity: unknown): entity is $ZodUndefined {
+  return entity instanceof $ZodType && entity._zod.def.type === 'undefined'
+}
+
 const getOverride = (
   ctx: {
     zodSchema: $ZodType
@@ -20,52 +28,34 @@ const getOverride = (
   },
   io: 'input' | 'output',
 ) => {
-  if (io === 'output') {
+  if (isZodUnion(ctx.zodSchema)) {
+    // Filter unrepresentable types in unions
+    // TODO: Should be fixed upstream and not merged in this plugin.
+    // Remove when passed: https://github.com/colinhacks/zod/pull/5013
+    ctx.jsonSchema.anyOf = ctx.jsonSchema.anyOf?.filter((schema) => Object.keys(schema).length > 0)
+  }
+
+  if (isZodDate(ctx.zodSchema)) {
     // Allow dates to be represented as strings in output schemas
-    if (isZodDate(ctx.zodSchema)) {
+    if (io === 'output') {
       ctx.jsonSchema.type = 'string'
       ctx.jsonSchema.format = 'date-time'
     }
+  }
 
-    if (ctx.zodSchema._zod.def.type === 'undefined') {
+  if (isZodUndefined(ctx.zodSchema)) {
+    // Allow undefined to be represented as null in output schemas
+    if (io === 'output') {
       ctx.jsonSchema.type = 'null'
     }
   }
-
-  // ToDo should be unnecessary after https://github.com/colinhacks/zod/pull/4811 is released
-  // Remove propertyNames from record schemas
-  if (ctx.jsonSchema.propertyNames) {
-    delete ctx.jsonSchema.propertyNames
-  }
-
-  // ToDo should be unnecessary after https://github.com/colinhacks/zod/pull/4811 is released
-  // Transform anyOf with type: null to nullable: true
-  if (ctx.jsonSchema.anyOf && ctx.jsonSchema.anyOf.some((s) => s.type === 'null')) {
-    ctx.jsonSchema.type = ctx.jsonSchema.anyOf.find((s) => s.type !== 'null')?.type
-    ctx.jsonSchema.nullable = true
-    delete ctx.jsonSchema.anyOf
-  }
-}
-
-const deleteInvalidProperties: (
-  schema: JSONSchema.BaseSchema,
-) => Omit<JSONSchema.BaseSchema, 'id' | '$schema'> = (schema) => {
-  const object = { ...schema }
-
-  delete object.id
-  delete object.$schema
-
-  // ToDo added in newer zod
-  delete object.$id
-
-  return object
 }
 
 export const zodSchemaToJson: (
   zodSchema: $ZodType,
   registry: $ZodRegistry<{ id?: string }>,
   io: 'input' | 'output',
-) => ReturnType<typeof deleteInvalidProperties> = (zodSchema, registry, io) => {
+) => JSONSchema.BaseSchema = (zodSchema, registry, io) => {
   const schemaRegistryEntry = registry.get(zodSchema)
 
   /**
@@ -75,7 +65,9 @@ export const zodSchemaToJson: (
    * @see https://github.com/turkerdev/fastify-type-provider-zod/issues/173
    */
   if (schemaRegistryEntry?.id) {
-    return { $ref: getReferenceUri(schemaRegistryEntry.id, io) }
+    return {
+      $ref: getReferenceUri(schemaRegistryEntry.id, io),
+    }
   }
 
   /**
@@ -93,6 +85,7 @@ export const zodSchemaToJson: (
   const {
     schemas: { [tempID]: result },
   } = toJSONSchema(tempRegistry, {
+    target: 'draft-2020-12',
     metadata: registry,
     io,
     unrepresentable: 'any',
@@ -113,11 +106,11 @@ export const zodSchemaToJson: (
      * @see https://github.com/colinhacks/zod/issues/4750
      */
     uri: () => `__SCHEMA__PLACEHOLDER__`,
-
     override: (ctx) => getOverride(ctx, io),
   })
 
-  const jsonSchema = deleteInvalidProperties(result)
+  const jsonSchema = { ...result }
+  delete jsonSchema.id
 
   /**
    * Replace the previous generated placeholders with the final `$ref` value
@@ -127,7 +120,7 @@ export const zodSchemaToJson: (
     (_, id) => `"${getReferenceUri(id, io)}"`,
   )
 
-  return JSON.parse(jsonSchemaReplaceRef)
+  return JSON.parse(jsonSchemaReplaceRef) as typeof result
 }
 
 export const zodRegistryToJson: (
@@ -135,6 +128,7 @@ export const zodRegistryToJson: (
   io: 'input' | 'output',
 ) => Record<string, JSONSchema.BaseSchema> = (registry, io) => {
   const result = toJSONSchema(registry, {
+    target: 'draft-2020-12',
     io,
     unrepresentable: 'any',
     cycles: 'ref',
@@ -144,9 +138,12 @@ export const zodRegistryToJson: (
   }).schemas
 
   const jsonSchemas: Record<string, JSONSchema.BaseSchema> = {}
-
   for (const id in result) {
-    jsonSchemas[getSchemaId(id, io)] = deleteInvalidProperties(result[id])
+    const jsonSchema = { ...result[id] }
+
+    delete jsonSchema.id
+
+    jsonSchemas[getSchemaId(id, io)] = jsonSchema
   }
 
   return jsonSchemas

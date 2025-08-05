@@ -34,11 +34,17 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
             "application/json": {
               "schema": {
                 "properties": {
+                  "code": {
+                    "exclusiveMaximum": true,
+                    "maximum": 10000,
+                    "type": "number",
+                  },
                   "password": {
                     "maxLength": 32,
                     "type": "string",
                   },
                   "seed": {
+                    "maximum": 1000,
                     "minimum": 1,
                     "type": "number",
                   },
@@ -51,6 +57,7 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
                 "required": [
                   "username",
                   "seed",
+                  "code",
                   "password",
                 ],
                 "type": "object",
@@ -77,14 +84,199 @@ exports[`transformer > generates types for fastify-swagger correctly 1`] = `
                   "additionalProperties": false,
                   "properties": {
                     "required_role": {
-                      "enum": [
-                        "admin",
+                      "anyOf": [
+                        {
+                          "enum": [
+                            "admin",
+                          ],
+                          "type": "string",
+                        },
+                        {
+                          "enum": [
+                            null,
+                          ],
+                          "nullable": true,
+                        },
                       ],
-                      "type": "string",
+                    },
+                    "scopes": {
+                      "items": {
+                        "oneOf": [
+                          {
+                            "enum": [
+                              "read",
+                            ],
+                            "type": "string",
+                          },
+                          {
+                            "enum": [
+                              "write",
+                            ],
+                            "type": "string",
+                          },
+                          {
+                            "enum": [
+                              null,
+                            ],
+                            "nullable": true,
+                          },
+                        ],
+                      },
+                      "maxItems": 3,
+                      "minItems": 3,
+                      "type": "array",
                     },
                   },
                   "required": [
                     "required_role",
+                    "scopes",
+                  ],
+                  "type": "object",
+                },
+              },
+            },
+            "description": "Default Response",
+          },
+        },
+        "summary": "login your account",
+        "tags": [
+          "auth",
+        ],
+      },
+    },
+    "/no-schema": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": [],
+}
+`;
+
+exports[`transformer > generates types for fastify-swagger with OAS 3.1.0 correctly 1`] = `
+{
+  "components": {
+    "schemas": {},
+  },
+  "info": {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/delete": {
+      "delete": {
+        "description": "delete route",
+        "responses": {
+          "204": {
+            "description": "Empty response",
+          },
+        },
+      },
+    },
+    "/login": {
+      "post": {
+        "description": "login route",
+        "externalDocs": {
+          "description": "check google",
+          "url": "https://google.com",
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "code": {
+                    "exclusiveMaximum": 10000,
+                    "type": "number",
+                  },
+                  "password": {
+                    "maxLength": 32,
+                    "type": "string",
+                  },
+                  "seed": {
+                    "maximum": 1000,
+                    "minimum": 1,
+                    "type": "number",
+                  },
+                  "username": {
+                    "description": "someDescription",
+                    "maxLength": 32,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "username",
+                  "seed",
+                  "code",
+                  "password",
+                ],
+                "type": "object",
+              },
+            },
+          },
+          "required": true,
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                },
+              },
+            },
+            "description": "Default Response",
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "required_role": {
+                      "anyOf": [
+                        {
+                          "enum": [
+                            "admin",
+                          ],
+                          "type": "string",
+                        },
+                        {
+                          "type": "null",
+                        },
+                      ],
+                    },
+                    "scopes": {
+                      "prefixItems": [
+                        {
+                          "enum": [
+                            "read",
+                          ],
+                          "type": "string",
+                        },
+                        {
+                          "enum": [
+                            "write",
+                          ],
+                          "type": "string",
+                        },
+                        {
+                          "type": "null",
+                        },
+                      ],
+                      "type": "array",
+                    },
+                  },
+                  "required": [
+                    "required_role",
+                    "scopes",
                   ],
                   "type": "object",
                 },
@@ -275,6 +467,74 @@ exports[`transformer > should generate nested and circular refs correctly 1`] = 
                   },
                   "required": [
                     "groups",
+                    "user",
+                  ],
+                  "type": "object",
+                },
+              },
+            },
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": [],
+}
+`;
+
+exports[`transformer > should generate nullable arrays correctly 1`] = `
+{
+  "components": {
+    "schemas": {},
+  },
+  "info": {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/login": {
+      "post": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "user": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                        },
+                        "values": {
+                          "anyOf": [
+                            {
+                              "items": {
+                                "type": "string",
+                              },
+                              "type": "array",
+                            },
+                            {
+                              "enum": [
+                                null,
+                              ],
+                              "nullable": true,
+                            },
+                          ],
+                        },
+                      },
+                      "required": [
+                        "id",
+                        "values",
+                      ],
+                      "type": "object",
+                    },
+                  },
+                  "required": [
                     "user",
                   ],
                   "type": "object",
@@ -602,8 +862,17 @@ exports[`transformer > should not generate ref 1`] = `
                     "type": "string",
                   },
                   "age": {
-                    "nullable": true,
-                    "type": "number",
+                    "anyOf": [
+                      {
+                        "type": "number",
+                      },
+                      {
+                        "enum": [
+                          null,
+                        ],
+                        "nullable": true,
+                      },
+                    ],
                   },
                   "metadata": {
                     "additionalProperties": {
