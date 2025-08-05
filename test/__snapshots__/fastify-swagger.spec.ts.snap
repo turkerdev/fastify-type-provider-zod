@@ -483,6 +483,74 @@ exports[`transformer > should generate nested and circular refs correctly 1`] = 
 }
 `;
 
+exports[`transformer > should generate nullable arrays correctly 1`] = `
+{
+  "components": {
+    "schemas": {},
+  },
+  "info": {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/login": {
+      "post": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "user": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                        },
+                        "values": {
+                          "anyOf": [
+                            {
+                              "items": {
+                                "type": "string",
+                              },
+                              "type": "array",
+                            },
+                            {
+                              "enum": [
+                                null,
+                              ],
+                              "nullable": true,
+                            },
+                          ],
+                        },
+                      },
+                      "required": [
+                        "id",
+                        "values",
+                      ],
+                      "type": "object",
+                    },
+                  },
+                  "required": [
+                    "user",
+                  ],
+                  "type": "object",
+                },
+              },
+            },
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": [],
+}
+`;
+
 exports[`transformer > should generate ref correctly using global registry 1`] = `
 {
   "components": {

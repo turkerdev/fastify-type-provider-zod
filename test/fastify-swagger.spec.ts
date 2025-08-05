@@ -15,6 +15,18 @@ import {
   validatorCompiler,
 } from '../src/core'
 
+const OPENAPI_ROOT = {
+  openapi: {
+    openapi: '3.0.3',
+    info: {
+      title: 'SampleApi',
+      description: 'Sample backend service',
+      version: '1.0.0',
+    },
+    servers: [],
+  },
+}
+
 describe('transformer', () => {
   it('generates types for fastify-swagger correctly', async () => {
     const app = Fastify()
@@ -467,15 +479,7 @@ describe('transformer', () => {
     })
 
     app.register(fastifySwagger, {
-      openapi: {
-        openapi: '3.0.3',
-        info: {
-          title: 'SampleApi',
-          description: 'Sample backend service',
-          version: '1.0.0',
-        },
-        servers: [],
-      },
+      ...OPENAPI_ROOT,
       transform: createJsonSchemaTransform({ schemaRegistry }),
       transformObject: createJsonSchemaTransformObject({ schemaRegistry }),
     })
@@ -502,6 +506,55 @@ describe('transformer', () => {
             user: {
               id: '1',
               groups: [],
+            },
+          })
+        },
+      })
+    })
+
+    await app.ready()
+
+    const openApiSpecResponse = await app.inject().get('/documentation/json')
+    const openApiSpec = JSON.parse(openApiSpecResponse.body)
+
+    expect(openApiSpec).toMatchSnapshot()
+    await validator.validate(openApiSpec, {})
+  })
+
+  it('should generate nullable arrays correctly', async () => {
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
+    const USER_SCHEMA = z.object({
+      id: z.string(),
+      values: z.array(z.string()).nullable(),
+    })
+
+    app.register(fastifySwagger, {
+      ...OPENAPI_ROOT,
+      transform: createJsonSchemaTransform({}),
+    })
+
+    app.register(fastifySwaggerUI, {
+      routePrefix: '/documentation',
+    })
+
+    app.after(() => {
+      app.withTypeProvider<ZodTypeProvider>().route({
+        method: 'POST',
+        url: '/login',
+        schema: {
+          response: {
+            200: z.object({
+              user: USER_SCHEMA,
+            }),
+          },
+        },
+        handler: (_req, res) => {
+          res.send({
+            user: {
+              id: '1',
+              values: null,
             },
           })
         },
