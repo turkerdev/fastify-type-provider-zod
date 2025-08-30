@@ -285,3 +285,30 @@ const plugin: FastifyPluginAsyncZod = async function (fastify, _opts) {
   });
 };
 ```
+
+## How to specify different OpenAPI targets
+
+You can specify different JSON Schema targets for OpenAPI compatibility using the `createJsonSchemaTransform` function with the `zodToJsonConfig.target` option.
+
+### Available Targets
+
+- `"draft-2020-12"` (default) - Latest JSON Schema draft, compatible with OpenAPI 3.1+
+- `"draft-7"` - JSON Schema Draft 7
+- `"draft-4"` - JSON Schema Draft 4, compatible with OpenAPI 3.0.x
+- `"openapi-3.0"` - OpenAPI 3.0 specific target
+
+### Usage
+
+```typescript
+import { createJsonSchemaTransform } from "fastify-type-provider-zod";
+
+// For OpenAPI 3.0.x compatibility
+const transform = createJsonSchemaTransform({
+  zodToJsonConfig: { target: "draft-4" },
+});
+
+// For OpenAPI 3.1+ (default)
+const transform = createJsonSchemaTransform({
+  zodToJsonConfig: { target: "draft-2020-12" },
+});
+```

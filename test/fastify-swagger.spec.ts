@@ -753,4 +753,74 @@ describe('transformer', () => {
     expect(openApiSpec).toMatchSnapshot()
     await validator.validate(openApiSpec, {})
   })
+
+  it('should allow specification of Zod target for draft-4 compatibility', async () => {
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
+
+    // Use draft-4 target for OpenAPI 3.0.x compatibility
+    const transform = createJsonSchemaTransform({
+      zodToJsonConfig: { target: 'draft-4' },
+    })
+
+    app.register(fastifySwagger, {
+      openapi: {
+        openapi: '3.0.3',
+        info: {
+          title: 'TestApi',
+          version: '1.0.0',
+        },
+      },
+      transform,
+    })
+
+    // Test schema with nullable field (problematic in draft-2020-12 but should work with draft-4)
+    const TEST_SCHEMA = z.object({
+      id: z.string(),
+      name: z.string().nullable(),
+      metadata: z.record(z.string(), z.string()),
+    })
+
+    app.after(() => {
+      app.withTypeProvider<ZodTypeProvider>().route({
+        method: 'POST',
+        url: '/test',
+        schema: {
+          body: TEST_SCHEMA,
+          response: {
+            200: z.object({
+              success: z.boolean(),
+              data: TEST_SCHEMA.nullable(),
+            }),
+          },
+        },
+        handler: (_req, res) => {
+          res.send({ success: true, data: null })
+        },
+      })
+    })
+
+    await app.ready()
+
+    const openapiObject = app.swagger()
+
+    // Check that nullable fields are handled properly for draft-4
+    const bodySchema =
+      // @ts-expect-error - requestBody is not typed
+      openapiObject.paths?.['/test']?.post?.requestBody?.content?.['application/json']?.schema
+
+    // Check that the name field has the correct anyOf structure for nullable string
+    const nameField = bodySchema?.properties?.name
+    expect(nameField.anyOf).toHaveLength(2)
+
+    // Check first anyOf option: type string
+    expect(nameField.anyOf[0]).toEqual({ type: 'string' })
+
+    // Check second anyOf option: nullable with null enum
+    expect(nameField.anyOf[1]).toEqual({
+      nullable: true,
+      enum: [null],
+    })
+  })
 })
