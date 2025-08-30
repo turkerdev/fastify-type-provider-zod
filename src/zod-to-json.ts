@@ -51,11 +51,17 @@ const getOverride = (
   }
 }
 
+export interface ZodToJsonConfig {
+  target?: 'draft-2020-12' | 'draft-7' | 'draft-4' | 'openapi-3.0'
+}
+
 export const zodSchemaToJson: (
   zodSchema: $ZodType,
   registry: $ZodRegistry<{ id?: string }>,
   io: 'input' | 'output',
-) => JSONSchema.BaseSchema = (zodSchema, registry, io) => {
+  config?: ZodToJsonConfig,
+) => JSONSchema.BaseSchema = (zodSchema, registry, io, config = {}) => {
+  const { target = 'draft-2020-12' } = config
   const schemaRegistryEntry = registry.get(zodSchema)
 
   /**
@@ -85,7 +91,7 @@ export const zodSchemaToJson: (
   const {
     schemas: { [tempID]: result },
   } = toJSONSchema(tempRegistry, {
-    target: 'draft-2020-12',
+    target,
     metadata: registry,
     io,
     unrepresentable: 'any',
@@ -126,9 +132,11 @@ export const zodSchemaToJson: (
 export const zodRegistryToJson: (
   registry: $ZodRegistry<{ id?: string }>,
   io: 'input' | 'output',
-) => Record<string, JSONSchema.BaseSchema> = (registry, io) => {
+  config?: ZodToJsonConfig,
+) => Record<string, JSONSchema.BaseSchema> = (registry, io, config = {}) => {
+  const { target = 'draft-2020-12' } = config
   const result = toJSONSchema(registry, {
-    target: 'draft-2020-12',
+    target,
     io,
     unrepresentable: 'any',
     cycles: 'ref',
