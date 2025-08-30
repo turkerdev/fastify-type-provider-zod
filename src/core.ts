@@ -14,7 +14,7 @@ import type { $ZodRegistry, input, output } from 'zod/v4/core'
 import { $ZodType, globalRegistry, safeParse } from 'zod/v4/core'
 import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors'
 import { getOASVersion, jsonSchemaToOAS } from './json-to-oas'
-import { zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
+import { type ZodToJsonConfig, zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
 
 type FreeformRecord = Record<string, any>
 
@@ -40,11 +40,13 @@ interface Schema extends FastifySchema {
 type CreateJsonSchemaTransformOptions = {
   skipList?: readonly string[]
   schemaRegistry?: $ZodRegistry<{ id?: string | undefined }>
+  zodToJsonConfig?: ZodToJsonConfig
 }
 
 export const createJsonSchemaTransform = ({
   skipList = defaultSkipList,
   schemaRegistry = globalRegistry,
+  zodToJsonConfig = {},
 }: CreateJsonSchemaTransformOptions): SwaggerTransform<Schema> => {
   return (input) => {
     if ('swaggerObject' in input) {
@@ -76,7 +78,7 @@ export const createJsonSchemaTransform = ({
     for (const prop in zodSchemas) {
       const zodSchema = zodSchemas[prop]
       if (zodSchema) {
-        const jsonSchema = zodSchemaToJson(zodSchema, schemaRegistry, 'input')
+        const jsonSchema = zodSchemaToJson(zodSchema, schemaRegistry, 'input', zodToJsonConfig)
         const oasSchema = jsonSchemaToOAS(jsonSchema, oasVersion)
 
         transformed[prop] = oasSchema
@@ -88,7 +90,7 @@ export const createJsonSchemaTransform = ({
 
       for (const prop in response as any) {
         const zodSchema = resolveSchema((response as any)[prop])
-        const jsonSchema = zodSchemaToJson(zodSchema, schemaRegistry, 'output')
+        const jsonSchema = zodSchemaToJson(zodSchema, schemaRegistry, 'output', zodToJsonConfig)
 
         // Check is the JSON schema is null then return as it is since fastify-swagger will handle it
         if (jsonSchema.type === 'null') {
@@ -117,11 +119,13 @@ export const jsonSchemaTransform: SwaggerTransform<Schema> = createJsonSchemaTra
 
 type CreateJsonSchemaTransformObjectOptions = {
   schemaRegistry?: $ZodRegistry<{ id?: string | undefined }>
+  zodToJsonConfig?: ZodToJsonConfig
 }
 
 export const createJsonSchemaTransformObject =
   ({
     schemaRegistry = globalRegistry,
+    zodToJsonConfig = {},
   }: CreateJsonSchemaTransformObjectOptions): SwaggerTransformObject =>
   (input) => {
     if ('swaggerObject' in input) {
@@ -130,8 +134,8 @@ export const createJsonSchemaTransformObject =
 
     const oasVersion = getOASVersion(input)
 
-    const inputSchemas = zodRegistryToJson(schemaRegistry, 'input')
-    const outputSchemas = zodRegistryToJson(schemaRegistry, 'output')
+    const inputSchemas = zodRegistryToJson(schemaRegistry, 'input', zodToJsonConfig)
+    const outputSchemas = zodRegistryToJson(schemaRegistry, 'output', zodToJsonConfig)
 
     for (const key in outputSchemas) {
       if (inputSchemas[key]) {
@@ -201,7 +205,9 @@ export const createSerializerCompiler =
 
     const result = safeParse(schema, data)
     if (result.error) {
-      throw new ResponseSerializationError(method, url, { cause: result.error })
+      throw new ResponseSerializationError(method, url, {
+        cause: result.error,
+      })
     }
 
     return JSON.stringify(result.data, options?.replacer)
