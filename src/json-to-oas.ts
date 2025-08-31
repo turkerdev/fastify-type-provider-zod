@@ -1,7 +1,7 @@
 import type { OpenAPIV3, OpenAPIV3_1 } from 'openapi-types'
 import type { JSONSchema } from 'zod/v4/core'
 
-type OASVersion = '3.0' | '3.1'
+export type OASVersion = '3.0' | '3.1'
 
 export const getOASVersion = (documentObject: {
   openapiObject: Partial<OpenAPIV3.Document | OpenAPIV3_1.Document>

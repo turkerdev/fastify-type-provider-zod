@@ -6,6 +6,7 @@ import type {
   JSONSchemaGenerator,
 } from 'zod/v4/core'
 import { $ZodRegistry, $ZodType, toJSONSchema } from 'zod/v4/core'
+import type { OASVersion } from './json-to-oas'
 
 const getSchemaId = (id: string, io: 'input' | 'output') => {
   return io === 'input' ? `${id}Input` : id
@@ -65,9 +66,12 @@ export const zodSchemaToJson: (
   zodSchema: $ZodType,
   registry: $ZodRegistry<{ id?: string }>,
   io: 'input' | 'output',
+  oasVersion: OASVersion,
   config?: ZodToJsonConfig,
-) => JSONSchema.BaseSchema = (zodSchema, registry, io, config = {}) => {
-  const { target = 'openapi-3.0' } = config
+) => JSONSchema.BaseSchema = (zodSchema, registry, io, oasVersion, config = {}) => {
+  const defaultTarget =
+    oasVersion === '3.0' ? 'openapi-3.0' : ('draft-2020-12' satisfies JSONSchemaGenerator['target'])
+  const target = config?.target ?? defaultTarget
   const schemaRegistryEntry = registry.get(zodSchema)
 
   /**
