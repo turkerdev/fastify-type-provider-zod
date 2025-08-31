@@ -210,7 +210,8 @@ describe('transformer', () => {
     const openApiSpec = JSON.parse(openApiSpecResponse.body)
 
     expect(openApiSpec).toMatchSnapshot()
-    await validate31(openApiSpec)
+    const validationResult = await validate31(openApiSpec)
+    expect(validationResult.valid).toBe(true)
   })
 
   it('should fail generating types for fastify-swagger Swagger 2.0 correctly', async () => {
@@ -816,7 +817,8 @@ describe('transformer', () => {
     const openApiSpec = JSON.parse(openApiSpecResponse.body)
 
     expect(openApiSpec).toMatchSnapshot()
-    await validate31(openApiSpec)
+    const validationResult = await validate31(openApiSpec)
+    expect(validationResult.valid).toBe(true)
 
     await expect(() =>
       validator.validate(openApiSpec, {}),
