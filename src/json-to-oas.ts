@@ -22,39 +22,6 @@ export const getOASVersion = (documentObject: {
 export const jsonSchemaToOAS_3_0 = (jsonSchema: JSONSchema.BaseSchema): OpenAPIV3.SchemaObject => {
   const clone: any = { ...jsonSchema }
 
-  if (clone.type === 'null') {
-    clone.nullable = true
-    delete clone.type
-    clone.enum = [null]
-  }
-
-  if (Array.isArray(clone.prefixItems)) {
-    const tuple = clone.prefixItems as JSONSchema.BaseSchema[]
-
-    clone.minItems ??= tuple.length
-    clone.maxItems ??= tuple.length
-
-    clone.items = {
-      oneOf: tuple.map(jsonSchemaToOAS_3_0),
-    }
-
-    delete clone.prefixItems
-  }
-
-  if ('const' in clone && clone.const !== undefined) {
-    clone.enum = [clone.const]
-    delete clone.const
-  }
-
-  if (typeof clone.exclusiveMinimum === 'number') {
-    clone.minimum = clone.exclusiveMinimum
-    clone.exclusiveMinimum = true
-  }
-  if (typeof clone.exclusiveMaximum === 'number') {
-    clone.maximum = clone.exclusiveMaximum
-    clone.exclusiveMaximum = true
-  }
-
   for (const key of [
     '$schema',
     '$id',
