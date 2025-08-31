@@ -1,4 +1,10 @@
-import type { $ZodDate, $ZodUndefined, $ZodUnion, JSONSchema } from 'zod/v4/core'
+import type {
+  $ZodDate,
+  $ZodUndefined,
+  $ZodUnion,
+  JSONSchema,
+  JSONSchemaGenerator,
+} from 'zod/v4/core'
 import { $ZodRegistry, $ZodType, toJSONSchema } from 'zod/v4/core'
 
 const getSchemaId = (id: string, io: 'input' | 'output') => {
@@ -52,7 +58,7 @@ const getOverride = (
 }
 
 export interface ZodToJsonConfig {
-  target?: 'draft-2020-12' | 'draft-7' | 'draft-4' | 'openapi-3.0'
+  target?: JSONSchemaGenerator['target']
 }
 
 export const zodSchemaToJson: (
@@ -61,7 +67,7 @@ export const zodSchemaToJson: (
   io: 'input' | 'output',
   config?: ZodToJsonConfig,
 ) => JSONSchema.BaseSchema = (zodSchema, registry, io, config = {}) => {
-  const { target = 'draft-2020-12' } = config
+  const { target = 'openapi-3.0' } = config
   const schemaRegistryEntry = registry.get(zodSchema)
 
   /**
@@ -118,12 +124,19 @@ export const zodSchemaToJson: (
   const jsonSchema = { ...result }
   delete jsonSchema.id
 
+  // Helper to normalize whatever Zod put after the placeholder into just the ID
+  const normalizeId = (raw: string) =>
+    raw.replace(/^#\/(?:\$defs|definitions|components\/schemas)\//, '')
+
   /**
    * Replace the previous generated placeholders with the final `$ref` value
    */
   const jsonSchemaReplaceRef = JSON.stringify(jsonSchema).replaceAll(
-    /"__SCHEMA__PLACEHOLDER__#\/\$defs\/(.+?)"/g,
-    (_, id) => `"${getReferenceUri(id, io)}"`,
+    /"__SCHEMA__PLACEHOLDER__(?:(?:#\/(?:\$defs|definitions|components\/schemas)\/))?([^"]+)"/g,
+    (_, raw) => {
+      const id = normalizeId(raw)
+      return `"${getReferenceUri(id, io)}"`
+    },
   )
 
   return JSON.parse(jsonSchemaReplaceRef) as typeof result

@@ -295,12 +295,12 @@ You can specify different JSON Schema targets for OpenAPI compatibility using th
 ```typescript
 import { createJsonSchemaTransform } from "fastify-type-provider-zod";
 
-// For OpenAPI 3.0.x compatibility
+// For OpenAPI 3.0.x compatibility (default)
 const transform = createJsonSchemaTransform({
-  zodToJsonConfig: { target: "draft-4" },
+  zodToJsonConfig: { target: "openapi-3.0" },
 });
 
-// For OpenAPI 3.1+ (default)
+// For OpenAPI 3.1+
 const transform = createJsonSchemaTransform({
   zodToJsonConfig: { target: "draft-2020-12" },
 });
