@@ -940,6 +940,67 @@ exports[`transformer > should generate referenced input and output schemas corre
 }
 `;
 
+exports[`transformer > should handle records within records 1`] = `
+{
+  "components": {
+    "schemas": {},
+  },
+  "info": {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/login": {
+      "post": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "user": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "files": {
+                          "additionalProperties": {
+                            "additionalProperties": {
+                              "type": "string",
+                            },
+                            "type": "object",
+                          },
+                          "type": "object",
+                        },
+                        "id": {
+                          "type": "string",
+                        },
+                      },
+                      "required": [
+                        "id",
+                        "files",
+                      ],
+                      "type": "object",
+                    },
+                  },
+                  "required": [
+                    "user",
+                  ],
+                  "type": "object",
+                },
+              },
+            },
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": [],
+}
+`;
+
 exports[`transformer > should not generate ref 1`] = `
 {
   "components": {
