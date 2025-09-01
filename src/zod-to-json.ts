@@ -1,5 +1,12 @@
-import type { $ZodDate, $ZodUndefined, $ZodUnion, JSONSchema } from 'zod/v4/core'
+import type {
+  $ZodDate,
+  $ZodUndefined,
+  $ZodUnion,
+  JSONSchema,
+  JSONSchemaGenerator,
+} from 'zod/v4/core'
 import { $ZodRegistry, $ZodType, toJSONSchema } from 'zod/v4/core'
+import type { OASVersion } from './json-to-oas'
 
 const getSchemaId = (id: string, io: 'input' | 'output') => {
   return io === 'input' ? `${id}Input` : id
@@ -52,16 +59,19 @@ const getOverride = (
 }
 
 export interface ZodToJsonConfig {
-  target?: 'draft-2020-12' | 'draft-7' | 'draft-4' | 'openapi-3.0'
+  target?: JSONSchemaGenerator['target']
 }
 
 export const zodSchemaToJson: (
   zodSchema: $ZodType,
   registry: $ZodRegistry<{ id?: string }>,
   io: 'input' | 'output',
+  oasVersion: OASVersion,
   config?: ZodToJsonConfig,
-) => JSONSchema.BaseSchema = (zodSchema, registry, io, config = {}) => {
-  const { target = 'draft-2020-12' } = config
+) => JSONSchema.BaseSchema = (zodSchema, registry, io, oasVersion, config = {}) => {
+  const defaultTarget =
+    oasVersion === '3.0' ? 'openapi-3.0' : ('draft-2020-12' satisfies JSONSchemaGenerator['target'])
+  const target = config?.target ?? defaultTarget
   const schemaRegistryEntry = registry.get(zodSchema)
 
   /**
@@ -118,12 +128,19 @@ export const zodSchemaToJson: (
   const jsonSchema = { ...result }
   delete jsonSchema.id
 
+  // Helper to normalize whatever Zod put after the placeholder into just the ID
+  const normalizeId = (raw: string) =>
+    raw.replace(/^#\/(?:\$defs|definitions|components\/schemas)\//, '')
+
   /**
    * Replace the previous generated placeholders with the final `$ref` value
    */
   const jsonSchemaReplaceRef = JSON.stringify(jsonSchema).replaceAll(
-    /"__SCHEMA__PLACEHOLDER__#\/\$defs\/(.+?)"/g,
-    (_, id) => `"${getReferenceUri(id, io)}"`,
+    /"__SCHEMA__PLACEHOLDER__(?:(?:#\/(?:\$defs|definitions|components\/schemas)\/))?([^"]+)"/g,
+    (_, raw) => {
+      const id = normalizeId(raw)
+      return `"${getReferenceUri(id, io)}"`
+    },
   )
 
   return JSON.parse(jsonSchemaReplaceRef) as typeof result

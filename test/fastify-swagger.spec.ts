@@ -1,5 +1,6 @@
 import fastifySwagger from '@fastify/swagger'
 import fastifySwaggerUI from '@fastify/swagger-ui'
+import { validate as validate31 } from '@readme/openapi-parser'
 import Fastify from 'fastify'
 import * as validator from 'oas-validator'
 import { describe, expect, it } from 'vitest'
@@ -133,7 +134,11 @@ describe('transformer', () => {
         },
         servers: [],
       },
-      transform: jsonSchemaTransform,
+      transform: createJsonSchemaTransform({
+        zodToJsonConfig: {
+          target: 'draft-2020-12',
+        },
+      }),
     })
 
     app.register(fastifySwaggerUI, {
@@ -205,6 +210,8 @@ describe('transformer', () => {
     const openApiSpec = JSON.parse(openApiSpecResponse.body)
 
     expect(openApiSpec).toMatchSnapshot()
+    const validationResult = await validate31(openApiSpec)
+    expect(validationResult.valid).toBe(true)
   })
 
   it('should fail generating types for fastify-swagger Swagger 2.0 correctly', async () => {
@@ -570,6 +577,55 @@ describe('transformer', () => {
     await validator.validate(openApiSpec, {})
   })
 
+  it('should handle records within records', async () => {
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
+    const USER_SCHEMA = z.object({
+      id: z.string(),
+      files: z.record(z.string(), z.record(z.string(), z.string())),
+    })
+
+    app.register(fastifySwagger, {
+      ...OPENAPI_ROOT,
+      transform: createJsonSchemaTransform({}),
+    })
+
+    app.register(fastifySwaggerUI, {
+      routePrefix: '/documentation',
+    })
+
+    app.after(() => {
+      app.withTypeProvider<ZodTypeProvider>().route({
+        method: 'POST',
+        url: '/login',
+        schema: {
+          response: {
+            200: z.object({
+              user: USER_SCHEMA,
+            }),
+          },
+        },
+        handler: (_req, res) => {
+          res.send({
+            user: {
+              id: '1',
+              values: null,
+            },
+          })
+        },
+      })
+    })
+
+    await app.ready()
+
+    const openApiSpecResponse = await app.inject().get('/documentation/json')
+    const openApiSpec = JSON.parse(openApiSpecResponse.body)
+
+    expect(openApiSpec).toMatchSnapshot()
+    await validator.validate(openApiSpec, {})
+  })
+
   it('should generate input and output schemas correctly', async () => {
     const app = Fastify()
     app.setValidatorCompiler(validatorCompiler)
@@ -754,19 +810,19 @@ describe('transformer', () => {
     await validator.validate(openApiSpec, {})
   })
 
-  it('should allow specification of Zod target for draft-4 compatibility', async () => {
+  it('should allow specification of Zod target to handle OpenAPI 3.1', async () => {
     const app = Fastify()
     app.setValidatorCompiler(validatorCompiler)
     app.setSerializerCompiler(serializerCompiler)
 
-    // Use draft-4 target for OpenAPI 3.0.x compatibility
+    // draft-2020-12 is aligned with OpenAPI 3.1.0
     const transform = createJsonSchemaTransform({
-      zodToJsonConfig: { target: 'draft-4' },
+      zodToJsonConfig: { target: 'draft-2020-12' },
     })
 
     app.register(fastifySwagger, {
       openapi: {
-        openapi: '3.0.3',
+        openapi: '3.1.0',
         info: {
           title: 'TestApi',
           version: '1.0.0',
@@ -775,11 +831,14 @@ describe('transformer', () => {
       transform,
     })
 
-    // Test schema with nullable field (problematic in draft-2020-12 but should work with draft-4)
     const TEST_SCHEMA = z.object({
       id: z.string(),
       name: z.string().nullable(),
       metadata: z.record(z.string(), z.string()),
+    })
+
+    app.register(fastifySwaggerUI, {
+      routePrefix: '/documentation',
     })
 
     app.after(() => {
@@ -803,24 +862,17 @@ describe('transformer', () => {
 
     await app.ready()
 
-    const openapiObject = app.swagger()
+    const openApiSpecResponse = await app.inject().get('/documentation/json')
+    const openApiSpec = JSON.parse(openApiSpecResponse.body)
 
-    // Check that nullable fields are handled properly for draft-4
-    const bodySchema =
-      // @ts-expect-error - requestBody is not typed
-      openapiObject.paths?.['/test']?.post?.requestBody?.content?.['application/json']?.schema
+    expect(openApiSpec).toMatchSnapshot()
+    const validationResult = await validate31(openApiSpec)
+    expect(validationResult.valid).toBe(true)
 
-    // Check that the name field has the correct anyOf structure for nullable string
-    const nameField = bodySchema?.properties?.name
-    expect(nameField.anyOf).toHaveLength(2)
-
-    // Check first anyOf option: type string
-    expect(nameField.anyOf[0]).toEqual({ type: 'string' })
-
-    // Check second anyOf option: nullable with null enum
-    expect(nameField.anyOf[1]).toEqual({
-      nullable: true,
-      enum: [null],
-    })
+    await expect(() =>
+      validator.validate(openApiSpec, {}),
+    ).rejects.toThrowErrorMatchingInlineSnapshot(
+      `[AssertionError: Must be an OpenAPI 3.0.x document]`,
+    )
   })
 })
