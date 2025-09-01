@@ -13,3 +13,17 @@ updates:
     open-pull-requests-limit: 10
     ignore:
       - dependency-name: '@types/node'
+    groups:
+      biome:
+        applies-to: 'version-updates'
+        dependency-type: 'development'
+        patterns:
+          - '@biomejs/biome'
+          - '@kibertoad/biome-config'
+
+      vitest:
+        applies-to: 'version-updates'
+        dependency-type: 'development'
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
