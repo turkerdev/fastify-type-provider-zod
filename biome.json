@@ -28,6 +28,10 @@
           }
         }
       }
+    },
+    {
+      "includes": ["src/**"],
+      "plugins": ["./biome-plugins/ensures-zod-core-import.grit"]
     }
   ]
 }
