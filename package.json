@@ -69,7 +69,7 @@
     "tsd": "^0.33.0",
     "typescript": "^5.9.3",
     "unplugin-isolated-decl": "^0.15.2",
-    "vitest": "^3.2.4",
+    "vitest": "^4.0.4",
     "zod": "^4.1.12"
   },
   "tsd": {
