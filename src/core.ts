@@ -95,6 +95,40 @@ export const createJsonSchemaTransform = ({
       transformed.response = {}
 
       for (const prop in response as any) {
+        const responseElement = (response as any)[prop]
+        if (responseElement.content) {
+          if (!transformed.response[prop]) {
+            transformed.response[prop] = {}
+          }
+          if (!transformed.response[prop]?.content) {
+            transformed.response[prop].content = {}
+          }
+          for (const contentType in responseElement.content) {
+            if (!transformed.response[prop].content[contentType]) {
+              transformed.response[prop].content[contentType] = {}
+            }
+
+            const zodSchema = resolveSchema(responseElement.content[contentType].schema)
+            const jsonSchema = zodSchemaToJson(
+              zodSchema,
+              schemaRegistry,
+              'output',
+              oasVersion,
+              zodToJsonConfig,
+            )
+            // Check is the JSON schema is null then return as it is since fastify-swagger will handle it
+            if (jsonSchema.type === 'null') {
+              transformed.response[prop].content[contentType].schema = jsonSchema
+              continue
+            }
+
+            const oasSchema = jsonSchemaToOAS(jsonSchema, oasVersion)
+
+            transformed.response[prop].content[contentType].schema = oasSchema
+          }
+          continue
+        }
+
         const zodSchema = resolveSchema((response as any)[prop])
         const jsonSchema = zodSchemaToJson(
           zodSchema,
@@ -103,7 +137,6 @@ export const createJsonSchemaTransform = ({
           oasVersion,
           zodToJsonConfig,
         )
-
         // Check is the JSON schema is null then return as it is since fastify-swagger will handle it
         if (jsonSchema.type === 'null') {
           transformed.response[prop] = jsonSchema

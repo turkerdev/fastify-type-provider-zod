@@ -875,4 +875,135 @@ describe('transformer', () => {
       `[AssertionError: Must be an OpenAPI 3.0.x document]`,
     )
   })
+
+  it('should generate docs for fastify-swagger with multiple response content correctly', async () => {
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
+
+    const schemaRegistry = z.registry<{ id: string }>()
+
+    const USER_SCHEMA = z.object({
+      id: z.string().default('1'),
+      createdAt: z.date(),
+    })
+
+    schemaRegistry.add(USER_SCHEMA, { id: 'User' })
+
+    // Examples from Fastify Validation-and-Serialization docs
+    const DEFAULT_REPLY_SCHEMA = z.object({
+      name: z.string(),
+    })
+
+    schemaRegistry.add(USER_SCHEMA, { id: 'Default' })
+
+    const V1_REPLY_SCHEMA = z.object({
+      name: z.string(),
+      version: z.literal(1),
+    })
+
+    schemaRegistry.add(USER_SCHEMA, { id: 'V1' })
+
+    const V2_REPLY_SCHEMA = z.object({
+      name: z.string(),
+      version: z.literal(2),
+    })
+
+    schemaRegistry.add(USER_SCHEMA, { id: 'V2' })
+
+    // Example from original change request: https://github.com/turkerdev/fastify-type-provider-zod/pull/89
+    const TEXT_REPLY_SCHEMA = z.string()
+
+    schemaRegistry.add(USER_SCHEMA, { id: 'Text' })
+
+    app.register(fastifySwagger, {
+      openapi: {
+        openapi: '3.0.3',
+        info: {
+          title: 'SampleApi',
+          description: 'Sample backend service',
+          version: '1.0.0',
+        },
+        servers: [],
+      },
+      transform: createJsonSchemaTransform({ schemaRegistry }),
+      transformObject: createJsonSchemaTransformObject({ schemaRegistry }),
+    })
+
+    app.register(fastifySwaggerUI, {
+      routePrefix: '/documentation',
+    })
+
+    const handler = (req: any, res: any) => {
+      const defaultReply: z.infer<typeof DEFAULT_REPLY_SCHEMA> = {
+        name: 'test',
+      }
+      const v1Reply: z.infer<typeof V1_REPLY_SCHEMA> = {
+        name: 'test',
+        version: 1,
+      }
+      const v2Reply: z.infer<typeof V2_REPLY_SCHEMA> = {
+        name: 'test',
+        version: 2,
+      }
+      const textReply: z.infer<typeof TEXT_REPLY_SCHEMA> = 'test'
+
+      if (req.headers.accept === '*/*') {
+        res.header('Content-Type', 'application/json')
+      } else {
+        res.header('Content-Type', req.headers.accept)
+      }
+
+      switch (req.headers.accept) {
+        case 'application/vnd.v1+json':
+          return res.send(v1Reply)
+        case 'application/vnd.v2+json':
+          return res.send(v2Reply)
+        case 'text/plain':
+          return res.send(textReply)
+        default:
+          return res.send(defaultReply)
+      }
+    }
+
+    app.after(() => {
+      app.withTypeProvider<ZodTypeProvider>().route({
+        method: 'POST',
+        url: '/',
+        schema: {
+          body: USER_SCHEMA,
+          response: {
+            200: {
+              content: {
+                'application/json': {
+                  schema: DEFAULT_REPLY_SCHEMA,
+                },
+                'application/vnd.v1+json': {
+                  schema: V1_REPLY_SCHEMA,
+                },
+                'application/vnd.v2+json': {
+                  schema: V2_REPLY_SCHEMA,
+                },
+                'text/plain': {
+                  schema: TEXT_REPLY_SCHEMA,
+                },
+                '*/*': {
+                  schema: DEFAULT_REPLY_SCHEMA,
+                },
+              },
+            },
+          },
+        },
+        handler,
+      })
+    })
+
+    await app.ready()
+
+    const openApiSpecResponse = await app.inject().get('/documentation/json')
+    const openApiSpec = JSON.parse(openApiSpecResponse.body)
+
+    expect(openApiSpec).toMatchSnapshot()
+    await validator.validate(openApiSpec, {})
+  })
 })

@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance, InjectOptions } from 'fastify'
 import Fastify from 'fastify'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { z } from 'zod/v4'
@@ -217,6 +217,210 @@ describe('response schema', () => {
 
     // FixMe https://github.com/turkerdev/fastify-type-provider-zod/issues/16
     it.skip('returns 500 for incorrect response', async () => {
+      const response = await app.inject().get('/incorrect')
+
+      expect(response.statusCode).toBe(500)
+      expect(response.json()).toMatchInlineSnapshot()
+    })
+  })
+
+  describe('correctly processes response schema (multiple content-types)', () => {
+    let app: FastifyInstance
+    beforeEach(async () => {
+      /* Examples from Fastify Validation-and-Serialization docs */
+      const DEFAULT_REPLY_SCHEMA = z.object({
+        name: z.string(),
+      })
+      const V1_REPLY_SCHEMA = z.object({
+        name: z.string(),
+        version: z.literal(1),
+      })
+      const V2_REPLY_SCHEMA = z.object({
+        name: z.string(),
+        version: z.literal(2),
+      })
+      /* Example from original change request: https://github.com/turkerdev/fastify-type-provider-zod/pull/89 */
+      const TEXT_REPLY_SCHEMA = z.string()
+
+      app = Fastify()
+      app.setValidatorCompiler(validatorCompiler)
+      app.setSerializerCompiler(serializerCompiler)
+
+      const handler = (req: any, res: any) => {
+        const defaultReply: z.infer<typeof DEFAULT_REPLY_SCHEMA> = {
+          name: 'test',
+        }
+        const v1Reply: z.infer<typeof V1_REPLY_SCHEMA> = {
+          name: 'test',
+          version: 1,
+        }
+        const v2Reply: z.infer<typeof V2_REPLY_SCHEMA> = {
+          name: 'test',
+          version: 2,
+        }
+        const textReply: z.infer<typeof TEXT_REPLY_SCHEMA> = 'test'
+
+        if (req.headers.accept === '*/*') {
+          res.header('Content-Type', 'application/json')
+        } else {
+          res.header('Content-Type', req.headers.accept)
+        }
+
+        switch (req.headers.accept) {
+          case 'application/vnd.v1+json':
+            return res.send(v1Reply)
+          case 'application/vnd.v2+json':
+            return res.send(v2Reply)
+          case 'text/plain':
+            return res.send(textReply)
+          default:
+            return res.send(defaultReply)
+        }
+      }
+
+      app.after(() => {
+        app.withTypeProvider<ZodTypeProvider>().route({
+          method: 'GET',
+          url: '/',
+          schema: {
+            response: {
+              200: {
+                content: {
+                  'application/json': {
+                    schema: DEFAULT_REPLY_SCHEMA,
+                  },
+                  'application/vnd.v1+json': {
+                    schema: V1_REPLY_SCHEMA,
+                  },
+                  'application/vnd.v2+json': {
+                    schema: V2_REPLY_SCHEMA,
+                  },
+                  'text/plain': {
+                    schema: TEXT_REPLY_SCHEMA,
+                  },
+                  '*/*': {
+                    schema: DEFAULT_REPLY_SCHEMA,
+                  },
+                },
+              },
+            },
+          },
+          handler,
+        })
+
+        app.withTypeProvider<ZodTypeProvider>().route({
+          method: 'GET',
+          url: '/incorrect',
+          schema: {
+            response: {
+              200: {
+                content: {
+                  'application/json': {
+                    schema: DEFAULT_REPLY_SCHEMA,
+                  },
+                  'application/vnd.v1+json': {
+                    schema: V1_REPLY_SCHEMA,
+                  },
+                  'application/vnd.v2+json': {
+                    schema: V2_REPLY_SCHEMA,
+                  },
+                  'text/plain': {
+                    schema: TEXT_REPLY_SCHEMA,
+                  },
+                  '*/*': {
+                    schema: DEFAULT_REPLY_SCHEMA,
+                  },
+                },
+              },
+            },
+          },
+          handler,
+        })
+      })
+
+      await app.ready()
+    })
+    afterAll(async () => {
+      await app.close()
+    })
+
+    const tests: { parseResponse: (response: any) => any; req: InjectOptions; res: any }[] = [
+      {
+        parseResponse: (response: any) => response.json(),
+        req: {
+          headers: {
+            accept: 'application/json',
+          },
+          method: 'GET',
+          url: '/',
+        },
+        res: {
+          name: 'test',
+        },
+      },
+      {
+        parseResponse: (response: any) => response.json(),
+        req: {
+          headers: {
+            accept: 'application/vnd.v1+json',
+          },
+          method: 'GET',
+          url: '/',
+        },
+        res: {
+          name: 'test',
+          version: 1,
+        },
+      },
+      {
+        parseResponse: (response: any) => response.json(),
+        req: {
+          headers: {
+            accept: 'application/vnd.v2+json',
+          },
+          method: 'GET',
+          url: '/',
+        },
+        res: {
+          name: 'test',
+          version: 2,
+        },
+      },
+      {
+        parseResponse: (response: any) => response.json(),
+        req: {
+          headers: {
+            accept: '*/*',
+          },
+          method: 'GET',
+          url: '/',
+        },
+        res: {
+          name: 'test',
+        },
+      },
+      {
+        parseResponse: (response: any) => response.body,
+        req: {
+          headers: {
+            accept: 'text/plain',
+          },
+          method: 'GET',
+          url: '/',
+        },
+        res: 'test',
+      },
+    ]
+
+    it.each(tests)('returns 200 for correct response', async ({ parseResponse, req, res }) => {
+      const response = await app.inject(req)
+
+      expect(response.statusCode).toBe(200)
+      expect(parseResponse(response)).toStrictEqual(res)
+    })
+
+    // FixMe https://github.com/turkerdev/fastify-type-provider-zod/issues/16
+    it.skip.each(tests)('returns 500 for incorrect response', async () => {
       const response = await app.inject().get('/incorrect')
 
       expect(response.statusCode).toBe(500)

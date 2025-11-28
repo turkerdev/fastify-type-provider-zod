@@ -417,6 +417,274 @@ exports[`transformer > should allow specification of Zod target to handle OpenAP
 }
 `;
 
+exports[`transformer > should generate docs for fastify-swagger with multiple response content correctly 1`] = `
+{
+  "components": {
+    "schemas": {
+      "Default": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+          },
+          "id": {
+            "default": "1",
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "createdAt",
+        ],
+        "type": "object",
+      },
+      "DefaultInput": {
+        "properties": {
+          "createdAt": {},
+          "id": {
+            "default": "1",
+            "type": "string",
+          },
+        },
+        "required": [
+          "createdAt",
+        ],
+        "type": "object",
+      },
+      "Text": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+          },
+          "id": {
+            "default": "1",
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "createdAt",
+        ],
+        "type": "object",
+      },
+      "TextInput": {
+        "properties": {
+          "createdAt": {},
+          "id": {
+            "default": "1",
+            "type": "string",
+          },
+        },
+        "required": [
+          "createdAt",
+        ],
+        "type": "object",
+      },
+      "User": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+          },
+          "id": {
+            "default": "1",
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "createdAt",
+        ],
+        "type": "object",
+      },
+      "UserInput": {
+        "properties": {
+          "createdAt": {},
+          "id": {
+            "default": "1",
+            "type": "string",
+          },
+        },
+        "required": [
+          "createdAt",
+        ],
+        "type": "object",
+      },
+      "V1": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+          },
+          "id": {
+            "default": "1",
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "createdAt",
+        ],
+        "type": "object",
+      },
+      "V1Input": {
+        "properties": {
+          "createdAt": {},
+          "id": {
+            "default": "1",
+            "type": "string",
+          },
+        },
+        "required": [
+          "createdAt",
+        ],
+        "type": "object",
+      },
+      "V2": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+          },
+          "id": {
+            "default": "1",
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "createdAt",
+        ],
+        "type": "object",
+      },
+      "V2Input": {
+        "properties": {
+          "createdAt": {},
+          "id": {
+            "default": "1",
+            "type": "string",
+          },
+        },
+        "required": [
+          "createdAt",
+        ],
+        "type": "object",
+      },
+    },
+  },
+  "info": {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextInput",
+              },
+            },
+          },
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "name",
+                  ],
+                  "type": "object",
+                },
+              },
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "name",
+                  ],
+                  "type": "object",
+                },
+              },
+              "application/vnd.v1+json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                    },
+                    "version": {
+                      "enum": [
+                        1,
+                      ],
+                      "type": "number",
+                    },
+                  },
+                  "required": [
+                    "name",
+                    "version",
+                  ],
+                  "type": "object",
+                },
+              },
+              "application/vnd.v2+json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                    },
+                    "version": {
+                      "enum": [
+                        2,
+                      ],
+                      "type": "number",
+                    },
+                  },
+                  "required": [
+                    "name",
+                    "version",
+                  ],
+                  "type": "object",
+                },
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                },
+              },
+            },
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": [],
+}
+`;
+
 exports[`transformer > should generate input and output schemas correctly 1`] = `
 {
   "components": {
