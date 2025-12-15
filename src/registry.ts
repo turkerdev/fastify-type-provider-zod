@@ -55,7 +55,7 @@ export const generateIORegistries = (
   inputRegistry._idmap.forEach((_, id) => {
     if (outputRegistry._idmap.has(id)) {
       throw new Error(
-        `Collision detected for schema "${id}". The is already an input schema with the same name.`,
+        `Collision detected for schema "${id}". There is already an input schema with the same name.`,
       )
     }
   })
