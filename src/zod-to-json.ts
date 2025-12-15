@@ -1,4 +1,4 @@
-import { z } from 'zod/v4'
+import type { ZodType } from 'zod'
 import type { $ZodDate, $ZodUndefined, $ZodUnion, JSONSchema } from 'zod/v4/core'
 import { type $ZodRegistry, $ZodType, toJSONSchema } from 'zod/v4/core'
 import { getReferenceUri, type JSONSchemaTarget } from './utils'
@@ -60,7 +60,7 @@ const deleteInvalidProperties: (
 }
 
 export const zodSchemaToJson: (
-  zodSchema: $ZodType,
+  zodSchema: ZodType,
   registry: $ZodRegistry<{ id?: string }>,
   io: 'input' | 'output',
   target: JSONSchemaTarget,
@@ -77,7 +77,7 @@ export const zodSchemaToJson: (
     return { $ref: getReferenceUri(schemaRegistryEntry.id) }
   }
 
-  const result = z.toJSONSchema(zodSchema, {
+  const result = zodSchema.toJSONSchema({
     metadata: registry,
     io,
     target,
@@ -87,12 +87,7 @@ export const zodSchemaToJson: (
     override: (ctx) => getOverride(ctx, io),
   })
 
-  const jsonSchema = { ...result }
-  delete jsonSchema.id
-
-  // Helper to normalize whatever Zod put after the placeholder into just the ID
-
-  return jsonSchema
+  return deleteInvalidProperties(result)
 }
 
 export const zodRegistryToJson: (

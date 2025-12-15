@@ -10,9 +10,9 @@ import type {
   RawServerDefault,
 } from 'fastify'
 import type { FastifySerializerCompiler } from 'fastify/types/schema'
+import type { ZodType } from 'zod'
 import type { $ZodRegistry, input, output } from 'zod/v4/core'
 import { $ZodType, globalRegistry, safeParse } from 'zod/v4/core'
-
 import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors'
 import { generateIORegistries } from './registry'
 import { assertIsOpenAPIObject, getJSONSchemaTarget } from './utils'
@@ -148,12 +148,12 @@ export const validatorCompiler: FastifySchemaCompiler<$ZodType> =
     return { value: result.data }
   }
 
-function resolveSchema(maybeSchema: $ZodType | { properties: $ZodType }): $ZodType {
+function resolveSchema(maybeSchema: $ZodType | { properties: $ZodType }): ZodType {
   if (maybeSchema instanceof $ZodType) {
-    return maybeSchema
+    return maybeSchema as ZodType
   }
   if ('properties' in maybeSchema && maybeSchema.properties instanceof $ZodType) {
-    return maybeSchema.properties
+    return maybeSchema.properties as ZodType
   }
   throw new InvalidSchemaError(JSON.stringify(maybeSchema))
 }
