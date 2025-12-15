@@ -111,11 +111,21 @@ export const zodSchemaToJson: (
      * @see jsonSchemaReplaceRef
      * @see https://github.com/colinhacks/zod/issues/4750
      */
-    uri: () => 'test',
+    uri: () => `__SCHEMA__PLACEHOLDER__`,
     override: (ctx) => getOverride(ctx, io),
   })
 
-  return deleteInvalidProperties(result)
+  const jsonSchema = deleteInvalidProperties(result)
+
+  /**
+   * Replace the previous generated placeholders with the final `$ref` value
+   */
+  return JSON.parse(JSON.stringify(jsonSchema), (__key, value) => {
+    if (typeof value === 'string' && value.startsWith('__SCHEMA__PLACEHOLDER__')) {
+      return getReferenceUri(value.replace('__SCHEMA__PLACEHOLDER__', ''))
+    }
+    return value
+  }) as typeof result
 }
 
 export const zodRegistryToJson: (
@@ -126,6 +136,7 @@ export const zodRegistryToJson: (
   const result = toJSONSchema(registry, {
     io,
     target,
+    metadata: registry,
     unrepresentable: 'any',
     cycles: 'ref',
     reused: 'inline',

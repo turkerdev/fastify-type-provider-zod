@@ -18,7 +18,9 @@ export const assertIsOpenAPIObject: (
 
 export type JSONSchemaTarget = 'draft-2020-12' | 'openapi-3.0'
 
-export const getReferenceUri = (id: string): string => {
+export const getReferenceUri = (input: string): string => {
+  const id = input.replace(/^#\/(?:\$defs|definitions|components\/schemas)\//, '')
+
   return `#/components/schemas/${id}`
 }
 
