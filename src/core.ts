@@ -5,16 +5,17 @@ import type {
   FastifyPluginOptions,
   FastifySchema,
   FastifySchemaCompiler,
-  FastifySerializerCompiler,
   FastifyTypeProvider,
   RawServerBase,
   RawServerDefault,
 } from 'fastify'
+import type { FastifySerializerCompiler } from 'fastify/types/schema'
 import type { $ZodRegistry, input, output } from 'zod/v4/core'
 import { $ZodType, globalRegistry, safeParse } from 'zod/v4/core'
+
 import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors'
-import { getOASVersion, jsonSchemaToOAS } from './json-to-oas'
-import { type ZodToJsonConfig, zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
+import { generateIORegistries } from './registry'
+import { getJSONSchemaTarget, zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
 
 type FreeformRecord = Record<string, any>
 
@@ -40,27 +41,31 @@ interface Schema extends FastifySchema {
 type CreateJsonSchemaTransformOptions = {
   skipList?: readonly string[]
   schemaRegistry?: $ZodRegistry<{ id?: string | undefined }>
-  zodToJsonConfig?: ZodToJsonConfig
 }
 
 export const createJsonSchemaTransform = ({
   skipList = defaultSkipList,
   schemaRegistry = globalRegistry,
-  zodToJsonConfig = {},
 }: CreateJsonSchemaTransformOptions): SwaggerTransform<Schema> => {
-  return (input) => {
-    if ('swaggerObject' in input) {
-      throw new Error('OpenAPI 2.0 is not supported')
-    }
-
-    const { schema, url } = input
-
+  return ({ schema, url, ...document }) => {
     if (!schema) {
       return {
         schema,
         url,
       }
     }
+
+    if ('swaggerObject' in document) {
+      console.warn('This package currently does not support component references for Swagger 2.0')
+      return {
+        schema,
+        url,
+      }
+    }
+
+    const target = getJSONSchemaTarget(document.openapiObject.openapi)
+
+    const { inputRegistry, outputRegistry } = generateIORegistries(schemaRegistry)
 
     const { response, headers, querystring, body, params, hide, ...rest } = schema
 
@@ -73,21 +78,10 @@ export const createJsonSchemaTransform = ({
 
     const zodSchemas: FreeformRecord = { headers, querystring, body, params }
 
-    const oasVersion = getOASVersion(input)
-
     for (const prop in zodSchemas) {
       const zodSchema = zodSchemas[prop]
       if (zodSchema) {
-        const jsonSchema = zodSchemaToJson(
-          zodSchema,
-          schemaRegistry,
-          'input',
-          oasVersion,
-          zodToJsonConfig,
-        )
-        const oasSchema = jsonSchemaToOAS(jsonSchema, oasVersion)
-
-        transformed[prop] = oasSchema
+        transformed[prop] = zodSchemaToJson(zodSchema, inputRegistry, 'input', target)
       }
     }
 
@@ -96,23 +90,8 @@ export const createJsonSchemaTransform = ({
 
       for (const prop in response as any) {
         const zodSchema = resolveSchema((response as any)[prop])
-        const jsonSchema = zodSchemaToJson(
-          zodSchema,
-          schemaRegistry,
-          'output',
-          oasVersion,
-          zodToJsonConfig,
-        )
 
-        // Check is the JSON schema is null then return as it is since fastify-swagger will handle it
-        if (jsonSchema.type === 'null') {
-          transformed.response[prop] = jsonSchema
-          continue
-        }
-
-        const oasSchema = jsonSchemaToOAS(jsonSchema, oasVersion)
-
-        transformed.response[prop] = oasSchema
+        transformed.response[prop] = zodSchemaToJson(zodSchema, outputRegistry, 'output', target)
       }
     }
 
@@ -131,40 +110,23 @@ export const jsonSchemaTransform: SwaggerTransform<Schema> = createJsonSchemaTra
 
 type CreateJsonSchemaTransformObjectOptions = {
   schemaRegistry?: $ZodRegistry<{ id?: string | undefined }>
-  zodToJsonConfig?: ZodToJsonConfig
 }
 
 export const createJsonSchemaTransformObject =
   ({
     schemaRegistry = globalRegistry,
-    zodToJsonConfig = {},
   }: CreateJsonSchemaTransformObjectOptions): SwaggerTransformObject =>
   (input) => {
     if ('swaggerObject' in input) {
-      throw new Error('OpenAPI 2.0 is not supported')
+      console.warn('This package currently does not support component references for Swagger 2.0')
+      return input.swaggerObject
     }
 
-    const oasVersion = getOASVersion(input)
+    const target = getJSONSchemaTarget(input.openapiObject.openapi)
 
-    const inputSchemas = zodRegistryToJson(schemaRegistry, 'input', zodToJsonConfig)
-    const outputSchemas = zodRegistryToJson(schemaRegistry, 'output', zodToJsonConfig)
-
-    for (const key in outputSchemas) {
-      if (inputSchemas[key]) {
-        throw new Error(
-          `Collision detected for schema "${key}". The is already an input schema with the same name.`,
-        )
-      }
-    }
-
-    const jsonSchemas = {
-      ...inputSchemas,
-      ...outputSchemas,
-    }
-
-    const oasSchemas = Object.fromEntries(
-      Object.entries(jsonSchemas).map(([key, value]) => [key, jsonSchemaToOAS(value, oasVersion)]),
-    )
+    const { inputRegistry, outputRegistry } = generateIORegistries(schemaRegistry)
+    const inputSchemas = zodRegistryToJson(inputRegistry, 'input', target)
+    const outputSchemas = zodRegistryToJson(outputRegistry, 'output', target)
 
     return {
       ...input.openapiObject,
@@ -172,7 +134,8 @@ export const createJsonSchemaTransformObject =
         ...input.openapiObject.components,
         schemas: {
           ...input.openapiObject.components?.schemas,
-          ...oasSchemas,
+          ...inputSchemas,
+          ...outputSchemas,
         },
       },
     } as ReturnType<SwaggerTransformObject>
@@ -217,9 +180,7 @@ export const createSerializerCompiler =
 
     const result = safeParse(schema, data)
     if (result.error) {
-      throw new ResponseSerializationError(method, url, {
-        cause: result.error,
-      })
+      throw new ResponseSerializationError(method, url, { cause: result.error })
     }
 
     return JSON.stringify(result.data, options?.replacer)

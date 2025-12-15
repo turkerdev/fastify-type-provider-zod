@@ -875,4 +875,41 @@ describe('transformer', () => {
       `[AssertionError: Must be an OpenAPI 3.0.x document]`,
     )
   })
+
+  it('throw on key collision correctly', async () => {
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
+
+    const A_SCHEMA = z.object({
+      text: z.string(),
+    })
+
+    const B_SCHEMA = z.object({
+      text: z.string(),
+    })
+
+    const schemaRegistry = z.registry<{ id: string }>()
+
+    schemaRegistry.add(A_SCHEMA, { id: 'MySchemaInput' })
+    schemaRegistry.add(B_SCHEMA, { id: 'MySchema' })
+
+    app.register(fastifySwagger, {
+      openapi: {
+        openapi: '3.1.0',
+        info: {
+          title: 'SampleApi',
+          description: 'Sample backend service',
+          version: '1.0.0',
+        },
+        servers: [],
+      },
+      transform: createJsonSchemaTransform({ schemaRegistry }),
+      transformObject: createJsonSchemaTransformObject({ schemaRegistry }),
+    })
+
+    await app.ready()
+
+    expect(() => app.swagger()).toThrow()
+  })
 })
