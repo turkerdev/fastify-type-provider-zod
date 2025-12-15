@@ -1,12 +1,7 @@
 import { z } from 'zod/v4'
 import type { $ZodDate, $ZodUndefined, $ZodUnion, JSONSchema } from 'zod/v4/core'
 import { type $ZodRegistry, $ZodType, toJSONSchema } from 'zod/v4/core'
-
-type JSONSchemaTarget = 'draft-2020-12' | 'openapi-3.0'
-
-const getReferenceUri = (id: string) => {
-  return `#/components/schemas/${id}`
-}
+import { getReferenceUri, type JSONSchemaTarget } from './utils'
 
 function isZodDate(entity: unknown): entity is $ZodDate {
   return entity instanceof $ZodType && entity._zod.def.type === 'date'
@@ -62,14 +57,6 @@ const deleteInvalidProperties: (
   delete object.$id
 
   return object
-}
-
-export const getJSONSchemaTarget = (version = '3.0.0'): JSONSchemaTarget => {
-  if (version.startsWith('3.0')) {
-    return 'openapi-3.0'
-  }
-
-  return 'draft-2020-12'
 }
 
 export const zodSchemaToJson: (

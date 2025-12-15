@@ -15,7 +15,8 @@ import { $ZodType, globalRegistry, safeParse } from 'zod/v4/core'
 
 import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors'
 import { generateIORegistries } from './registry'
-import { getJSONSchemaTarget, zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
+import { assertIsOpenAPIObject, getJSONSchemaTarget } from './utils'
+import { zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
 
 type FreeformRecord = Record<string, any>
 
@@ -47,16 +48,12 @@ export const createJsonSchemaTransform = ({
   skipList = defaultSkipList,
   schemaRegistry = globalRegistry,
 }: CreateJsonSchemaTransformOptions): SwaggerTransform<Schema> => {
-  return ({ schema, url, ...document }) => {
-    if (!schema) {
-      return {
-        schema,
-        url,
-      }
-    }
+  return (document) => {
+    assertIsOpenAPIObject(document)
 
-    if ('swaggerObject' in document) {
-      console.warn('This package currently does not support component references for Swagger 2.0')
+    const { schema, url } = document
+
+    if (!schema) {
       return {
         schema,
         url,
@@ -116,24 +113,21 @@ export const createJsonSchemaTransformObject =
   ({
     schemaRegistry = globalRegistry,
   }: CreateJsonSchemaTransformObjectOptions): SwaggerTransformObject =>
-  (input) => {
-    if ('swaggerObject' in input) {
-      console.warn('This package currently does not support component references for Swagger 2.0')
-      return input.swaggerObject
-    }
+  (document) => {
+    assertIsOpenAPIObject(document)
 
-    const target = getJSONSchemaTarget(input.openapiObject.openapi)
+    const target = getJSONSchemaTarget(document.openapiObject.openapi)
 
     const { inputRegistry, outputRegistry } = generateIORegistries(schemaRegistry)
     const inputSchemas = zodRegistryToJson(inputRegistry, 'input', target)
     const outputSchemas = zodRegistryToJson(outputRegistry, 'output', target)
 
     return {
-      ...input.openapiObject,
+      ...document.openapiObject,
       components: {
-        ...input.openapiObject.components,
+        ...document.openapiObject.components,
         schemas: {
-          ...input.openapiObject.components?.schemas,
+          ...document.openapiObject.components?.schemas,
           ...inputSchemas,
           ...outputSchemas,
         },

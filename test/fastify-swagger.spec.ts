@@ -214,7 +214,7 @@ describe('transformer', () => {
     expect(validationResult.valid).toBe(true)
   })
 
-  it('should fail generating types for fastify-swagger Swagger 2.0 correctly', async () => {
+  it('should fail generating types for fastify-swagger Swagger 2.0', async () => {
     const app = Fastify()
     app.setValidatorCompiler(validatorCompiler)
     app.setSerializerCompiler(serializerCompiler)
@@ -292,7 +292,9 @@ describe('transformer', () => {
 
     await app.ready()
 
-    expect(() => app.swagger()).toThrowError('OpenAPI 2.0 is not supported')
+    expect(() => app.swagger()).toThrowError(
+      'This package currently does not support component references for Swagger 2.0',
+    )
   })
 
   it('should not generate ref', async () => {
