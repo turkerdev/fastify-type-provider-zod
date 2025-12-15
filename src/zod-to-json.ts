@@ -4,6 +4,9 @@ import { $ZodRegistry, $ZodType, toJSONSchema } from 'zod/v4/core'
 import type { SchemaRegistryMeta } from './registry'
 import { getReferenceUri, type JSONSchemaTarget } from './utils'
 
+const SCHEMA_REGISTRY_ID_PLACEHOLDER = '__SCHEMA__ID__PLACEHOLDER__'
+const SCHEMA_URI_PLACEHOLDER = '__SCHEMA__PLACEHOLDER__'
+
 function isZodDate(entity: unknown): entity is $ZodDate {
   return entity instanceof $ZodType && entity._zod.def.type === 'date'
 }
@@ -85,12 +88,11 @@ export const zodSchemaToJson: (
    *
    * @see https://github.com/colinhacks/zod/issues/4281
    */
-  const tempId = '__temp__'
   const tempRegistry = new $ZodRegistry<SchemaRegistryMeta>()
-  tempRegistry.add(zodSchema, { id: tempId })
+  tempRegistry.add(zodSchema, { id: SCHEMA_REGISTRY_ID_PLACEHOLDER })
 
   const {
-    schemas: { [tempId]: result },
+    schemas: { [SCHEMA_REGISTRY_ID_PLACEHOLDER]: result },
   } = toJSONSchema(tempRegistry, {
     io,
     target,
@@ -100,18 +102,11 @@ export const zodSchemaToJson: (
     reused: 'inline',
     /**
      * The uri option only allows customizing the base path of the `$ref`, and it automatically appends a path to it.
-     * As a workaround, we set a placeholder that looks something like this:
-     *
-     * |       marker          | always added by zod | meta.id |
-     * |__SCHEMA__PLACEHOLDER__|      #/$defs/       | User    |
-     *
-     * @example `__SCHEMA__PLACEHOLDER__#/$defs/User"`
-     * @example `__SCHEMA__PLACEHOLDER__#/$defs/Group"`
-     *
+     * As a workaround, we set a placeholder that looks something like this.
      * @see jsonSchemaReplaceRef
      * @see https://github.com/colinhacks/zod/issues/4750
      */
-    uri: () => `__SCHEMA__PLACEHOLDER__`,
+    uri: () => SCHEMA_URI_PLACEHOLDER,
     override: (ctx) => getOverride(ctx, io),
   })
 
@@ -121,15 +116,15 @@ export const zodSchemaToJson: (
    * Replace the previous generated placeholders with the final `$ref` value
    */
   return JSON.parse(JSON.stringify(jsonSchema), (__key, value) => {
-    if (typeof value === 'string' && value.startsWith('__SCHEMA__PLACEHOLDER__')) {
-      return getReferenceUri(value.replace('__SCHEMA__PLACEHOLDER__', ''))
+    if (typeof value === 'string' && value.startsWith(SCHEMA_URI_PLACEHOLDER)) {
+      return getReferenceUri(value.slice(SCHEMA_URI_PLACEHOLDER.length))
     }
     return value
   }) as typeof result
 }
 
 export const zodRegistryToJson: (
-  registry: $ZodRegistry<{ id?: string }>,
+  registry: $ZodRegistry<SchemaRegistryMeta>,
   io: 'input' | 'output',
   target: JSONSchemaTarget,
 ) => Record<string, JSONSchema.BaseSchema> = (registry, io, target) => {

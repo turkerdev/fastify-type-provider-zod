@@ -14,7 +14,7 @@ import type { ZodType } from 'zod'
 import type { $ZodRegistry, input, output } from 'zod/v4/core'
 import { $ZodType, globalRegistry, safeParse } from 'zod/v4/core'
 import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors'
-import { generateIORegistries } from './registry'
+import { generateIORegistries, type SchemaRegistryMeta } from './registry'
 import { assertIsOpenAPIObject, getJSONSchemaTarget } from './utils'
 import { zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
 
@@ -41,7 +41,7 @@ interface Schema extends FastifySchema {
 
 type CreateJsonSchemaTransformOptions = {
   skipList?: readonly string[]
-  schemaRegistry?: $ZodRegistry<{ id?: string | undefined }>
+  schemaRegistry?: $ZodRegistry<SchemaRegistryMeta>
 }
 
 export const createJsonSchemaTransform = ({
@@ -106,7 +106,7 @@ export const createJsonSchemaTransform = ({
 export const jsonSchemaTransform: SwaggerTransform<Schema> = createJsonSchemaTransform({})
 
 type CreateJsonSchemaTransformObjectOptions = {
-  schemaRegistry?: $ZodRegistry<{ id?: string | undefined }>
+  schemaRegistry?: $ZodRegistry<SchemaRegistryMeta>
 }
 
 export const createJsonSchemaTransformObject =

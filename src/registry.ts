@@ -1,7 +1,7 @@
 import { $ZodRegistry, type $ZodType } from 'zod/v4/core'
 
 export type SchemaRegistryMeta = {
-  id?: string
+  id?: string | undefined
   [key: string]: unknown
 }
 
