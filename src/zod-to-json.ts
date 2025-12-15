@@ -111,7 +111,7 @@ export const zodSchemaToJson: (
      * @see jsonSchemaReplaceRef
      * @see https://github.com/colinhacks/zod/issues/4750
      */
-    uri: () => '',
+    uri: () => 'test',
     override: (ctx) => getOverride(ctx, io),
   })
 
