@@ -1,6 +1,7 @@
 import type { ZodType } from 'zod'
 import type { $ZodDate, $ZodUndefined, $ZodUnion, JSONSchema } from 'zod/v4/core'
-import { type $ZodRegistry, $ZodType, toJSONSchema } from 'zod/v4/core'
+import { $ZodRegistry, $ZodType, toJSONSchema } from 'zod/v4/core'
+import type { SchemaRegistryMeta } from './registry'
 import { getReferenceUri, type JSONSchemaTarget } from './utils'
 
 function isZodDate(entity: unknown): entity is $ZodDate {
@@ -61,7 +62,7 @@ const deleteInvalidProperties: (
 
 export const zodSchemaToJson: (
   zodSchema: ZodType,
-  registry: $ZodRegistry<{ id?: string }>,
+  registry: $ZodRegistry<SchemaRegistryMeta>,
   io: 'input' | 'output',
   target: JSONSchemaTarget,
 ) => ReturnType<typeof deleteInvalidProperties> = (zodSchema, registry, io, target) => {
@@ -76,13 +77,41 @@ export const zodSchemaToJson: (
     return { $ref: getReferenceUri(schemaRegistryEntry.id) }
   }
 
-  const result = zodSchema.toJSONSchema({
-    metadata: registry,
+  /**
+   * Unfortunately, at the time of writing, there is no way to generate a schema with `$ref`
+   * using `toJSONSchema` and a zod schema.
+   *
+   * As a workaround, we create a zod registry containing only the specific schema we want to convert.
+   *
+   * @see https://github.com/colinhacks/zod/issues/4281
+   */
+  const tempId = '__temp__'
+  const tempRegistry = new $ZodRegistry<SchemaRegistryMeta>()
+  tempRegistry.add(zodSchema, { id: tempId })
+
+  const {
+    schemas: { [tempId]: result },
+  } = toJSONSchema(tempRegistry, {
     io,
     target,
+    metadata: registry,
     unrepresentable: 'any',
     cycles: 'ref',
     reused: 'inline',
+    /**
+     * The uri option only allows customizing the base path of the `$ref`, and it automatically appends a path to it.
+     * As a workaround, we set a placeholder that looks something like this:
+     *
+     * |       marker          | always added by zod | meta.id |
+     * |__SCHEMA__PLACEHOLDER__|      #/$defs/       | User    |
+     *
+     * @example `__SCHEMA__PLACEHOLDER__#/$defs/User"`
+     * @example `__SCHEMA__PLACEHOLDER__#/$defs/Group"`
+     *
+     * @see jsonSchemaReplaceRef
+     * @see https://github.com/colinhacks/zod/issues/4750
+     */
+    uri: () => '',
     override: (ctx) => getOverride(ctx, io),
   })
 
