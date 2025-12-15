@@ -114,7 +114,6 @@ export const zodRegistryToJson: (
   target: JSONSchemaTarget,
 ) => Record<string, JSONSchema.BaseSchema> = (registry, io, target) => {
   const result = toJSONSchema(registry, {
-    target,
     io,
     target,
     unrepresentable: 'any',
