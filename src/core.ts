@@ -16,7 +16,7 @@ import { $ZodType, globalRegistry, safeParse } from 'zod/v4/core'
 import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors'
 import { generateIORegistries, type SchemaRegistryMeta } from './registry'
 import { assertIsOpenAPIObject, getJSONSchemaTarget } from './utils'
-import { zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
+import { type ZodToJsonConfig, zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
 
 type FreeformRecord = Record<string, any>
 
@@ -42,11 +42,13 @@ interface Schema extends FastifySchema {
 type CreateJsonSchemaTransformOptions = {
   skipList?: readonly string[]
   schemaRegistry?: $ZodRegistry<SchemaRegistryMeta>
+  zodToJsonConfig?: ZodToJsonConfig
 }
 
 export const createJsonSchemaTransform = ({
   skipList = defaultSkipList,
   schemaRegistry = globalRegistry,
+  zodToJsonConfig = {},
 }: CreateJsonSchemaTransformOptions): SwaggerTransform<Schema> => {
   return (document) => {
     assertIsOpenAPIObject(document)
@@ -61,6 +63,10 @@ export const createJsonSchemaTransform = ({
     }
 
     const target = getJSONSchemaTarget(document.openapiObject.openapi)
+    const config = {
+      target,
+      ...zodToJsonConfig,
+    }
 
     const { inputRegistry, outputRegistry } = generateIORegistries(schemaRegistry)
 
@@ -78,7 +84,7 @@ export const createJsonSchemaTransform = ({
     for (const prop in zodSchemas) {
       const zodSchema = zodSchemas[prop]
       if (zodSchema) {
-        transformed[prop] = zodSchemaToJson(zodSchema, inputRegistry, 'input', target)
+        transformed[prop] = zodSchemaToJson(zodSchema, inputRegistry, 'input', config)
       }
     }
 
@@ -88,7 +94,7 @@ export const createJsonSchemaTransform = ({
       for (const prop in response as any) {
         const zodSchema = resolveSchema((response as any)[prop])
 
-        transformed.response[prop] = zodSchemaToJson(zodSchema, outputRegistry, 'output', target)
+        transformed.response[prop] = zodSchemaToJson(zodSchema, outputRegistry, 'output', config)
       }
     }
 
@@ -107,20 +113,26 @@ export const jsonSchemaTransform: SwaggerTransform<Schema> = createJsonSchemaTra
 
 type CreateJsonSchemaTransformObjectOptions = {
   schemaRegistry?: $ZodRegistry<SchemaRegistryMeta>
+  zodToJsonConfig?: ZodToJsonConfig
 }
 
 export const createJsonSchemaTransformObject =
   ({
     schemaRegistry = globalRegistry,
+    zodToJsonConfig = {},
   }: CreateJsonSchemaTransformObjectOptions): SwaggerTransformObject =>
   (document) => {
     assertIsOpenAPIObject(document)
 
     const target = getJSONSchemaTarget(document.openapiObject.openapi)
+    const config = {
+      target,
+      ...zodToJsonConfig,
+    }
 
     const { inputRegistry, outputRegistry } = generateIORegistries(schemaRegistry)
-    const inputSchemas = zodRegistryToJson(inputRegistry, 'input', target)
-    const outputSchemas = zodRegistryToJson(outputRegistry, 'output', target)
+    const inputSchemas = zodRegistryToJson(inputRegistry, 'input', config)
+    const outputSchemas = zodRegistryToJson(outputRegistry, 'output', config)
 
     return {
       ...document.openapiObject,
