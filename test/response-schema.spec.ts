@@ -224,6 +224,76 @@ describe('response schema', () => {
     })
   })
 
+  describe('correctly processes response schema (codec)', () => {
+    let app: FastifyInstance
+    beforeEach(async () => {
+      const REPLY_SCHEMA = z.object({
+        value: z.codec(z.string().regex(z.regexes.integer), z.int(), {
+          decode: (str) => Number.parseInt(str, 10),
+          encode: (num) => num.toString(),
+        }),
+      })
+
+      app = Fastify()
+      app.setValidatorCompiler(validatorCompiler)
+      app.setSerializerCompiler(serializerCompiler)
+
+      app.after(() => {
+        app.withTypeProvider<ZodTypeProvider>().route({
+          method: 'GET',
+          url: '/',
+          schema: {
+            response: {
+              200: REPLY_SCHEMA,
+            },
+          },
+          handler: (_req, res) => {
+            res.send({ value: 1234 })
+          },
+        })
+
+        app.withTypeProvider<ZodTypeProvider>().route({
+          method: 'GET',
+          url: '/incorrect',
+          schema: {
+            response: {
+              200: REPLY_SCHEMA,
+            },
+          },
+          handler: (_req, res) => {
+            res.send({ value: '1234' as any })
+          },
+        })
+      })
+
+      await app.ready()
+    })
+    afterAll(async () => {
+      await app.close()
+    })
+
+    it('returns 200 for correct response', async () => {
+      const response = await app.inject().get('/')
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json()).toEqual({ value: '1234' })
+    })
+
+    it('returns 500 for incorrect response', async () => {
+      const response = await app.inject().get('/incorrect')
+
+      expect(response.statusCode).toBe(500)
+      expect(response.json()).toMatchInlineSnapshot(`
+        {
+          "code": "FST_ERR_RESPONSE_SERIALIZATION",
+          "error": "Internal Server Error",
+          "message": "Response doesn't match the schema",
+          "statusCode": 500,
+        }
+      `)
+    })
+  })
+
   describe('correctly replaces date in stringified response', () => {
     let app: FastifyInstance
     beforeAll(async () => {
