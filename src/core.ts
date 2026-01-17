@@ -10,8 +10,8 @@ import type {
   RawServerBase,
   RawServerDefault,
 } from 'fastify'
-import type { $ZodRegistry, input, output } from 'zod/v4/core'
-import { $ZodType, globalRegistry, safeParse } from 'zod/v4/core'
+import type { $ZodRegistry, output } from 'zod/v4/core'
+import { $ZodType, globalRegistry, safeEncode, safeParse } from 'zod/v4/core'
 import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors'
 import { getOASVersion, jsonSchemaToOAS } from './json-to-oas'
 import { type ZodToJsonConfig, zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
@@ -30,7 +30,7 @@ const defaultSkipList = [
 
 export interface ZodTypeProvider extends FastifyTypeProvider {
   validator: this['schema'] extends $ZodType ? output<this['schema']> : unknown
-  serializer: this['schema'] extends $ZodType ? input<this['schema']> : unknown
+  serializer: this['schema'] extends $ZodType ? output<this['schema']> : unknown
 }
 
 interface Schema extends FastifySchema {
@@ -215,7 +215,7 @@ export const createSerializerCompiler =
   (data) => {
     const schema = resolveSchema(maybeSchema)
 
-    const result = safeParse(schema, data)
+    const result = safeEncode(schema, data)
     if (result.error) {
       throw new ResponseSerializationError(method, url, {
         cause: result.error,
