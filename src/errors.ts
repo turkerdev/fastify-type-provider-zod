@@ -46,7 +46,7 @@ export class ResponseSerializationError extends ResponseSerializationBase {
 }
 
 export function isResponseSerializationError(value: unknown): value is ResponseSerializationError {
-  return 'method' in (value as ResponseSerializationError)
+  return typeof value === 'object' && value !== null && 'method' in value
 }
 
 function isZodFastifySchemaValidationError(

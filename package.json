@@ -1,6 +1,6 @@
 {
-  "name": "fastify-type-provider-zod",
-  "version": "6.1.0",
+  "name": "@fastify/type-provider-zod",
+  "version": "0.0.0",
   "description": "Zod Type Provider for Fastify@5",
   "type": "module",
   "main": "./dist/cjs/index.cjs",
@@ -32,7 +32,7 @@
     "prepublishOnly": "npm run build"
   },
   "repository": {
-    "url": "https://github.com/turkerdev/fastify-type-provider-zod"
+    "url": "https://github.com/fastify/fastify-type-provider-zod"
   },
   "keywords": [
     "fastify",
@@ -43,9 +43,9 @@
   "author": "turkerd",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/turkerdev/fastify-type-provider-zod/issues"
+    "url": "https://github.com/fastify/fastify-type-provider-zod/issues"
   },
-  "homepage": "https://github.com/turkerdev/fastify-type-provider-zod",
+  "homepage": "https://github.com/fastify/fastify-type-provider-zod",
   "dependencies": {
     "@fastify/error": "^4.2.0"
   },

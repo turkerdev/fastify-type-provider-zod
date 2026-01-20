@@ -1,21 +1,21 @@
-# Fastify Type Provider Zod
+# @fastify/type-provider-zod
 
-[![NPM Version](https://img.shields.io/npm/v/fastify-type-provider-zod.svg)](https://npmjs.org/package/fastify-type-provider-zod)
-[![NPM Downloads](https://img.shields.io/npm/dm/fastify-type-provider-zod.svg)](https://npmjs.org/package/fastify-type-provider-zod)
-[![Build Status](https://github.com//turkerdev/fastify-type-provider-zod/workflows/CI/badge.svg)](https://github.com//turkerdev/fastify-type-provider-zod/actions)
+[![NPM Version](https://img.shields.io/npm/v/@fastify/type-provider-zod.svg)](https://npmjs.org/package/@fastify/type-provider-zod)
+[![NPM Downloads](https://img.shields.io/npm/dm/@fastify/type-provider-zod.svg)](https://npmjs.org/package/@fastify/type-provider-zod)
+[![Build Status](https://github.com/fastify/fastify-type-provider-zod/actions/workflows/ci.yml/badge.svg)](https://github.com/fastify/fastify-type-provider-zod/actions/workflows/ci.yml)
 
 ## Zod compatibility
 
-| fastify-type-provider-zod | zod  |
-|---------------------------|------|
-| <=4.x                     | v3   |
-| >=5.x                     | v4   |
+| @fastify/type-provider-zod | zod |
+|----------------------------|-----|
+| <=4.x                      | v3  |
+| >=5.x                      | v4  |
 
 ## How to use?
 
 ```ts
-import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
+import type { ZodTypeProvider } from '@fastify/type-provider-zod';
+import { serializerCompiler, validatorCompiler } from '@fastify/type-provider-zod';
 import { z } from 'zod/v4';
 
 const app = Fastify();
@@ -54,7 +54,7 @@ type ZodSerializerCompilerOptions = {
 
 ```ts
 import Fastify from 'fastify';
-import { createSerializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
+import { createSerializerCompiler, validatorCompiler } from '@fastify/type-provider-zod';
 
 const app = Fastify();
 
@@ -84,13 +84,13 @@ import fastify from 'fastify';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUI from '@fastify/swagger-ui';
 import { z } from 'zod/v4';
-import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+import type { ZodTypeProvider } from '@fastify/type-provider-zod';
 import {
   jsonSchemaTransform,
   createJsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
-} from 'fastify-type-provider-zod';
+} from '@fastify/type-provider-zod';
 
 const app = fastify();
 app.setValidatorCompiler(validatorCompiler);
@@ -152,7 +152,7 @@ run();
 You can add custom handling of request and response validation errors to your fastify error handler like this:
 
 ```ts
-import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
+import { hasZodFastifySchemaValidationErrors } from '@fastify/type-provider-zod';
 
 fastifyApp.setErrorHandler((err, req, reply) => {
   if (hasZodFastifySchemaValidationErrors(err)) {
@@ -196,13 +196,13 @@ import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUI from '@fastify/swagger-ui';
 import fastify from 'fastify';
 import { z } from 'zod/v4';
-import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+import type { ZodTypeProvider } from '@fastify/type-provider-zod';
 import {
   jsonSchemaTransformObject,
   jsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
-} from 'fastify-type-provider-zod';
+} from '@fastify/type-provider-zod';
 
 const USER_SCHEMA = z.object({
   id: z.number().int().positive(),
@@ -264,7 +264,7 @@ run();
 
 ```ts
 import { z } from 'zod/v4';
-import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
+import type { FastifyPluginAsyncZod } from '@fastify/type-provider-zod';
 
 const plugin: FastifyPluginAsyncZod = async function (fastify, _opts) {
   fastify.route({
@@ -295,7 +295,7 @@ By default target "openapi-3.0" is used for documents with "openapi" field set t
 ### Usage
 
 ```typescript
-import { createJsonSchemaTransform } from "fastify-type-provider-zod";
+import { createJsonSchemaTransform } from "@fastify/type-provider-zod";
 
 // For OpenAPI 3.0.x compatibility
 const transform = createJsonSchemaTransform({
