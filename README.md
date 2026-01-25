@@ -6,10 +6,18 @@
 
 ## Zod compatibility
 
-| fastify-type-provider-zod | zod  |
-|---------------------------|------|
-| <=4.x                     | v3   |
-| >=5.x                     | v4   |
+| fastify-type-provider-zod | zod |
+|---------------------------|-------|
+| <=4.x | v3 |
+| >=5.x <7.x | v4 |
+| >=7.x | v4.2+ |
+
+> **Important (v7+)**
+>
+> Starting from **v7**, this library uses Zod’s `.encode()` / `.decode()` APIs introduced in **Zod 4.3**.
+> Because of this change, **response serialization is now based on `z.output<T>` instead of `z.input<T>`**.
+>
+> This means Fastify serializers always expect the **post-transformation output type** of your Zod schemas.
 
 ## How to use?
 
