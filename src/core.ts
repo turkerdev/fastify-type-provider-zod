@@ -183,7 +183,7 @@ export const jsonSchemaTransformObject: SwaggerTransformObject = createJsonSchem
 export const validatorCompiler: FastifySchemaCompiler<$ZodType> =
   ({ schema }) =>
   (data) => {
-    const result = safeDecode(schema, data)
+    const result = safeParse(schema, data)
     if (result.error) {
       return { error: createValidationError(result.error) as unknown as Error }
     }
