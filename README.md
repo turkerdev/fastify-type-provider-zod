@@ -14,7 +14,7 @@
 
 > **Important (v7+)**
 >
-> Starting from **v7**, this library uses Zod’s `.encode()` / `.decode()` APIs introduced in **Zod 4.3**.
+> Starting from **v7**, this library uses Zod’s `.encode()` / `.decode()` APIs introduced in **Zod 4.2**.
 > Because of this change, **response serialization is now based on `z.output<T>` instead of `z.input<T>`**.
 >
 > This means Fastify serializers always expect the **post-transformation output type** of your Zod schemas.
