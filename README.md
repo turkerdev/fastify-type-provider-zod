@@ -6,13 +6,21 @@
 
 ## Zod compatibility
 
-`@fastify/type-provider-zod` only works with Zod v4.
+`@fastify/type-provider-zod` only works with Zod v4.2 or later.
+
+> **Important (v0+)**
+>
+> Starting from **v0**, this library uses Zod’s `.encode()` / `.decode()` APIs introduced in **Zod 4.1**.
+> Because of this change, **response serialization is now based on `z.output<T>` instead of `z.input<T>`**.
 
 ## How to use?
 
 ```ts
 import type { ZodTypeProvider } from '@fastify/type-provider-zod';
-import { serializerCompiler, validatorCompiler } from '@fastify/type-provider-zod';
+import {
+  serializerCompiler,
+  validatorCompiler,
+} from '@fastify/type-provider-zod';
 import { z } from 'zod/v4';
 
 const app = Fastify();
@@ -51,7 +59,10 @@ type ZodSerializerCompilerOptions = {
 
 ```ts
 import Fastify from 'fastify';
-import { createSerializerCompiler, validatorCompiler } from '@fastify/type-provider-zod';
+import {
+  createSerializerCompiler,
+  validatorCompiler,
+} from '@fastify/type-provider-zod';
 
 const app = Fastify();
 
@@ -155,7 +166,7 @@ fastifyApp.setErrorHandler((err, req, reply) => {
   if (hasZodFastifySchemaValidationErrors(err)) {
     return reply.code(400).send({
       error: 'Response Validation Error',
-      message: "Request doesn't match the schema",
+      message: 'Request doesn't match the schema',
       statusCode: 400,
       details: {
         issues: err.validation,
@@ -168,7 +179,7 @@ fastifyApp.setErrorHandler((err, req, reply) => {
   if (isResponseSerializationError(err)) {
     return reply.code(500).send({
       error: 'Internal Server Error',
-      message: "Response doesn't match the schema",
+      message: 'Response doesn't match the schema',
       statusCode: 500,
       details: {
         issues: err.cause.issues,
@@ -287,20 +298,20 @@ const plugin: FastifyPluginAsyncZod = async function (fastify, _opts) {
 
 You can specify different JSON Schema targets for OpenAPI compatibility using the `createJsonSchemaTransform` function with the `zodToJsonConfig.target` option.
 
-By default target "openapi-3.0" is used for documents with "openapi" field set to "3.0.x", and target "draft-2020-12" is used for documents with "openapi" field set to "3.1.x".
+By default target 'openapi-3.0' is used for documents with 'openapi' field set to '3.0.x', and target 'draft-2020-12' is used for documents with 'openapi' field set to '3.1.x'.
 
 ### Usage
 
 ```typescript
-import { createJsonSchemaTransform } from "@fastify/type-provider-zod";
+import { createJsonSchemaTransform } from '@fastify/type-provider-zod';
 
 // For OpenAPI 3.0.x compatibility
 const transform = createJsonSchemaTransform({
-  zodToJsonConfig: { target: "openapi-3.0" },
+  zodToJsonConfig: { target: 'openapi-3.0' },
 });
 
 // For OpenAPI 3.1+
 const transform = createJsonSchemaTransform({
-  zodToJsonConfig: { target: "draft-2020-12" },
+  zodToJsonConfig: { target: 'draft-2020-12' },
 });
 ```

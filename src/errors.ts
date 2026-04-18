@@ -32,7 +32,7 @@ const ResponseSerializationBase: FastifyErrorConstructor<
 )
 
 export class ResponseSerializationError extends ResponseSerializationBase {
-  cause!: $ZodError
+  cause: $ZodError
 
   constructor(
     public method: string,

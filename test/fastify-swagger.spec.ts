@@ -214,7 +214,7 @@ describe('transformer', () => {
     expect(validationResult.valid).toBe(true)
   })
 
-  it('should fail generating types for fastify-swagger Swagger 2.0 correctly', async () => {
+  it('should fail generating types for fastify-swagger Swagger 2.0', async () => {
     const app = Fastify()
     app.setValidatorCompiler(validatorCompiler)
     app.setSerializerCompiler(serializerCompiler)
@@ -292,7 +292,9 @@ describe('transformer', () => {
 
     await app.ready()
 
-    expect(() => app.swagger()).toThrowError('OpenAPI 2.0 is not supported')
+    expect(() => app.swagger()).toThrowError(
+      'This package currently does not support component references for Swagger 2.0',
+    )
   })
 
   it('should not generate ref', async () => {
@@ -874,5 +876,42 @@ describe('transformer', () => {
     ).rejects.toThrowErrorMatchingInlineSnapshot(
       `[AssertionError: Must be an OpenAPI 3.0.x document]`,
     )
+  })
+
+  it('throw on key collision correctly', async () => {
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
+
+    const A_SCHEMA = z.object({
+      text: z.string(),
+    })
+
+    const B_SCHEMA = z.object({
+      text: z.string(),
+    })
+
+    const schemaRegistry = z.registry<{ id: string }>()
+
+    schemaRegistry.add(A_SCHEMA, { id: 'MySchemaInput' })
+    schemaRegistry.add(B_SCHEMA, { id: 'MySchema' })
+
+    app.register(fastifySwagger, {
+      openapi: {
+        openapi: '3.1.0',
+        info: {
+          title: 'SampleApi',
+          description: 'Sample backend service',
+          version: '1.0.0',
+        },
+        servers: [],
+      },
+      transform: createJsonSchemaTransform({ schemaRegistry }),
+      transformObject: createJsonSchemaTransformObject({ schemaRegistry }),
+    })
+
+    await app.ready()
+
+    expect(() => app.swagger()).toThrow()
   })
 })

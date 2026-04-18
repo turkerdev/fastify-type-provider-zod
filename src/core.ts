@@ -10,10 +10,11 @@ import type {
   RawServerBase,
   RawServerDefault,
 } from 'fastify'
-import type { $ZodRegistry, input, JSONSchema, output } from 'zod/v4/core'
-import { $ZodType, globalRegistry, safeParse } from 'zod/v4/core'
+import type { $ZodRegistry, JSONSchema, output } from 'zod/v4/core'
+import { $ZodType, globalRegistry, safeDecode, safeEncode } from 'zod/v4/core'
 import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors'
-import { getOASVersion, jsonSchemaToOAS } from './json-to-oas'
+import { generateIORegistries, type SchemaRegistryMeta } from './registry'
+import { assertIsOpenAPIObject, getJSONSchemaTarget } from './utils'
 import { type ZodToJsonConfig, zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
 
 type FreeformRecord = Record<string, any>
@@ -30,7 +31,7 @@ const defaultSkipList = [
 
 export interface ZodTypeProvider extends FastifyTypeProvider {
   validator: this['schema'] extends $ZodType ? output<this['schema']> : unknown
-  serializer: this['schema'] extends $ZodType ? input<this['schema']> : unknown
+  serializer: this['schema'] extends $ZodType ? output<this['schema']> : unknown
 }
 
 interface Schema extends FastifySchema {
@@ -39,7 +40,7 @@ interface Schema extends FastifySchema {
 
 type CreateJsonSchemaTransformOptions = {
   skipList?: readonly string[]
-  schemaRegistry?: $ZodRegistry<{ id?: string | undefined }>
+  schemaRegistry?: $ZodRegistry<SchemaRegistryMeta>
   zodToJsonConfig?: ZodToJsonConfig
 }
 
@@ -50,12 +51,10 @@ export const createJsonSchemaTransform = ({
 }: CreateJsonSchemaTransformOptions): SwaggerTransform<Schema> => {
   const zodSchemaToJsonCache = new WeakMap<$ZodType, Map<string, JSONSchema.BaseSchema>>()
 
-  return (input) => {
-    if ('swaggerObject' in input) {
-      throw new Error('OpenAPI 2.0 is not supported')
-    }
+  return (document) => {
+    assertIsOpenAPIObject(document)
 
-    const { schema, url } = input
+    const { schema, url } = document
 
     if (!schema) {
       return {
@@ -63,6 +62,14 @@ export const createJsonSchemaTransform = ({
         url,
       }
     }
+
+    const target = getJSONSchemaTarget(document.openapiObject.openapi)
+    const config = {
+      target,
+      ...zodToJsonConfig,
+    }
+
+    const { inputRegistry, outputRegistry } = generateIORegistries(schemaRegistry)
 
     const { response, headers, querystring, body, params, hide, ...rest } = schema
 
@@ -75,15 +82,13 @@ export const createJsonSchemaTransform = ({
 
     const zodSchemas: FreeformRecord = { headers, querystring, body, params }
 
-    const oasVersion = getOASVersion(input)
-
     for (const prop in zodSchemas) {
       const zodSchema = zodSchemas[prop]
       if (!zodSchema) {
         continue
       }
 
-      const cacheKey = `input|${oasVersion}|${zodToJsonConfig.target ?? ''}`
+      const cacheKey = `input|${config.target}`
 
       let perSchema = zodSchemaToJsonCache.get(zodSchema)
       if (!perSchema) {
@@ -93,18 +98,11 @@ export const createJsonSchemaTransform = ({
 
       let jsonSchema = perSchema.get(cacheKey)
       if (!jsonSchema) {
-        jsonSchema = zodSchemaToJson(
-          zodSchema,
-          schemaRegistry,
-          'input',
-          oasVersion,
-          zodToJsonConfig,
-        )
+        jsonSchema = zodSchemaToJson(zodSchema, inputRegistry, 'input', config)
         perSchema.set(cacheKey, jsonSchema)
       }
 
-      const oasSchema = jsonSchemaToOAS(jsonSchema, oasVersion)
-      transformed[prop] = oasSchema
+      transformed[prop] = jsonSchema
     }
 
     if (response) {
@@ -113,7 +111,7 @@ export const createJsonSchemaTransform = ({
       for (const prop in response as any) {
         const zodSchema = resolveSchema((response as any)[prop])
 
-        const cacheKey = `output|${oasVersion}|${zodToJsonConfig.target ?? ''}`
+        const cacheKey = `output|${config.target}`
 
         let perSchema = zodSchemaToJsonCache.get(zodSchema)
         if (!perSchema) {
@@ -123,25 +121,11 @@ export const createJsonSchemaTransform = ({
 
         let jsonSchema = perSchema.get(cacheKey)
         if (!jsonSchema) {
-          jsonSchema = zodSchemaToJson(
-            zodSchema,
-            schemaRegistry,
-            'output',
-            oasVersion,
-            zodToJsonConfig,
-          )
+          jsonSchema = zodSchemaToJson(zodSchema, outputRegistry, 'output', config)
           perSchema.set(cacheKey, jsonSchema)
         }
 
-        // Check is the JSON schema is null then return as it is since fastify-swagger will handle it
-        if (jsonSchema.type === 'null') {
-          transformed.response[prop] = jsonSchema
-          continue
-        }
-
-        const oasSchema = jsonSchemaToOAS(jsonSchema, oasVersion)
-
-        transformed.response[prop] = oasSchema
+        transformed.response[prop] = jsonSchema
       }
     }
 
@@ -159,7 +143,7 @@ export const createJsonSchemaTransform = ({
 export const jsonSchemaTransform: SwaggerTransform<Schema> = createJsonSchemaTransform({})
 
 type CreateJsonSchemaTransformObjectOptions = {
-  schemaRegistry?: $ZodRegistry<{ id?: string | undefined }>
+  schemaRegistry?: $ZodRegistry<SchemaRegistryMeta>
   zodToJsonConfig?: ZodToJsonConfig
 }
 
@@ -168,40 +152,27 @@ export const createJsonSchemaTransformObject =
     schemaRegistry = globalRegistry,
     zodToJsonConfig = {},
   }: CreateJsonSchemaTransformObjectOptions): SwaggerTransformObject =>
-  (input) => {
-    if ('swaggerObject' in input) {
-      throw new Error('OpenAPI 2.0 is not supported')
+  (document) => {
+    assertIsOpenAPIObject(document)
+
+    const target = getJSONSchemaTarget(document.openapiObject.openapi)
+    const config = {
+      target,
+      ...zodToJsonConfig,
     }
 
-    const oasVersion = getOASVersion(input)
-
-    const inputSchemas = zodRegistryToJson(schemaRegistry, 'input', zodToJsonConfig)
-    const outputSchemas = zodRegistryToJson(schemaRegistry, 'output', zodToJsonConfig)
-
-    for (const key in outputSchemas) {
-      if (inputSchemas[key]) {
-        throw new Error(
-          `Collision detected for schema "${key}". The is already an input schema with the same name.`,
-        )
-      }
-    }
-
-    const jsonSchemas = {
-      ...inputSchemas,
-      ...outputSchemas,
-    }
-
-    const oasSchemas = Object.fromEntries(
-      Object.entries(jsonSchemas).map(([key, value]) => [key, jsonSchemaToOAS(value, oasVersion)]),
-    )
+    const { inputRegistry, outputRegistry } = generateIORegistries(schemaRegistry)
+    const inputSchemas = zodRegistryToJson(inputRegistry, 'input', config)
+    const outputSchemas = zodRegistryToJson(outputRegistry, 'output', config)
 
     return {
-      ...input.openapiObject,
+      ...document.openapiObject,
       components: {
-        ...input.openapiObject.components,
+        ...document.openapiObject.components,
         schemas: {
-          ...input.openapiObject.components?.schemas,
-          ...oasSchemas,
+          ...document.openapiObject.components?.schemas,
+          ...inputSchemas,
+          ...outputSchemas,
         },
       },
     } as ReturnType<SwaggerTransformObject>
@@ -212,7 +183,7 @@ export const jsonSchemaTransformObject: SwaggerTransformObject = createJsonSchem
 export const validatorCompiler: FastifySchemaCompiler<$ZodType> =
   ({ schema }) =>
   (data) => {
-    const result = safeParse(schema, data)
+    const result = safeDecode(schema, data)
     if (result.error) {
       return { error: createValidationError(result.error) as unknown as Error }
     }
@@ -222,10 +193,10 @@ export const validatorCompiler: FastifySchemaCompiler<$ZodType> =
 
 function resolveSchema(maybeSchema: $ZodType | { properties: $ZodType }): $ZodType {
   if (maybeSchema instanceof $ZodType) {
-    return maybeSchema
+    return maybeSchema as $ZodType
   }
   if ('properties' in maybeSchema && maybeSchema.properties instanceof $ZodType) {
-    return maybeSchema.properties
+    return maybeSchema.properties as $ZodType
   }
   throw new InvalidSchemaError(JSON.stringify(maybeSchema))
 }
@@ -244,11 +215,9 @@ export const createSerializerCompiler =
   (data) => {
     const schema = resolveSchema(maybeSchema)
 
-    const result = safeParse(schema, data)
+    const result = safeEncode(schema, data)
     if (result.error) {
-      throw new ResponseSerializationError(method, url, {
-        cause: result.error,
-      })
+      throw new ResponseSerializationError(method, url, { cause: result.error })
     }
 
     return JSON.stringify(result.data, options?.replacer)

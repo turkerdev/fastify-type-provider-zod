@@ -70,7 +70,7 @@
     "typescript": "^5.9.3",
     "unplugin-isolated-decl": "^0.15.2",
     "vitest": "^3.2.4",
-    "zod": "^4.1.12"
+    "zod": "^4.2.0"
   },
   "tsd": {
     "directory": "types"

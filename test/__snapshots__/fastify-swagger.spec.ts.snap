@@ -920,6 +920,7 @@ exports[`transformer > should generate referenced input and output schemas corre
               },
             },
           },
+          "required": true,
         },
         "responses": {
           "200": {
