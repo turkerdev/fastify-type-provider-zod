@@ -59,6 +59,16 @@ export type ZodToJsonConfig = {} & Omit<
   'io' | 'metadata' | 'cycles' | 'reused' | 'uri'
 >
 
+const composeOverride = (
+  io: 'input' | 'output',
+  override?: RegistryToJSONSchemaParams['override'],
+): RegistryToJSONSchemaParams['override'] => {
+  return (ctx) => {
+    getOverride(ctx, io)
+    override?.(ctx)
+  }
+}
+
 const deleteInvalidProperties: (
   schema: JSONSchema.BaseSchema,
 ) => Omit<JSONSchema.BaseSchema, 'id' | '$schema'> = (schema) => {
@@ -118,7 +128,7 @@ export const zodSchemaToJson: (
      * @see https://github.com/colinhacks/zod/issues/4750
      */
     uri: () => SCHEMA_URI_PLACEHOLDER,
-    override: config.override ?? ((ctx) => getOverride(ctx, io)),
+    override: composeOverride(io, config.override),
   })
 
   const jsonSchema = deleteInvalidProperties(result)
@@ -148,7 +158,7 @@ export const zodRegistryToJson: (
     cycles: 'ref',
     reused: 'inline',
     uri: (id) => getReferenceUri(id),
-    override: config.override ?? ((ctx) => getOverride(ctx, io)),
+    override: composeOverride(io, config.override),
   }).schemas
 
   const jsonSchemas: Record<string, JSONSchema.BaseSchema> = {}
