@@ -4,6 +4,15 @@
 [![NPM Downloads](https://img.shields.io/npm/dm/@fastify/type-provider-zod.svg)](https://npmjs.org/package/@fastify/type-provider-zod)
 [![Build Status](https://github.com/fastify/fastify-type-provider-zod/actions/workflows/ci.yml/badge.svg)](https://github.com/fastify/fastify-type-provider-zod/actions/workflows/ci.yml)
 
+A Type Provider for [Zod](https://github.com/colinhacks/zod).
+
+## Installation
+
+```sh
+npm i zod
+npm i @fastify/type-provider-zod
+```
+
 ## Zod compatibility
 
 `@fastify/type-provider-zod` only works with Zod v4.2 or later.
@@ -315,3 +324,7 @@ const transform = createJsonSchemaTransform({
   zodToJsonConfig: { target: 'draft-2020-12' },
 });
 ```
+
+## License
+
+Licensed under [MIT](./LICENSE).
