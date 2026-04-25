@@ -1,12 +1,22 @@
 {
-    "compilerOptions": {
-      "target": "ES2022",
-      "moduleResolution": "node",
-      "skipLibCheck": true,
-      "esModuleInterop": true,
-      "declaration": true,
-      "strict": true,
-      "isolatedDeclarations": true
-    },
-    "exclude": ["./node_modules", "types/**/*.test-d.ts", "test", "dist", "vite.config.ts", "vitest.config.ts"]
-  }  
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "node16",
+    "moduleResolution": "node16",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "declaration": true,
+    "strict": true,
+    "isolatedDeclarations": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  },
+  "exclude": [
+    "./node_modules",
+    "types/**/*.test-d.ts",
+    "test",
+    "dist",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ]
+}

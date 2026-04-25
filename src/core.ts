@@ -12,10 +12,10 @@ import type {
 } from 'fastify'
 import type { $ZodRegistry, JSONSchema, output } from 'zod/v4/core'
 import { $ZodType, globalRegistry, safeDecode, safeEncode } from 'zod/v4/core'
-import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors'
-import { generateIORegistries, type SchemaRegistryMeta } from './registry'
-import { assertIsOpenAPIObject, getJSONSchemaTarget } from './utils'
-import { type ZodToJsonConfig, zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
+import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors.ts'
+import { generateIORegistries, type SchemaRegistryMeta } from './registry.ts'
+import { assertIsOpenAPIObject, getJSONSchemaTarget } from './utils.ts'
+import { type ZodToJsonConfig, zodRegistryToJson, zodSchemaToJson } from './zod-to-json.ts'
 
 type FreeformRecord = Record<string, any>
 
@@ -217,7 +217,9 @@ export const createSerializerCompiler =
 
     const result = safeEncode(schema, data)
     if (result.error) {
-      throw new ResponseSerializationError(method, url, { cause: result.error })
+      throw new ResponseSerializationError(method, url, {
+        cause: result.error,
+      })
     }
 
     return JSON.stringify(result.data, options?.replacer)

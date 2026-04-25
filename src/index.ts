@@ -10,7 +10,7 @@ export {
   validatorCompiler,
   type ZodSerializerCompilerOptions,
   type ZodTypeProvider,
-} from './core'
+} from './core.js'
 
 export {
   hasZodFastifySchemaValidationErrors,
@@ -18,4 +18,4 @@ export {
   isResponseSerializationError,
   ResponseSerializationError,
   type ZodFastifySchemaValidationError,
-} from './errors'
+} from './errors.ts'

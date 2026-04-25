@@ -67,8 +67,8 @@
     "fastify-plugin": "^5.0.1",
     "oas-validator": "^5.0.8",
     "tsd": "^0.33.0",
-    "typescript": "^5.9.3",
-    "unplugin-isolated-decl": "^0.15.2",
+    "typescript": "^6.0.2",
+    "unplugin-isolated-decl": "^0.16.0",
     "vitest": "^3.2.4",
     "zod": "^4.2.0"
   },

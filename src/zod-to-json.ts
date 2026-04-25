@@ -6,8 +6,8 @@ import type {
   RegistryToJSONSchemaParams,
 } from 'zod/v4/core'
 import { $ZodRegistry, $ZodType, toJSONSchema } from 'zod/v4/core'
-import type { SchemaRegistryMeta } from './registry'
-import { getReferenceUri } from './utils'
+import type { SchemaRegistryMeta } from './registry.ts'
+import { getReferenceUri } from './utils.ts'
 
 const SCHEMA_REGISTRY_ID_PLACEHOLDER = '__SCHEMA__ID__PLACEHOLDER__'
 const SCHEMA_URI_PLACEHOLDER = '__SCHEMA__PLACEHOLDER__'
