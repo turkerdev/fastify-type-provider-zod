@@ -150,12 +150,3 @@ yarn.lock
 
 #tap files
 .tap/
-
-# static files
-static
-
-# AI assistant local config
-.pi
-.claude
-AGENTS.md
-CLAUDE.md
