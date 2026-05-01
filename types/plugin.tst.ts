@@ -1,18 +1,17 @@
-import type { Http2Server } from 'http2'
-
-import type { FastifyPluginAsync, FastifyPluginCallback } from 'fastify'
 import Fastify from 'fastify'
 import fp from 'fastify-plugin'
-import { expectType } from 'tsd'
+import { expect } from 'tstyche'
 import { z } from 'zod/v4'
-
-import type { FastifyPluginAsyncZod, FastifyPluginCallbackZod } from '../src/core'
+import type { Http2Server } from 'node:http2';
+import type { FastifyPluginAsync, FastifyPluginCallback } from 'fastify';
+import type { FastifyPluginAsyncZod, FastifyPluginCallbackZod } from '../src/core.ts'
+import type { Server } from 'node:http'
 
 // Ensure the defaults of FastifyPluginAsyncZod are the same as FastifyPluginAsync
 export const pluginAsyncDefaults: FastifyPluginAsync = async (fastify, options) => {
   const pluginAsyncZodDefaults: FastifyPluginAsyncZod = async (fastifyWithZod, optionsZod) => {
-    expectType<(typeof fastifyWithZod)['server']>(fastify.server);
-    expectType<typeof optionsZod>(options);
+    expect(fastifyWithZod.server).type.toBe(fastify.server);
+    expect(optionsZod).type.toBe(options);
   };
   fastify.register(pluginAsyncZodDefaults);
 };
@@ -20,8 +19,8 @@ export const pluginAsyncDefaults: FastifyPluginAsync = async (fastify, options) 
 // Ensure the defaults of FastifyPluginAsyncZod are the same as FastifyPluginCallback
 export const pluginCallbackDefaults: FastifyPluginCallback = async (fastify, options) => {
   const pluginCallbackZodDefaults: FastifyPluginAsyncZod = async (fastifyWithZod, optionsZod) => {
-    expectType<(typeof fastifyWithZod)['server']>(fastify.server);
-    expectType<typeof optionsZod>(options);
+    expect(fastifyWithZod.server).type.toBe(fastify.server);
+    expect(optionsZod).type.toBe(options);
   };
 
   fastify.register(pluginCallbackZodDefaults);
@@ -31,9 +30,8 @@ const asyncPlugin: FastifyPluginAsyncZod<{ optionA: string }, Http2Server> = asy
   fastify,
   options,
 ) => {
-  expectType<Http2Server>(fastify.server);
-
-  expectType<string>(options.optionA);
+  expect(fastify.server).type.toBe<Http2Server>();
+  expect(options).type.toBe<{ optionA: string }>();
 
   fastify.get(
     '/',
@@ -47,9 +45,9 @@ const asyncPlugin: FastifyPluginAsyncZod<{ optionA: string }, Http2Server> = asy
       },
     },
     (req) => {
-      expectType<boolean>(req.body.z);
-      expectType<number>(req.body.y);
-      expectType<string>(req.body.x);
+      expect(req.body.z).type.toBe<boolean>();
+      expect(req.body.y).type.toBe<number>();
+      expect(req.body.x).type.toBe<string>();
     },
   );
 };
@@ -59,9 +57,8 @@ const callbackPlugin: FastifyPluginCallbackZod<{ optionA: string }, Http2Server>
   options,
   done,
 ) => {
-  expectType<Http2Server>(fastify.server);
-
-  expectType<string>(options.optionA);
+  expect(fastify.server).type.toBe<Http2Server>();
+  expect(options).type.toBe<{ optionA: string }>();
 
   fastify.get(
     '/',
@@ -75,9 +72,9 @@ const callbackPlugin: FastifyPluginCallbackZod<{ optionA: string }, Http2Server>
       },
     },
     (req) => {
-      expectType<boolean>(req.body.z);
-      expectType<number>(req.body.y);
-      expectType<string>(req.body.x);
+      expect(req.body.z).type.toBe<boolean>();
+      expect(req.body.y).type.toBe<number>();
+      expect(req.body.x).type.toBe<string>();
     },
   );
   done();
@@ -92,9 +89,8 @@ const asyncPluginHttpDefault: FastifyPluginAsyncZod<{ optionA: string }> = async
   fastify,
   options,
 ) => {
-  expectType<(typeof fastify)['server']>(fastify.server);
-  expectType<typeof options>(options);
-  expectType<{ optionA: string }>(options);
+  expect(fastify.server).type.toBe<Server>();
+  expect(options).type.toBe<{ optionA: string }>();
 };
 
 fp(asyncPlugin);

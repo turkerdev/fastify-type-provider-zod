@@ -13,7 +13,7 @@
   },
   "exclude": [
     "./node_modules",
-    "types/**/*.test-d.ts",
+    "types/**/*.tst.ts",
     "test",
     "dist",
     "vite.config.ts",
