@@ -224,6 +224,108 @@ describe('response schema', () => {
     })
   })
 
+  describe('correctly processes content-type response schema', () => {
+    let app: FastifyInstance
+    beforeAll(async () => {
+      app = Fastify()
+      app.setValidatorCompiler(validatorCompiler)
+      app.setSerializerCompiler(serializerCompiler)
+
+      app.after(() => {
+        app
+          .withTypeProvider<ZodTypeProvider>()
+          .route({
+            method: 'GET',
+            url: '/single',
+            schema: {
+              response: {
+                200: {
+                  content: {
+                    'application/json': { schema: z.object({ name: z.string() }) },
+                  },
+                },
+              },
+            },
+            handler: (_req, res) => {
+              res.send({ name: 'test' })
+            },
+          })
+          .route({
+            method: 'GET',
+            url: '/multi-content-type',
+            schema: {
+              response: {
+                200: {
+                  content: {
+                    'application/json': { schema: z.object({ type: z.literal('first') }) },
+                    'application/vnd.v1+json': { schema: z.object({ type: z.literal('second') }) },
+                  },
+                },
+              },
+            },
+            handler: (_req, res) => {
+              res.header('Content-Type', 'application/vnd.v1+json')
+              res.send({ type: 'second' })
+            },
+          })
+          .route({
+            method: 'GET',
+            url: '/incorrect',
+            schema: {
+              response: {
+                200: {
+                  content: {
+                    'application/json': { schema: z.object({ name: z.string() }) },
+                  },
+                },
+              },
+            },
+            handler: (_req, res) => {
+              // @ts-expect-error
+              res.send({ invalid: true })
+            },
+          })
+      })
+
+      app.setErrorHandler((err, _req, reply) => {
+        if (isResponseSerializationError(err)) {
+          return reply.code(500).send({
+            error: 'Internal Server Error',
+            message: "Response doesn't match the schema",
+            statusCode: 500,
+          })
+        }
+        throw err
+      })
+
+      await app.ready()
+    })
+
+    afterAll(async () => {
+      await app.close()
+    })
+
+    it('validates single content type response', async () => {
+      const response = await app.inject().get('/single')
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json()).toEqual({ name: 'test' })
+    })
+
+    it('uses matching schema when Content-Type header selects a non-default content type', async () => {
+      const response = await app.inject().get('/multi-content-type')
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json()).toEqual({ type: 'second' })
+    })
+
+    it('throws when data does not match any content type schema', async () => {
+      const response = await app.inject().get('/incorrect')
+
+      expect(response.statusCode).toBe(500)
+    })
+  })
+
   describe('correctly replaces date in stringified response', () => {
     let app: FastifyInstance
     beforeAll(async () => {

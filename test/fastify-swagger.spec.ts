@@ -875,4 +875,68 @@ describe('transformer', () => {
       `[AssertionError: Must be an OpenAPI 3.0.x document]`,
     )
   })
+
+  it('generates correct OpenAPI schema for content-type response schemas', async () => {
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
+
+    app.register(fastifySwagger, {
+      openapi: {
+        openapi: '3.0.3',
+        info: {
+          title: 'SampleApi',
+          description: 'Sample backend service',
+          version: '1.0.0',
+        },
+        servers: [],
+      },
+      transform: jsonSchemaTransform,
+    })
+
+    app.register(fastifySwaggerUI, {
+      routePrefix: '/documentation',
+    })
+
+    const ItemSchema = z.object({ id: z.number(), name: z.string() })
+
+    app.after(() => {
+      app.withTypeProvider<ZodTypeProvider>().route({
+        method: 'GET',
+        url: '/items',
+        schema: {
+          response: {
+            200: {
+              description: 'Successful response with multiple content types',
+              content: {
+                'application/json': { schema: ItemSchema },
+                'application/vnd.v1+json': { schema: z.array(ItemSchema) },
+              },
+            },
+            '3xx': {
+              content: {
+                'application/vnd.v2+json': { schema: z.object({ redirect: z.string() }) },
+              },
+            },
+            default: {
+              content: {
+                '*/*': { schema: z.object({ desc: z.string() }) },
+              },
+            },
+          },
+        },
+        handler: (_req, res) => {
+          res.send({ id: 1, name: 'item' })
+        },
+      })
+    })
+
+    await app.ready()
+
+    const openApiSpecResponse = await app.inject().get('/documentation/json')
+    const openApiSpec = JSON.parse(openApiSpecResponse.body)
+
+    expect(openApiSpec).toMatchSnapshot()
+    await validator.validate(openApiSpec, {})
+  })
 })
