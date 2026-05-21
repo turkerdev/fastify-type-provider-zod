@@ -1024,8 +1024,7 @@ exports[`transformer > should generate referenced input and output schemas corre
                 "$ref": "#/components/schemas/UserInput",
               },
             },
-          },
-          "required": true,
+          }
         },
         "responses": {
           "200": {

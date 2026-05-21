@@ -334,20 +334,18 @@ describe('response schema', () => {
       app.setSerializerCompiler(serializerCompiler)
 
       app.after(() => {
-        app
-          .withTypeProvider<ZodTypeProvider>()
-          .route({
-            method: 'DELETE',
-            url: '/resource',
-            schema: {
-              response: {
-                204: z.undefined().describe('Resource deleted'),
-              },
+        app.withTypeProvider<ZodTypeProvider>().route({
+          method: 'DELETE',
+          url: '/resource',
+          schema: {
+            response: {
+              204: z.undefined().describe('Resource deleted'),
             },
-            handler: (_req, res) => {
-              res.status(204).send()
-            },
-          })
+          },
+          handler: (_req, res) => {
+            res.status(204).send()
+          },
+        })
       })
       await app.ready()
     })

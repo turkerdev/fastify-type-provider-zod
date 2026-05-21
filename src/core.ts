@@ -121,7 +121,9 @@ export const createJsonSchemaTransform = ({
 
           responseObj.content = {}
 
-          for (const [contentType, { schema: maybeSchema }] of Object.entries(responseSchema.content)) {
+          for (const [contentType, { schema: maybeSchema }] of Object.entries(
+            responseSchema.content,
+          )) {
             const zodSchema = resolveSchema(maybeSchema)
             const jsonSchema = zodSchemaToJson(
               zodSchema,
