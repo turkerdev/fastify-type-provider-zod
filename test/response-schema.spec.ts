@@ -326,6 +326,44 @@ describe('response schema', () => {
     })
   })
 
+  describe('correctly processes no-content response', () => {
+    let app: FastifyInstance
+    beforeAll(async () => {
+      app = Fastify()
+      app.setValidatorCompiler(validatorCompiler)
+      app.setSerializerCompiler(serializerCompiler)
+
+      app.after(() => {
+        app
+          .withTypeProvider<ZodTypeProvider>()
+          .route({
+            method: 'DELETE',
+            url: '/resource',
+            schema: {
+              response: {
+                204: z.undefined().describe('Resource deleted'),
+              },
+            },
+            handler: (_req, res) => {
+              res.status(204).send()
+            },
+          })
+      })
+      await app.ready()
+    })
+
+    afterAll(async () => {
+      await app.close()
+    })
+
+    it('returns 204 with empty body', async () => {
+      const response = await app.inject().delete('/resource')
+
+      expect(response.statusCode).toBe(204)
+      expect(response.body).toEqual('')
+    })
+  })
+
   describe('correctly replaces date in stringified response', () => {
     let app: FastifyInstance
     beforeAll(async () => {

@@ -260,6 +260,28 @@ async function run() {
 run();
 ```
 
+## How to define an empty body response
+
+Use `z.undefined()` to define a response with no body. This enforces correct types on `res.send()` and generates an accurate OpenAPI schema:
+
+```ts
+import { z } from 'zod/v4';
+import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+
+app.withTypeProvider<ZodTypeProvider>().route({
+  method: 'DELETE',
+  url: '/resource',
+  schema: {
+    response: {
+      204: z.undefined().describe('Resource deleted'),
+    },
+  },
+  handler: (_req, res) => {
+    res.status(204).send();
+  },
+});
+```
+
 ## How to define multiple response content types
 
 You can define per-content-type response schemas following the OpenAPI 3.x response object format. The `jsonSchemaTransform` will include them correctly in the generated spec, and `res.send()` will be typed as the union of all defined schemas.
