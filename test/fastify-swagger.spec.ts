@@ -939,4 +939,45 @@ describe('transformer', () => {
     expect(openApiSpec).toMatchSnapshot()
     await validator.validate(openApiSpec, {})
   })
+
+  it('generates correct OpenAPI schema for z.undefined() 204 no-body response', async () => {
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
+
+    app.register(fastifySwagger, {
+      ...OPENAPI_ROOT,
+      transform: jsonSchemaTransform,
+    })
+
+    app.register(fastifySwaggerUI, { routePrefix: '/documentation' })
+
+    app.after(() => {
+      app.withTypeProvider<ZodTypeProvider>().route({
+        method: 'DELETE',
+        url: '/items/:id',
+        schema: {
+          response: {
+            204: z.undefined().describe('No content'),
+          },
+        },
+        handler: (_req, res) => {
+          res.status(204).send()
+        },
+      })
+    })
+
+    await app.ready()
+
+    const openApiSpec = JSON.parse((await app.inject().get('/documentation/json')).body)
+
+    expect(openApiSpec.paths['/items/{id}'].delete.responses).toMatchInlineSnapshot(`
+      {
+        "204": {
+          "description": "No content",
+        },
+      }
+    `)
+    await validator.validate(openApiSpec, {})
+  })
 })
