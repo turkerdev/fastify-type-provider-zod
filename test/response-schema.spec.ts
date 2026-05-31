@@ -38,8 +38,7 @@ describe('response schema', () => {
               },
             },
             handler: (_req, res) => {
-              // @ts-expect-error
-              res.status(204).send({ id: 1 })
+              res.status(204).send({ id: 1 } as any)
             },
           })
       })
@@ -281,7 +280,7 @@ describe('response schema', () => {
               },
             },
             handler: (_req, res) => {
-              // @ts-expect-error
+              // @ts-expect-error — intentionally sending wrong shape to test runtime serialization rejection
               res.send({ invalid: true })
             },
           })
