@@ -1,5 +1,110 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`transformer > generates correct OpenAPI schema for content-type response schemas 1`] = `
+{
+  "components": {
+    "schemas": {},
+  },
+  "info": {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/items": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                    },
+                    "name": {
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                  ],
+                  "type": "object",
+                },
+              },
+              "application/vnd.v1+json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": "number",
+                      },
+                      "name": {
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                    ],
+                    "type": "object",
+                  },
+                  "type": "array",
+                },
+              },
+            },
+            "description": "Successful response with multiple content types",
+          },
+          "3XX": {
+            "content": {
+              "application/vnd.v2+json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "redirect": {
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "redirect",
+                  ],
+                  "type": "object",
+                },
+              },
+            },
+            "description": "Default Response",
+          },
+          "default": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "desc": {
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "desc",
+                  ],
+                  "type": "object",
+                },
+              },
+            },
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": [],
+}
+`;
+
 exports[`transformer > generates types for fastify-swagger correctly 1`] = `
 {
   "components": {
@@ -920,6 +1025,7 @@ exports[`transformer > should generate referenced input and output schemas corre
               },
             },
           },
+          "required": true,
         },
         "responses": {
           "200": {

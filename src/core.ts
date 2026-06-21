@@ -18,6 +18,21 @@ import { type ZodToJsonConfig, zodRegistryToJson, zodSchemaToJson } from './zod-
 
 type FreeformRecord = Record<string, any>
 
+type ContentTypeResponse = {
+  description?: string
+  content: Record<string, { schema: $ZodType }>
+}
+
+const isContentTypeResponse = (maybeSchema: unknown): maybeSchema is ContentTypeResponse => {
+  return (
+    typeof maybeSchema === 'object' &&
+    maybeSchema !== null &&
+    'content' in maybeSchema &&
+    typeof maybeSchema.content === 'object' &&
+    maybeSchema.content !== null
+  )
+}
+
 const defaultSkipList = [
   '/documentation/',
   '/documentation/initOAuth',
@@ -94,8 +109,38 @@ export const createJsonSchemaTransform = ({
     if (response) {
       transformed.response = {}
 
-      for (const prop in response as any) {
-        const zodSchema = resolveSchema((response as any)[prop])
+      for (const prop in response) {
+        const responseSchema = (response as any)[prop]
+
+        if (isContentTypeResponse(responseSchema)) {
+          const responseObj: FreeformRecord = {}
+
+          if (responseSchema.description) {
+            responseObj.description = responseSchema.description
+          }
+
+          responseObj.content = {}
+
+          for (const [contentType, { schema: maybeSchema }] of Object.entries(
+            responseSchema.content,
+          )) {
+            const zodSchema = resolveSchema(maybeSchema)
+            const jsonSchema = zodSchemaToJson(
+              zodSchema,
+              schemaRegistry,
+              'output',
+              oasVersion,
+              zodToJsonConfig,
+            )
+            const oasSchema = jsonSchemaToOAS(jsonSchema, oasVersion)
+            responseObj.content[contentType] = { schema: oasSchema }
+          }
+
+          transformed.response[prop] = responseObj
+          continue
+        }
+
+        const zodSchema = resolveSchema(responseSchema)
         const jsonSchema = zodSchemaToJson(
           zodSchema,
           schemaRegistry,
