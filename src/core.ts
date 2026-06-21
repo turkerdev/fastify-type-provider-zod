@@ -256,19 +256,19 @@ export const createSerializerCompiler =
   (
     options?: ZodSerializerCompilerOptions,
   ): FastifySerializerCompiler<$ZodType | { properties: $ZodType }> =>
-  ({ schema: maybeSchema, method, url }) =>
-  (data) => {
-    const schema = resolveSchema(maybeSchema)
+  ({ schema: maybeSchema, method, url }) => {
+    const schema = resolveSchema(maybeSchema);
+    return (data) => {
+      const result = safeParse(schema, data)
+      if (result.error) {
+        throw new ResponseSerializationError(method, url, {
+          cause: result.error,
+        })
+      }
 
-    const result = safeParse(schema, data)
-    if (result.error) {
-      throw new ResponseSerializationError(method, url, {
-        cause: result.error,
-      })
+      return JSON.stringify(result.data, options?.replacer)
     }
-
-    return JSON.stringify(result.data, options?.replacer)
-  }
+}
 
 export const serializerCompiler: ReturnType<typeof createSerializerCompiler> =
   createSerializerCompiler({})
