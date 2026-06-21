@@ -268,6 +268,70 @@ async function run() {
 run();
 ```
 
+## How to define an empty body response
+
+Use `z.undefined()` to define a response with no body. This enforces correct types on `res.send()` and generates an accurate OpenAPI schema:
+
+```ts
+import { z } from 'zod/v4';
+import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+
+app.withTypeProvider<ZodTypeProvider>().route({
+  method: 'DELETE',
+  url: '/resource',
+  schema: {
+    response: {
+      204: z.undefined().describe('Resource deleted'),
+    },
+  },
+  handler: (_req, res) => {
+    res.status(204).send();
+  },
+});
+```
+
+## How to define multiple response content types
+
+You can define per-content-type response schemas following the OpenAPI 3.x response object format. The `jsonSchemaTransform` will include them correctly in the generated spec, and `res.send()` will be typed as the union of all defined schemas.
+
+```ts
+import { z } from 'zod/v4';
+import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+
+app.withTypeProvider<ZodTypeProvider>().route({
+  method: 'GET',
+  url: '/items',
+  schema: {
+    response: {
+      200: {
+        description: 'Successful response',
+        content: {
+          'application/json': { schema: z.object({ id: z.number(), name: z.string() }) },
+          'application/vnd.v1+json': { schema: z.array(z.object({ id: z.number(), name: z.string() })) },
+        },
+      },
+      default: {
+        content: {
+          '*/*': { schema: z.object({ message: z.string() }) },
+        },
+      },
+    },
+  },
+  handler: (req, res) => {
+    res.send({ id: 1, name: 'item' });
+  },
+});
+```
+
+Fastify dispatches serialization per content type — set the response `Content-Type` header in the handler to select which schema validates the response body:
+
+```ts
+handler: (req, res) => {
+  res.header('Content-Type', 'application/vnd.v1+json');
+  res.send([{ id: 1, name: 'item' }]);
+},
+```
+
 ## How to create a plugin?
 
 ```ts

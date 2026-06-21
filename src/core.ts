@@ -11,12 +11,27 @@ import type {
   RawServerDefault,
 } from 'fastify'
 import type { $ZodRegistry, output } from 'zod/v4/core'
-import { $ZodType, globalRegistry, safeDecode, safeEncode } from 'zod/v4/core'
+import { $ZodType, globalRegistry, safeEncode, safeParse } from 'zod/v4/core'
 import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors'
 import { getOASVersion, jsonSchemaToOAS } from './json-to-oas'
 import { type ZodToJsonConfig, zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
 
 type FreeformRecord = Record<string, any>
+
+type ContentTypeResponse = {
+  description?: string
+  content: Record<string, { schema: $ZodType }>
+}
+
+const isContentTypeResponse = (maybeSchema: unknown): maybeSchema is ContentTypeResponse => {
+  return (
+    typeof maybeSchema === 'object' &&
+    maybeSchema !== null &&
+    'content' in maybeSchema &&
+    typeof maybeSchema.content === 'object' &&
+    maybeSchema.content !== null
+  )
+}
 
 const defaultSkipList = [
   '/documentation/',
@@ -94,8 +109,38 @@ export const createJsonSchemaTransform = ({
     if (response) {
       transformed.response = {}
 
-      for (const prop in response as any) {
-        const zodSchema = resolveSchema((response as any)[prop])
+      for (const prop in response) {
+        const responseSchema = (response as any)[prop]
+
+        if (isContentTypeResponse(responseSchema)) {
+          const responseObj: FreeformRecord = {}
+
+          if (responseSchema.description) {
+            responseObj.description = responseSchema.description
+          }
+
+          responseObj.content = {}
+
+          for (const [contentType, { schema: maybeSchema }] of Object.entries(
+            responseSchema.content,
+          )) {
+            const zodSchema = resolveSchema(maybeSchema)
+            const jsonSchema = zodSchemaToJson(
+              zodSchema,
+              schemaRegistry,
+              'output',
+              oasVersion,
+              zodToJsonConfig,
+            )
+            const oasSchema = jsonSchemaToOAS(jsonSchema, oasVersion)
+            responseObj.content[contentType] = { schema: oasSchema }
+          }
+
+          transformed.response[prop] = responseObj
+          continue
+        }
+
+        const zodSchema = resolveSchema(responseSchema)
         const jsonSchema = zodSchemaToJson(
           zodSchema,
           schemaRegistry,
@@ -211,18 +256,18 @@ export const createSerializerCompiler =
   (
     options?: ZodSerializerCompilerOptions,
   ): FastifySerializerCompiler<$ZodType | { properties: $ZodType }> =>
-  ({ schema: maybeSchema, method, url }) =>
-  (data) => {
+  ({ schema: maybeSchema, method, url }) => {
     const schema = resolveSchema(maybeSchema)
+    return (data) => {
+      const result = safeEncode(schema, data)
+      if (result.error) {
+        throw new ResponseSerializationError(method, url, {
+          cause: result.error,
+        })
+      }
 
-    const result = safeEncode(schema, data)
-    if (result.error) {
-      throw new ResponseSerializationError(method, url, {
-        cause: result.error,
-      })
+      return JSON.stringify(result.data, options?.replacer)
     }
-
-    return JSON.stringify(result.data, options?.replacer)
   }
 
 export const serializerCompiler: ReturnType<typeof createSerializerCompiler> =
