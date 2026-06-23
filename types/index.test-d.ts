@@ -44,3 +44,23 @@ fastify.route({
     res.send('string');
   },
 });
+
+fastify.route({
+  method: 'GET',
+  url: '/content-type',
+  schema: {
+    response: {
+      200: {
+        content: {
+          'application/json': { schema: z.object({ type: z.literal('first') }) },
+          'application/vnd.v1+json': { schema: z.object({ type: z.literal('second') }) },
+        },
+      },
+    },
+  },
+  handler: (_req, res) => {
+    expectType<{ type: 'first' } | { type: 'second' }>(
+      {} as Parameters<typeof res.send>[0],
+    );
+  },
+});

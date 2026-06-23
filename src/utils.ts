@@ -21,6 +21,13 @@ export type JSONSchemaTarget = 'draft-2020-12' | 'openapi-3.0'
 export const getReferenceUri = (input: string): string => {
   const id = input.replace(/^#\/(?:\$defs|definitions|components\/schemas)\//, '')
 
+  if (id === '') {
+    throw new Error(
+      'Unable to build a component reference for an unnamed schema. ' +
+        'Recursive or self-referential schemas used inline must be registered with an `id` so they can be referenced as components.',
+    )
+  }
+
   return `#/components/schemas/${id}`
 }
 

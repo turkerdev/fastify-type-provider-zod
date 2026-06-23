@@ -878,6 +878,111 @@ describe('transformer', () => {
     )
   })
 
+  it('generates correct OpenAPI schema for content-type response schemas', async () => {
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
+
+    app.register(fastifySwagger, {
+      openapi: {
+        openapi: '3.0.3',
+        info: {
+          title: 'SampleApi',
+          description: 'Sample backend service',
+          version: '1.0.0',
+        },
+        servers: [],
+      },
+      transform: jsonSchemaTransform,
+    })
+
+    app.register(fastifySwaggerUI, {
+      routePrefix: '/documentation',
+    })
+
+    const ItemSchema = z.object({ id: z.number(), name: z.string() })
+
+    app.after(() => {
+      app.withTypeProvider<ZodTypeProvider>().route({
+        method: 'GET',
+        url: '/items',
+        schema: {
+          response: {
+            200: {
+              description: 'Successful response with multiple content types',
+              content: {
+                'application/json': { schema: ItemSchema },
+                'application/vnd.v1+json': { schema: z.array(ItemSchema) },
+              },
+            },
+            '3xx': {
+              content: {
+                'application/vnd.v2+json': { schema: z.object({ redirect: z.string() }) },
+              },
+            },
+            default: {
+              content: {
+                '*/*': { schema: z.object({ desc: z.string() }) },
+              },
+            },
+          },
+        },
+        handler: (_req, res) => {
+          res.send({ id: 1, name: 'item' })
+        },
+      })
+    })
+
+    await app.ready()
+
+    const openApiSpecResponse = await app.inject().get('/documentation/json')
+    const openApiSpec = JSON.parse(openApiSpecResponse.body)
+
+    expect(openApiSpec).toMatchSnapshot()
+    await validator.validate(openApiSpec, {})
+  })
+
+  it('generates correct OpenAPI schema for z.undefined() 204 no-body response', async () => {
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
+
+    app.register(fastifySwagger, {
+      ...OPENAPI_ROOT,
+      transform: jsonSchemaTransform,
+    })
+
+    app.register(fastifySwaggerUI, { routePrefix: '/documentation' })
+
+    app.after(() => {
+      app.withTypeProvider<ZodTypeProvider>().route({
+        method: 'DELETE',
+        url: '/items/:id',
+        schema: {
+          response: {
+            204: z.undefined().describe('No content'),
+          },
+        },
+        handler: (_req, res) => {
+          res.status(204).send()
+        },
+      })
+    })
+
+    await app.ready()
+
+    const openApiSpec = JSON.parse((await app.inject().get('/documentation/json')).body)
+
+    expect(openApiSpec.paths['/items/{id}'].delete.responses).toMatchInlineSnapshot(`
+      {
+        "204": {
+          "description": "No content",
+        },
+      }
+    `)
+    await validator.validate(openApiSpec, {})
+  })
+
   it('throw on key collision correctly', async () => {
     const app = Fastify()
     app.setValidatorCompiler(validatorCompiler)
