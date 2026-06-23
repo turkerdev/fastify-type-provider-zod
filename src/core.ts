@@ -13,7 +13,12 @@ import type {
 import type { $ZodRegistry, output } from 'zod/v4/core'
 import { $ZodType, globalRegistry, safeEncode, safeParse } from 'zod/v4/core'
 import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors'
-import { getOASVersion, jsonSchemaToOAS } from './json-to-oas'
+import {
+  createIORegistriesProvider,
+  generateIORegistries,
+  type SchemaRegistryMeta,
+} from './registry'
+import { assertIsOpenAPIObject, getJSONSchemaTarget } from './utils'
 import { type ZodToJsonConfig, zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
 
 type FreeformRecord = Record<string, any>
@@ -54,7 +59,7 @@ interface Schema extends FastifySchema {
 
 type CreateJsonSchemaTransformOptions = {
   skipList?: readonly string[]
-  schemaRegistry?: $ZodRegistry<{ id?: string | undefined }>
+  schemaRegistry?: $ZodRegistry<SchemaRegistryMeta>
   zodToJsonConfig?: ZodToJsonConfig
 }
 
@@ -63,12 +68,12 @@ export const createJsonSchemaTransform = ({
   schemaRegistry = globalRegistry,
   zodToJsonConfig = {},
 }: CreateJsonSchemaTransformOptions): SwaggerTransform<Schema> => {
-  return (input) => {
-    if ('swaggerObject' in input) {
-      throw new Error('OpenAPI 2.0 is not supported')
-    }
+  const getIORegistries = createIORegistriesProvider(schemaRegistry)
 
-    const { schema, url } = input
+  return (document) => {
+    assertIsOpenAPIObject(document)
+
+    const { schema, url } = document
 
     if (!schema) {
       return {
@@ -86,23 +91,20 @@ export const createJsonSchemaTransform = ({
       return { schema: transformed, url }
     }
 
-    const zodSchemas: FreeformRecord = { headers, querystring, body, params }
+    const target = getJSONSchemaTarget(document.openapiObject.openapi)
+    const config = {
+      target,
+      ...zodToJsonConfig,
+    }
 
-    const oasVersion = getOASVersion(input)
+    const { inputRegistry, outputRegistry } = getIORegistries()
+
+    const zodSchemas: FreeformRecord = { headers, querystring, body, params }
 
     for (const prop in zodSchemas) {
       const zodSchema = zodSchemas[prop]
       if (zodSchema) {
-        const jsonSchema = zodSchemaToJson(
-          zodSchema,
-          schemaRegistry,
-          'input',
-          oasVersion,
-          zodToJsonConfig,
-        )
-        const oasSchema = jsonSchemaToOAS(jsonSchema, oasVersion)
-
-        transformed[prop] = oasSchema
+        transformed[prop] = zodSchemaToJson(zodSchema, inputRegistry, 'input', config)
       }
     }
 
@@ -125,15 +127,9 @@ export const createJsonSchemaTransform = ({
             responseSchema.content,
           )) {
             const zodSchema = resolveSchema(maybeSchema)
-            const jsonSchema = zodSchemaToJson(
-              zodSchema,
-              schemaRegistry,
-              'output',
-              oasVersion,
-              zodToJsonConfig,
-            )
-            const oasSchema = jsonSchemaToOAS(jsonSchema, oasVersion)
-            responseObj.content[contentType] = { schema: oasSchema }
+            responseObj.content[contentType] = {
+              schema: zodSchemaToJson(zodSchema, outputRegistry, 'output', config),
+            }
           }
 
           transformed.response[prop] = responseObj
@@ -141,23 +137,7 @@ export const createJsonSchemaTransform = ({
         }
 
         const zodSchema = resolveSchema(responseSchema)
-        const jsonSchema = zodSchemaToJson(
-          zodSchema,
-          schemaRegistry,
-          'output',
-          oasVersion,
-          zodToJsonConfig,
-        )
-
-        // Check is the JSON schema is null then return as it is since fastify-swagger will handle it
-        if (jsonSchema.type === 'null') {
-          transformed.response[prop] = jsonSchema
-          continue
-        }
-
-        const oasSchema = jsonSchemaToOAS(jsonSchema, oasVersion)
-
-        transformed.response[prop] = oasSchema
+        transformed.response[prop] = zodSchemaToJson(zodSchema, outputRegistry, 'output', config)
       }
     }
 
@@ -175,7 +155,7 @@ export const createJsonSchemaTransform = ({
 export const jsonSchemaTransform: SwaggerTransform<Schema> = createJsonSchemaTransform({})
 
 type CreateJsonSchemaTransformObjectOptions = {
-  schemaRegistry?: $ZodRegistry<{ id?: string | undefined }>
+  schemaRegistry?: $ZodRegistry<SchemaRegistryMeta>
   zodToJsonConfig?: ZodToJsonConfig
 }
 
@@ -184,40 +164,27 @@ export const createJsonSchemaTransformObject =
     schemaRegistry = globalRegistry,
     zodToJsonConfig = {},
   }: CreateJsonSchemaTransformObjectOptions): SwaggerTransformObject =>
-  (input) => {
-    if ('swaggerObject' in input) {
-      throw new Error('OpenAPI 2.0 is not supported')
+  (document) => {
+    assertIsOpenAPIObject(document)
+
+    const target = getJSONSchemaTarget(document.openapiObject.openapi)
+    const config = {
+      target,
+      ...zodToJsonConfig,
     }
 
-    const oasVersion = getOASVersion(input)
-
-    const inputSchemas = zodRegistryToJson(schemaRegistry, 'input', zodToJsonConfig)
-    const outputSchemas = zodRegistryToJson(schemaRegistry, 'output', zodToJsonConfig)
-
-    for (const key in outputSchemas) {
-      if (inputSchemas[key]) {
-        throw new Error(
-          `Collision detected for schema "${key}". The is already an input schema with the same name.`,
-        )
-      }
-    }
-
-    const jsonSchemas = {
-      ...inputSchemas,
-      ...outputSchemas,
-    }
-
-    const oasSchemas = Object.fromEntries(
-      Object.entries(jsonSchemas).map(([key, value]) => [key, jsonSchemaToOAS(value, oasVersion)]),
-    )
+    const { inputRegistry, outputRegistry } = generateIORegistries(schemaRegistry)
+    const inputSchemas = zodRegistryToJson(inputRegistry, 'input', config)
+    const outputSchemas = zodRegistryToJson(outputRegistry, 'output', config)
 
     return {
-      ...input.openapiObject,
+      ...document.openapiObject,
       components: {
-        ...input.openapiObject.components,
+        ...document.openapiObject.components,
         schemas: {
-          ...input.openapiObject.components?.schemas,
-          ...oasSchemas,
+          ...document.openapiObject.components?.schemas,
+          ...inputSchemas,
+          ...outputSchemas,
         },
       },
     } as ReturnType<SwaggerTransformObject>
