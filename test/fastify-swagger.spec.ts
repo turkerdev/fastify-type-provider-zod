@@ -579,6 +579,80 @@ describe('transformer', () => {
     await validator.validate(openApiSpec, {})
   })
 
+  describe('nullable unions (OpenAPI 3.0)', () => {
+    const createNullCaseApp = () => {
+      const app = Fastify()
+      app.setValidatorCompiler(validatorCompiler)
+      app.setSerializerCompiler(serializerCompiler)
+
+      app.register(fastifySwagger, {
+        ...OPENAPI_ROOT,
+        transform: jsonSchemaTransform,
+        transformObject: jsonSchemaTransformObject,
+      })
+
+      app.register(fastifySwaggerUI, {
+        routePrefix: '/documentation',
+      })
+
+      return app
+    }
+
+    it('collapses a two-member nullable union into a single `nullable: true` schema', async () => {
+      const app = createNullCaseApp()
+
+      const VALUE_SCHEMA = z.union([z.null(), z.array(z.string())])
+
+      app.after(() => {
+        app.withTypeProvider<ZodTypeProvider>().route({
+          method: 'POST',
+          url: '/',
+          schema: {
+            response: { 200: VALUE_SCHEMA },
+          },
+          handler: (_, res) => {
+            res.send(null)
+          },
+        })
+      })
+
+      await app.ready()
+
+      const openApiSpecResponse = await app.inject().get('/documentation/json')
+      const openApiSpec = JSON.parse(openApiSpecResponse.body)
+
+      expect(openApiSpec).toMatchSnapshot()
+      await validator.validate(openApiSpec, {})
+    })
+
+    it('keeps the remaining members in `anyOf` and marks the union `nullable: true`', async () => {
+      const app = createNullCaseApp()
+
+      const VALUE_SCHEMA = z.union([z.null(), z.array(z.string()), z.literal('any')])
+
+      app.after(() => {
+        app.withTypeProvider<ZodTypeProvider>().route({
+          method: 'POST',
+          url: '/',
+          schema: {
+            response: { 200: VALUE_SCHEMA },
+          },
+          handler: (_, res) => {
+            res.send(null)
+          },
+        })
+      })
+
+      await app.ready()
+
+      const openApiSpecResponse = await app.inject().get('/documentation/json')
+      const openApiSpec = JSON.parse(openApiSpecResponse.body)
+
+      expect(openApiSpec).toMatchSnapshot()
+      await validator.validate(openApiSpec, {})
+    })
+  })
+
   it('should handle records within records', async () => {
     const app = Fastify()
     app.setValidatorCompiler(validatorCompiler)

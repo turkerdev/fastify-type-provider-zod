@@ -98,18 +98,51 @@ function isZodUndefined(entity: unknown): entity is $ZodUndefined {
   return entity instanceof $ZodType && entity._zod.def.type === 'undefined'
 }
 
+type NullableSchema = JSONSchema.BaseSchema & { nullable?: boolean }
+
+/**
+ * The `openapi-3.0` target has no `null` type, so zod emits `z.null()` as
+ * `{ type: 'string', nullable: true, enum: [null] }`. Detect that branch so a nullable
+ * union can be collapsed back into a single `nullable: true` schema.
+ */
+const isNullBranch = (schema: NullableSchema): boolean =>
+  schema.nullable === true &&
+  Array.isArray(schema.enum) &&
+  schema.enum.length === 1 &&
+  schema.enum[0] === null
+
 const getOverride = (
   ctx: {
     zodSchema: $ZodType
     jsonSchema: JSONSchema.BaseSchema
   },
   io: 'input' | 'output',
+  target: RegistryToJSONSchemaParams['target'],
 ) => {
   if (isZodUnion(ctx.zodSchema)) {
     // Filter unrepresentable types in unions
     // TODO: Should be fixed upstream and not merged in this plugin.
     // Remove when passed: https://github.com/colinhacks/zod/pull/5013
     ctx.jsonSchema.anyOf = ctx.jsonSchema.anyOf?.filter((schema) => Object.keys(schema).length > 0)
+
+    // OpenAPI 3.0 has no `null` type, so collapse the null branch of a nullable union into
+    // `nullable: true` rather than leaving a `{ enum: [null] }` member in the `anyOf`.
+    // @see https://github.com/turkerdev/fastify-type-provider-zod/issues/192
+    const anyOf = ctx.jsonSchema.anyOf as NullableSchema[] | undefined
+    if (target === 'openapi-3.0' && anyOf) {
+      const otherBranches = anyOf.filter((schema) => !isNullBranch(schema))
+      if (otherBranches.length < anyOf.length && otherBranches.length > 0) {
+        if (otherBranches.length === 1) {
+          // Only one non-null member remains: merge it up and drop the `anyOf` wrapper.
+          delete ctx.jsonSchema.anyOf
+          Object.assign(ctx.jsonSchema, otherBranches[0], { nullable: true })
+        } else {
+          // Keep the remaining members and mark the whole schema nullable.
+          ctx.jsonSchema.anyOf = otherBranches
+          ;(ctx.jsonSchema as NullableSchema).nullable = true
+        }
+      }
+    }
   }
 
   if (isZodDate(ctx.zodSchema)) {
@@ -176,7 +209,7 @@ export const zodSchemaToJson: (
      * @see https://github.com/colinhacks/zod/issues/4750
      */
     uri: () => SCHEMA_URI_PLACEHOLDER,
-    override: config.override ?? ((ctx) => getOverride(ctx, io)),
+    override: config.override ?? ((ctx) => getOverride(ctx, io, config.target)),
   })
 
   /**
@@ -209,7 +242,7 @@ export const zodRegistryToJson: (
     cycles: 'ref',
     reused: 'inline',
     uri: (id) => getReferenceUri(id),
-    override: config.override ?? ((ctx) => getOverride(ctx, io)),
+    override: config.override ?? ((ctx) => getOverride(ctx, io, config.target)),
   }).schemas
 
   const removeKeys = getRemoveKeys(config.target)

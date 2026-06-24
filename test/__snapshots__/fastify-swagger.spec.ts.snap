@@ -402,6 +402,90 @@ exports[`transformer > generates types for fastify-swagger with OAS 3.1.0 correc
 }
 `;
 
+exports[`transformer > nullable unions (OpenAPI 3.0) > collapses a two-member nullable union into a single \`nullable: true\` schema 1`] = `
+{
+  "components": {
+    "schemas": {},
+  },
+  "info": {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/": {
+      "post": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string",
+                  },
+                  "nullable": true,
+                  "type": "array",
+                },
+              },
+            },
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": [],
+}
+`;
+
+exports[`transformer > nullable unions (OpenAPI 3.0) > keeps the remaining members in \`anyOf\` and marks the union \`nullable: true\` 1`] = `
+{
+  "components": {
+    "schemas": {},
+  },
+  "info": {
+    "description": "Sample backend service",
+    "title": "SampleApi",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/": {
+      "post": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "type": "string",
+                      },
+                      "type": "array",
+                    },
+                    {
+                      "enum": [
+                        "any",
+                      ],
+                      "type": "string",
+                    },
+                  ],
+                  "nullable": true,
+                },
+              },
+            },
+            "description": "Default Response",
+          },
+        },
+      },
+    },
+  },
+  "servers": [],
+}
+`;
+
 exports[`transformer > should allow specification of Zod target to handle OpenAPI 3.1 1`] = `
 {
   "components": {
