@@ -20,9 +20,10 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
@@ -47,20 +48,25 @@ jobs:
 
       - name: Determine version bump
         id: version
+        env:
+          IS_MAJOR: ${{ contains(github.event.pull_request.labels.*.name, 'major') }}
+          IS_MINOR: ${{ contains(github.event.pull_request.labels.*.name, 'minor') }}
         run: |
-          if ${{ contains(github.event.pull_request.labels.*.name, 'major') }}; then
+          if [ "$IS_MAJOR" = "true" ]; then
             echo "bump=major" >> "$GITHUB_OUTPUT"
-          elif ${{ contains(github.event.pull_request.labels.*.name, 'minor') }}; then
+          elif [ "$IS_MINOR" = "true" ]; then
             echo "bump=minor" >> "$GITHUB_OUTPUT"
           else
             echo "bump=patch" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Bump version
+        env:
+          BUMP: ${{ steps.version.outputs.bump }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          npm version ${{ steps.version.outputs.bump }} -m "chore: release v%s"
-          git push
-          git push --tags
+          npm version "$BUMP" -m "chore: release v%s"
+          git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main --follow-tags
 
       - name: Publish to npm
         run: pnpm publish --access public --no-git-checks
