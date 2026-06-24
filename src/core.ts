@@ -5,18 +5,38 @@ import type {
   FastifyPluginOptions,
   FastifySchema,
   FastifySchemaCompiler,
+  FastifySerializerCompiler,
   FastifyTypeProvider,
   RawServerBase,
   RawServerDefault,
 } from 'fastify'
-import type { FastifySerializerCompiler } from 'fastify/types/schema'
-import type { $ZodRegistry, input, output } from 'zod/v4/core'
-import { $ZodType, globalRegistry, safeParse } from 'zod/v4/core'
-
+import type { $ZodRegistry, output } from 'zod/v4/core'
+import { $ZodType, globalRegistry, safeEncode, safeParse } from 'zod/v4/core'
 import { createValidationError, InvalidSchemaError, ResponseSerializationError } from './errors'
-import { zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
+import {
+  createIORegistriesProvider,
+  generateIORegistries,
+  type SchemaRegistryMeta,
+} from './registry'
+import { assertIsOpenAPIObject, getJSONSchemaTarget } from './utils'
+import { type ZodToJsonConfig, zodRegistryToJson, zodSchemaToJson } from './zod-to-json'
 
 type FreeformRecord = Record<string, any>
+
+type ContentTypeResponse = {
+  description?: string
+  content: Record<string, { schema: $ZodType }>
+}
+
+const isContentTypeResponse = (maybeSchema: unknown): maybeSchema is ContentTypeResponse => {
+  return (
+    typeof maybeSchema === 'object' &&
+    maybeSchema !== null &&
+    'content' in maybeSchema &&
+    typeof maybeSchema.content === 'object' &&
+    maybeSchema.content !== null
+  )
+}
 
 const defaultSkipList = [
   '/documentation/',
@@ -30,7 +50,7 @@ const defaultSkipList = [
 
 export interface ZodTypeProvider extends FastifyTypeProvider {
   validator: this['schema'] extends $ZodType ? output<this['schema']> : unknown
-  serializer: this['schema'] extends $ZodType ? input<this['schema']> : unknown
+  serializer: this['schema'] extends $ZodType ? output<this['schema']> : unknown
 }
 
 interface Schema extends FastifySchema {
@@ -39,14 +59,22 @@ interface Schema extends FastifySchema {
 
 type CreateJsonSchemaTransformOptions = {
   skipList?: readonly string[]
-  schemaRegistry?: $ZodRegistry<{ id?: string | undefined }>
+  schemaRegistry?: $ZodRegistry<SchemaRegistryMeta>
+  zodToJsonConfig?: ZodToJsonConfig
 }
 
 export const createJsonSchemaTransform = ({
   skipList = defaultSkipList,
   schemaRegistry = globalRegistry,
+  zodToJsonConfig = {},
 }: CreateJsonSchemaTransformOptions): SwaggerTransform<Schema> => {
-  return ({ schema, url }) => {
+  const getIORegistries = createIORegistriesProvider(schemaRegistry)
+
+  return (document) => {
+    assertIsOpenAPIObject(document)
+
+    const { schema, url } = document
+
     if (!schema) {
       return {
         schema,
@@ -63,22 +91,53 @@ export const createJsonSchemaTransform = ({
       return { schema: transformed, url }
     }
 
+    const target = getJSONSchemaTarget(document.openapiObject.openapi)
+    const config = {
+      target,
+      ...zodToJsonConfig,
+    }
+
+    const { inputRegistry, outputRegistry } = getIORegistries()
+
     const zodSchemas: FreeformRecord = { headers, querystring, body, params }
 
     for (const prop in zodSchemas) {
       const zodSchema = zodSchemas[prop]
       if (zodSchema) {
-        transformed[prop] = zodSchemaToJson(zodSchema, schemaRegistry, 'input')
+        transformed[prop] = zodSchemaToJson(zodSchema, inputRegistry, 'input', config)
       }
     }
 
     if (response) {
       transformed.response = {}
 
-      for (const prop in response as any) {
-        const zodSchema = resolveSchema((response as any)[prop])
+      for (const prop in response) {
+        const responseSchema = (response as any)[prop]
 
-        transformed.response[prop] = zodSchemaToJson(zodSchema, schemaRegistry, 'output')
+        if (isContentTypeResponse(responseSchema)) {
+          const responseObj: FreeformRecord = {}
+
+          if (responseSchema.description) {
+            responseObj.description = responseSchema.description
+          }
+
+          responseObj.content = {}
+
+          for (const [contentType, { schema: maybeSchema }] of Object.entries(
+            responseSchema.content,
+          )) {
+            const zodSchema = resolveSchema(maybeSchema)
+            responseObj.content[contentType] = {
+              schema: zodSchemaToJson(zodSchema, outputRegistry, 'output', config),
+            }
+          }
+
+          transformed.response[prop] = responseObj
+          continue
+        }
+
+        const zodSchema = resolveSchema(responseSchema)
+        transformed.response[prop] = zodSchemaToJson(zodSchema, outputRegistry, 'output', config)
       }
     }
 
@@ -96,36 +155,34 @@ export const createJsonSchemaTransform = ({
 export const jsonSchemaTransform: SwaggerTransform<Schema> = createJsonSchemaTransform({})
 
 type CreateJsonSchemaTransformObjectOptions = {
-  schemaRegistry?: $ZodRegistry<{ id?: string | undefined }>
+  schemaRegistry?: $ZodRegistry<SchemaRegistryMeta>
+  zodToJsonConfig?: ZodToJsonConfig
 }
 
 export const createJsonSchemaTransformObject =
   ({
     schemaRegistry = globalRegistry,
+    zodToJsonConfig = {},
   }: CreateJsonSchemaTransformObjectOptions): SwaggerTransformObject =>
-  (input) => {
-    if ('swaggerObject' in input) {
-      console.warn('This package currently does not support component references for Swagger 2.0')
-      return input.swaggerObject
+  (document) => {
+    assertIsOpenAPIObject(document)
+
+    const target = getJSONSchemaTarget(document.openapiObject.openapi)
+    const config = {
+      target,
+      ...zodToJsonConfig,
     }
 
-    const inputSchemas = zodRegistryToJson(schemaRegistry, 'input')
-    const outputSchemas = zodRegistryToJson(schemaRegistry, 'output')
-
-    for (const key in outputSchemas) {
-      if (inputSchemas[key]) {
-        throw new Error(
-          `Collision detected for schema "${key}". The is already an input schema with the same name.`,
-        )
-      }
-    }
+    const { inputRegistry, outputRegistry } = generateIORegistries(schemaRegistry)
+    const inputSchemas = zodRegistryToJson(inputRegistry, 'input', config)
+    const outputSchemas = zodRegistryToJson(outputRegistry, 'output', config)
 
     return {
-      ...input.openapiObject,
+      ...document.openapiObject,
       components: {
-        ...input.openapiObject.components,
+        ...document.openapiObject.components,
         schemas: {
-          ...input.openapiObject.components?.schemas,
+          ...document.openapiObject.components?.schemas,
           ...inputSchemas,
           ...outputSchemas,
         },
@@ -166,16 +223,18 @@ export const createSerializerCompiler =
   (
     options?: ZodSerializerCompilerOptions,
   ): FastifySerializerCompiler<$ZodType | { properties: $ZodType }> =>
-  ({ schema: maybeSchema, method, url }) =>
-  (data) => {
+  ({ schema: maybeSchema, method, url }) => {
     const schema = resolveSchema(maybeSchema)
+    return (data) => {
+      const result = safeEncode(schema, data)
+      if (result.error) {
+        throw new ResponseSerializationError(method, url, {
+          cause: result.error,
+        })
+      }
 
-    const result = safeParse(schema, data)
-    if (result.error) {
-      throw new ResponseSerializationError(method, url, { cause: result.error })
+      return JSON.stringify(result.data, options?.replacer)
     }
-
-    return JSON.stringify(result.data, options?.replacer)
   }
 
 export const serializerCompiler: ReturnType<typeof createSerializerCompiler> =

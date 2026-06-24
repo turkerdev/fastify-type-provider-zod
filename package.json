@@ -1,6 +1,6 @@
 {
   "name": "fastify-type-provider-zod",
-  "version": "5.0.2",
+  "version": "6.1.0",
   "description": "Zod Type Provider for Fastify@5",
   "type": "module",
   "main": "./dist/cjs/index.cjs",
@@ -17,16 +17,19 @@
     }
   },
   "files": [
+    "src",
     "dist"
   ],
   "scripts": {
     "build": "vite build",
+    "prepare": "pnpm run build",
+    "test": "vitest",
     "test:coverage": "vitest --coverage",
-    "test:ci": "npm run build && npm run typescript && npm run test:coverage",
+    "test:ci": "pnpm run build && pnpm run typescript && pnpm run test:coverage",
     "lint": "biome check . && tsc --noEmit",
     "lint:fix": "biome check --write .",
     "typescript": "tsd",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "pnpm run build"
   },
   "repository": {
     "url": "https://github.com/turkerdev/fastify-type-provider-zod"
@@ -39,6 +42,7 @@
   ],
   "author": "turkerd",
   "license": "MIT",
+  "packageManager": "pnpm@11.8.0",
   "bugs": {
     "url": "https://github.com/turkerdev/fastify-type-provider-zod/issues"
   },
@@ -48,24 +52,27 @@
   },
   "peerDependencies": {
     "@fastify/swagger": ">=9.5.1",
-    "fastify": "^5.0.0",
-    "zod": ">=3.25.67"
+    "fastify": "^5.5.0",
+    "openapi-types": "^12.1.3",
+    "zod": ">=4.1.5"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.0.6",
-    "@fastify/swagger": "^9.5.1",
-    "@fastify/swagger-ui": "^5.2.3",
+    "@biomejs/biome": "^2.5.0",
+    "@fastify/swagger": "^9.7.0",
+    "@fastify/swagger-ui": "^6.0.0",
     "@kibertoad/biome-config": "^2.0.0",
-    "@types/node": "^22.16.0",
-    "@vitest/coverage-v8": "^3.2.4",
-    "fastify": "^5.4.0",
-    "fastify-plugin": "^5.0.1",
+    "@readme/openapi-parser": "^6.1.3",
+    "@types/node": "^24.13.2",
+    "@vitest/coverage-v8": "^4.1.9",
+    "fastify": "^5.8.5",
+    "fastify-plugin": "^6.0.0",
     "oas-validator": "^5.0.8",
-    "tsd": "^0.32.0",
-    "typescript": "^5.8.3",
-    "unplugin-isolated-decl": "^0.14.5",
-    "vitest": "^3.2.4",
-    "zod": "^4.0.5"
+    "tsd": "^0.33.0",
+    "typescript": "^6.0.3",
+    "unplugin-isolated-decl": "^0.16.0",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.9",
+    "zod": "^4.4.3"
   },
   "tsd": {
     "directory": "types"
