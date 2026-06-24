@@ -1,0 +1,72 @@
+name: publish
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+permissions: {}
+
+jobs:
+  publish:
+    if: github.event.pull_request.merged == true && (contains(github.event.pull_request.labels.*.name, 'patch') || contains(github.event.pull_request.labels.*.name, 'minor') || contains(github.event.pull_request.labels.*.name, 'major'))
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24.x
+          registry-url: 'https://registry.npmjs.org'
+          cache: pnpm
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Determine version bump
+        id: version
+        env:
+          IS_MAJOR: ${{ contains(github.event.pull_request.labels.*.name, 'major') }}
+          IS_MINOR: ${{ contains(github.event.pull_request.labels.*.name, 'minor') }}
+        run: |
+          if [ "$IS_MAJOR" = "true" ]; then
+            echo "bump=major" >> "$GITHUB_OUTPUT"
+          elif [ "$IS_MINOR" = "true" ]; then
+            echo "bump=minor" >> "$GITHUB_OUTPUT"
+          else
+            echo "bump=patch" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Bump version
+        env:
+          BUMP: ${{ steps.version.outputs.bump }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm version "$BUMP" -m "chore: release v%s"
+          git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main --follow-tags
+
+      - name: Publish to npm
+        run: pnpm publish --access public --no-git-checks
