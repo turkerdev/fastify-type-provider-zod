@@ -32,7 +32,11 @@
     "prepublishOnly": "pnpm run build"
   },
   "repository": {
-    "url": "https://github.com/turkerdev/fastify-type-provider-zod"
+    "type": "git",
+    "url": "git+https://github.com/turkerdev/fastify-type-provider-zod.git"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "keywords": [
     "fastify",
