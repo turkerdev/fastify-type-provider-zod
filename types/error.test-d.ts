@@ -1,4 +1,4 @@
-import type { FastifySchemaValidationError } from 'fastify/types/schema';
+import type { FastifySchemaValidationError } from 'fastify';
 import { expectAssignable } from 'tsd';
 
 import { hasZodFastifySchemaValidationErrors, type ZodFastifySchemaValidationError } from '../src/errors';
