@@ -1,7 +1,7 @@
 # @fastify/type-provider-zod
 
-[![NPM Version](https://img.shields.io/npm/v/@fastify/type-provider-zod.svg)](https://npmjs.org/package/@fastify/type-provider-zod)
-[![NPM Downloads](https://img.shields.io/npm/dm/@fastify/type-provider-zod.svg)](https://npmjs.org/package/@fastify/type-provider-zod)
+[![NPM Version](https://img.shields.io/npm/v/@fastify/type-provider-zod.svg)](https://www.npmjs.com/package/@fastify/type-provider-zod)
+[![NPM Downloads](https://img.shields.io/npm/dm/@fastify/type-provider-zod.svg)](https://www.npmjs.com/package/@fastify/type-provider-zod)
 [![Build Status](https://github.com/fastify/fastify-type-provider-zod/actions/workflows/ci.yml/badge.svg)](https://github.com/fastify/fastify-type-provider-zod/actions/workflows/ci.yml)
 
 A Type Provider for [Zod](https://github.com/colinhacks/zod).
