@@ -279,3 +279,28 @@ describe('response schema', () => {
     })
   })
 })
+
+describe('serializer compiler resolves schema at startup', () => {
+  it('throws InvalidSchemaError on ready() instead of on first request', async () => {
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
+
+    app.route({
+      method: 'GET',
+      url: '/',
+      schema: {
+        response: {
+          // not a zod schema: must be rejected while the server starts
+          200: { type: 'object', properties: { foo: { type: 'string' } } } as any,
+        },
+      },
+      handler: () => ({ foo: 'bar' }),
+    })
+
+    await expect(app.ready()).rejects.toMatchObject({
+      code: 'FST_ERR_SCH_SERIALIZATION_BUILD',
+      message: expect.stringContaining('Invalid schema passed'),
+    })
+  })
+})

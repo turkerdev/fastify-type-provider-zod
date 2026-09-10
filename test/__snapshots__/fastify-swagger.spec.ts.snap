@@ -246,6 +246,9 @@ exports[`transformer > generates types for fastify-swagger with OAS 3.1.0 correc
                       ],
                     },
                     "scopes": {
+                      "items": false,
+                      "maxItems": 3,
+                      "minItems": 3,
                       "prefixItems": [
                         {
                           "enum": [
@@ -328,13 +331,9 @@ exports[`transformer > should allow specification of Zod target to handle OpenAP
                     "type": "object",
                   },
                   "name": {
-                    "anyOf": [
-                      {
-                        "type": "string",
-                      },
-                      {
-                        "type": "null",
-                      },
+                    "type": [
+                      "string",
+                      "null",
                     ],
                   },
                 },
@@ -374,13 +373,9 @@ exports[`transformer > should allow specification of Zod target to handle OpenAP
                               "type": "object",
                             },
                             "name": {
-                              "anyOf": [
-                                {
-                                  "type": "string",
-                                },
-                                {
-                                  "type": "null",
-                                },
+                              "type": [
+                                "string",
+                                "null",
                               ],
                             },
                           },

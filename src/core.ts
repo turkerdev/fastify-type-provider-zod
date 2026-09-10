@@ -211,18 +211,19 @@ export const createSerializerCompiler =
   (
     options?: ZodSerializerCompilerOptions,
   ): FastifySerializerCompiler<$ZodType | { properties: $ZodType }> =>
-  ({ schema: maybeSchema, method, url }) =>
-  (data) => {
+  ({ schema: maybeSchema, method, url }) => {
     const schema = resolveSchema(maybeSchema)
 
-    const result = safeEncode(schema, data)
-    if (result.error) {
-      throw new ResponseSerializationError(method, url, {
-        cause: result.error,
-      })
-    }
+    return (data) => {
+      const result = safeEncode(schema, data)
+      if (result.error) {
+        throw new ResponseSerializationError(method, url, {
+          cause: result.error,
+        })
+      }
 
-    return JSON.stringify(result.data, options?.replacer)
+      return JSON.stringify(result.data, options?.replacer)
+    }
   }
 
 export const serializerCompiler: ReturnType<typeof createSerializerCompiler> =
