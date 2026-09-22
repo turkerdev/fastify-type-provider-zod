@@ -1,0 +1,4 @@
+{
+  "$schema": "./node_modules/tstyche/schemas/config.json",
+  "target": "6.0"
+}
