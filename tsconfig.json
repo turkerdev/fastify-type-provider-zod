@@ -9,5 +9,5 @@
       "strict": true,
       "isolatedDeclarations": true
     },
-    "exclude": ["./node_modules", "types/**/*.test-d.ts", "test", "dist", "vite.config.ts", "vitest.config.ts"]
-  }  
+    "exclude": ["./node_modules", "types/**/*.tst.ts", "test", "dist", "vite.config.ts", "vitest.config.ts"]
+  }

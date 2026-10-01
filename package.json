@@ -28,7 +28,7 @@
     "test:ci": "pnpm run build && pnpm run typescript && pnpm run test:coverage",
     "lint": "biome check . && tsc --noEmit",
     "lint:fix": "biome check --write .",
-    "typescript": "tsd",
+    "typescript": "tstyche",
     "prepublishOnly": "pnpm run build"
   },
   "repository": {
@@ -71,14 +71,11 @@
     "fastify": "^5.8.5",
     "fastify-plugin": "^6.0.0",
     "oas-validator": "^5.0.8",
-    "tsd": "^0.33.0",
+    "tstyche": "^7.2.5",
     "typescript": "^7.0.2",
     "unplugin-isolated-decl": "^0.17.0",
     "vite": "^8.0.16",
     "vitest": "^4.1.9",
     "zod": "^4.4.3"
-  },
-  "tsd": {
-    "directory": "types"
   }
 }

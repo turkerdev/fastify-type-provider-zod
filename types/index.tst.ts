@@ -6,7 +6,7 @@ import type {
     RawServerDefault,
 } from 'fastify';
 import Fastify from 'fastify';
-import { expectAssignable, expectType } from 'tsd';
+import { expect } from 'tstyche';
 import { z } from 'zod/v4';
 
 import { serializerCompiler, validatorCompiler } from '../src/core';
@@ -22,10 +22,10 @@ type FastifyZodInstance = FastifyInstance<
   ZodTypeProvider
 >;
 
-expectType<FastifyZodInstance>(fastify.setValidatorCompiler(validatorCompiler));
-expectType<FastifyZodInstance>(fastify.setSerializerCompiler(serializerCompiler));
-expectAssignable<FastifyZodInstance>(fastify);
-expectAssignable<FastifyInstance>(fastify);
+expect(fastify.setValidatorCompiler(validatorCompiler)).type.toBe<FastifyZodInstance>();
+expect(fastify.setSerializerCompiler(serializerCompiler)).type.toBe<FastifyZodInstance>();
+expect(fastify).type.toBeAssignableTo<FastifyZodInstance>();
+expect(fastify).type.toBeAssignableTo<FastifyInstance>();
 
 fastify.route({
   method: 'GET',
@@ -40,7 +40,7 @@ fastify.route({
     },
   },
   handler: (req, res) => {
-    expectType<string>(req.query.name);
+    expect(req.query.name).type.toBe<string>();
     res.send('string');
   },
 });
@@ -59,8 +59,8 @@ fastify.route({
     },
   },
   handler: (_req, res) => {
-    expectType<{ type: 'first' } | { type: 'second' }>(
-      {} as Parameters<typeof res.send>[0],
-    );
+    expect<Parameters<typeof res.send>[0]>().type.toBe<
+      { type: 'first' } | { type: 'second' }
+    >();
   },
 });
