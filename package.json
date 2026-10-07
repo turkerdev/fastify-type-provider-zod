@@ -23,6 +23,7 @@
   "scripts": {
     "build": "vite build",
     "prepare": "npm run build",
+    "release:build": "npm run build",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
     "test:ci": "npm run build && npm run typescript && npm run test:coverage",
