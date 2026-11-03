@@ -332,6 +332,8 @@ handler: (req, res) => {
 },
 ```
 
+Only `schema` is converted from Zod to JSON Schema. Other fields, such as `example`, `examples`, `itemSchema` and `x-` extensions on a media type, are passed to `@fastify/swagger` unchanged, so write them as plain values rather than Zod schemas. The same applies to `headers` on the response, where each header is a plain JSON Schema.
+
 ## How to create a plugin?
 
 ```ts
