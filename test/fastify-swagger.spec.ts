@@ -1016,6 +1016,134 @@ describe('transformer', () => {
     await validator.validate(openApiSpec, {})
   })
 
+  it('keeps response and media type fields other than `schema` in content-type response schemas', async () => {
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
+
+    app.register(fastifySwagger, {
+      ...OPENAPI_ROOT,
+      transform: jsonSchemaTransform,
+    })
+
+    app.register(fastifySwaggerUI, {
+      routePrefix: '/documentation',
+    })
+
+    app.after(() => {
+      app.withTypeProvider<ZodTypeProvider>().route({
+        method: 'GET',
+        url: '/export',
+        schema: {
+          response: {
+            200: {
+              description: 'Export in several formats',
+              headers: {
+                'X-Request-Id': { type: 'string', description: 'Request id' },
+              },
+              content: {
+                'text/csv': {
+                  schema: z.string(),
+                  example: 'id,name',
+                  'x-format': 'csv',
+                },
+                'application/json': {
+                  schema: z.object({ id: z.number() }),
+                  examples: { first: { value: { id: 1 } } },
+                },
+              },
+            },
+          },
+        },
+        handler: (_req, res) => {
+          res.header('Content-Type', 'application/json').send({ id: 1 })
+        },
+      })
+    })
+
+    await app.ready()
+
+    const openApiSpecResponse = await app.inject().get('/documentation/json')
+    const openApiSpec = JSON.parse(openApiSpecResponse.body)
+
+    expect(openApiSpec.paths['/export'].get.responses['200']).toEqual({
+      description: 'Export in several formats',
+      headers: {
+        'X-Request-Id': { description: 'Request id', schema: { type: 'string' } },
+      },
+      content: {
+        'text/csv': {
+          schema: { type: 'string' },
+          example: 'id,name',
+          'x-format': 'csv',
+        },
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: { id: { type: 'number' } },
+            required: ['id'],
+            additionalProperties: false,
+          },
+          examples: { first: { value: { id: 1 } } },
+        },
+      },
+    })
+    await validator.validate(openApiSpec, {})
+
+    const response = await app.inject().get('/export')
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({ id: 1 })
+  })
+
+  it('keeps `itemSchema` in content-type response schemas for OpenAPI 3.2', async () => {
+    const app = Fastify()
+    app.setValidatorCompiler(validatorCompiler)
+    app.setSerializerCompiler(serializerCompiler)
+
+    app.register(fastifySwagger, {
+      openapi: {
+        openapi: '3.2.0',
+        info: { title: 'SampleApi', version: '1.0.0' },
+      },
+      transform: jsonSchemaTransform,
+    })
+
+    app.register(fastifySwaggerUI, {
+      routePrefix: '/documentation',
+    })
+
+    const itemSchema = { type: 'object', properties: { data: { type: 'string' } } }
+
+    app.after(() => {
+      app.withTypeProvider<ZodTypeProvider>().route({
+        method: 'GET',
+        url: '/stream',
+        schema: {
+          response: {
+            200: {
+              description: 'Event stream',
+              content: {
+                'text/event-stream': { schema: z.string(), itemSchema },
+              },
+            },
+          },
+        },
+        handler: (_req, res) => {
+          res.header('Content-Type', 'text/event-stream').send('data: 1')
+        },
+      })
+    })
+
+    await app.ready()
+
+    const openApiSpecResponse = await app.inject().get('/documentation/json')
+    const openApiSpec = JSON.parse(openApiSpecResponse.body)
+
+    expect(openApiSpec.paths['/stream'].get.responses['200'].content).toEqual({
+      'text/event-stream': { schema: { type: 'string' }, itemSchema },
+    })
+  })
+
   it('generates correct OpenAPI schema for z.undefined() 204 no-body response', async () => {
     const app = Fastify()
     app.setValidatorCompiler(validatorCompiler)
