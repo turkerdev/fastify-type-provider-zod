@@ -115,19 +115,15 @@ export const createJsonSchemaTransform = ({
         const responseSchema = (response as any)[prop]
 
         if (isContentTypeResponse(responseSchema)) {
-          const responseObj: FreeformRecord = {}
+          const { content, ...responseFields } = responseSchema
+          const responseObj: FreeformRecord = { ...responseFields, content: {} }
 
-          if (responseSchema.description) {
-            responseObj.description = responseSchema.description
-          }
-
-          responseObj.content = {}
-
-          for (const [contentType, { schema: maybeSchema }] of Object.entries(
-            responseSchema.content,
+          for (const [contentType, { schema: maybeSchema, ...mediaTypeFields }] of Object.entries(
+            content,
           )) {
             const zodSchema = resolveSchema(maybeSchema)
             responseObj.content[contentType] = {
+              ...mediaTypeFields,
               schema: zodSchemaToJson(zodSchema, outputRegistry, 'output', config),
             }
           }
